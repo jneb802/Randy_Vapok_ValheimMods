@@ -1,6 +1,6 @@
 ﻿namespace EpicLoot.Adventure
 {
-    public static class PlayerExtensions
+    public static class PlayerExtensions_Adventure
     {
         private static AdventureComponent GetAdventureComponent(Player player)
         {
