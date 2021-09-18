@@ -16,146 +16,182 @@ using Random = System.Random;
 
 namespace EpicLoot
 {
-    [HarmonyPatch(typeof(Console), nameof(Console.InputText))]
-    public static class Console_Patch
+    [HarmonyPatch(typeof(Terminal), nameof(Terminal.InitTerminal))]
+    public static class Terminal_Patch
     {
         private static readonly Random _random = new Random();
 
-        public static bool Prefix(Console __instance)
+        public static void Postfix()
         {
-            var input = __instance.m_input.text;
-            var args = input.Split(' ');
-            if (args.Length == 0)
-            {
-                return true;
-            }
-
             var player = Player.m_localPlayer;
 
-            var command = args[0];
-            if (CheatCommand(command, "magicitem", "mi"))
+            new Terminal.ConsoleCommand("magicitem", "", (args =>
             {
-                MagicItem(__instance, args);
-            }
-            else if (CheatCommand(command, "magicitemwitheffect", "mieffect")) 
+                MagicItem(args.Context, args.Args);
+            }), true);
+            new Terminal.ConsoleCommand("mi", "", (args =>
             {
-                SpawnMagicItemWithEffect(__instance, args);
-            }
-            else if (CheatCommand(command, "magicitemlegendary", "milegend"))
+                MagicItem(args.Context, args.Args);
+            }), true);
+            new Terminal.ConsoleCommand("magicitemwitheffect", "", (args =>
             {
-                SpawnLegendaryMagicItem(__instance, args);
-            }
-            else if (CheatCommand(command, "magicitemset", "miset"))
+                SpawnMagicItemWithEffect(args.Context, args.Args);
+            }), true);
+            new Terminal.ConsoleCommand("mieffect", "", (args =>
             {
-                SpawnMagicItemSet(__instance, args);
-            }
-            else if (Command(command, "checkstackquality"))
+                SpawnMagicItemWithEffect(args.Context, args.Args);
+            }), true);
+            new Terminal.ConsoleCommand("magicitemlegendary", "", (args =>
             {
-                CheckStackQuality(__instance);
-            }
-            else if (CheatCommand(command, "magicmats"))
+                SpawnLegendaryMagicItem(args.Context, args.Args);
+            }), true);
+            new Terminal.ConsoleCommand("milegend", "", (args =>
+            {
+                SpawnLegendaryMagicItem(args.Context, args.Args);
+            }), true);
+            new Terminal.ConsoleCommand("magicitemset", "", (args =>
+            {
+                SpawnMagicItemSet(args.Context, args.Args);
+            }), true);
+            new Terminal.ConsoleCommand("miset", "", (args =>
+            {
+                SpawnMagicItemSet(args.Context, args.Args);
+            }), true);
+            new Terminal.ConsoleCommand("checkstackquality", "", (args =>
+            {
+                CheckStackQuality(args.Context);
+            }));
+            new Terminal.ConsoleCommand("magicmats", "", (args =>
             {
                 SpawnMagicCraftingMaterials();
-            }
-            else if (CheatCommand(command, "alwaysdrop"))
+            }), true);
+            new Terminal.ConsoleCommand("alwaysdrop", "", (args =>
             {
-                ToggleAlwaysDrop(__instance);
-            }
-            else if (CheatCommand(command, "cheatgating"))
+                ToggleAlwaysDrop(args.Context);
+            }), true);
+            new Terminal.ConsoleCommand("cheatgating", "", (args =>
             {
                 LootRoller.CheatDisableGating = !LootRoller.CheatDisableGating;
-                __instance.AddString($"> Disable gating for magic item drops: {LootRoller.CheatDisableGating}");
-            }
-            else if (CheatCommand(command, "testtreasuremap", "testtm"))
+                args.Context.AddString($"> Disable gating for magic item drops: {LootRoller.CheatDisableGating}");
+            }), true);
+            new Terminal.ConsoleCommand("testtreasuremap", "", (args =>
             {
-                TestTreasureMap(args);
-            }
-            else if (Command(command, "resettreasuremap", "resettm"))
+                TestTreasureMap(args.Args);
+            }), true);
+            new Terminal.ConsoleCommand("testtm", "", (args =>
+            {
+                TestTreasureMap(args.Args);
+            }), true);
+            new Terminal.ConsoleCommand("resettreasuremap", "", (args =>
             {
                 var saveData = player.GetAdventureSaveData();
                 saveData.TreasureMaps.Clear();
                 saveData.NumberOfTreasureMapsOrBountiesStarted = 0;
                 player.SaveAdventureSaveData();
-            }
-            else if (Command(command, "debugtreasuremap", "debugtm"))
+            }));
+            new Terminal.ConsoleCommand("resettm", "", (args =>
+            {
+                var saveData = player.GetAdventureSaveData();
+                saveData.TreasureMaps.Clear();
+                saveData.NumberOfTreasureMapsOrBountiesStarted = 0;
+                player.SaveAdventureSaveData();
+            }));
+            new Terminal.ConsoleCommand("debugtreasuremap", "", (args =>
             {
                 Minimap_Patch.DebugMode = !Minimap_Patch.DebugMode;
-                __instance.AddString($"> Treasure Map Debug Mode: {Minimap_Patch.DebugMode}");
-            }
-            else if (Command(command, "resetbounties"))
+                args.Context.AddString($"> Treasure Map Debug Mode: {Minimap_Patch.DebugMode}");
+            }));
+            new Terminal.ConsoleCommand("debugtm", "", (args =>
+            {
+                Minimap_Patch.DebugMode = !Minimap_Patch.DebugMode;
+                args.Context.AddString($"> Treasure Map Debug Mode: {Minimap_Patch.DebugMode}");
+            }));
+            new Terminal.ConsoleCommand("resetbounties", "", (args =>
             {
                 var saveData = player.GetAdventureSaveData();
                 saveData.Bounties.Clear();
                 player.SaveAdventureSaveData();
-            }
-            else if (Command(command, "testbountynames"))
+            }));
+            new Terminal.ConsoleCommand("testbountynames", "", (args =>
             {
                 var random = new Random();
                 var count = (args.Length >= 2) ? int.Parse(args[1]) : 10;
                 for (var i = 0; i < count; ++i)
                 {
                     var name = BountiesAdventureFeature.GenerateTargetName(random);
-                    __instance.AddString(name);
+                    args.Context.AddString(name);
                 }
-            }
-            else if (Command(command, "resetadventure"))
+            }));
+            new Terminal.ConsoleCommand("resetadventure", "", (args =>
             {
                 var adventureComponent = player.GetComponent<AdventureComponent>();
                 adventureComponent.SaveData = new AdventureSaveDataList();
                 player.SaveAdventureSaveData();
-            }
-            else if (Command(command, "bounties"))
+            }));
+            new Terminal.ConsoleCommand("bounties", "", (args =>
             {
                 var interval = (args.Length >= 2) ? int.Parse(args[1]) : AdventureDataManager.Bounties.GetCurrentInterval();
                 var availableBounties = AdventureDataManager.Bounties.GetAvailableBounties(interval, false);
                 BountiesAdventureFeature.PrintBounties($"Bounties for Interval {interval}:", availableBounties);
-            }
-            else if (Command(command, "playerbounties"))
+            }));
+            new Terminal.ConsoleCommand("playerbounties", "", (args =>
             {
                 var availableBounties = player.GetAdventureSaveData().Bounties;
                 BountiesAdventureFeature.PrintBounties($"Player Bounties:", availableBounties);
-            }
-            else if (CheatCommand(command, "timescale", "ts"))
+            }));
+            new Terminal.ConsoleCommand("timescale", "", (args =>
             {
                 var timeScale = (args.Length >= 2) ? float.Parse(args[1]) : 1;
                 Time.timeScale = timeScale;
-            }
-            else if (CheatCommand(command, "gotomerchant", "gotom"))
+            }), true);
+            new Terminal.ConsoleCommand("ts", "", (args =>
+            {
+                var timeScale = (args.Length >= 2) ? float.Parse(args[1]) : 1;
+                Time.timeScale = timeScale;
+            }), true);
+            new Terminal.ConsoleCommand("gotomerchant", "", (args =>
             {
                 if (ZoneSystem.instance.FindClosestLocation("Vendor_BlackForest", player.transform.position, out var location))
                 {
                     player.TeleportTo(location.m_position + Vector3.right * 5, player.transform.rotation, true);
                 }
-            }
-            else if (Command(command, "globalkeys"))
+            }), true);
+            new Terminal.ConsoleCommand("gotom", "", (args =>
+            {
+                if (ZoneSystem.instance.FindClosestLocation("Vendor_BlackForest", player.transform.position, out var location))
+                {
+                    player.TeleportTo(location.m_position + Vector3.right * 5, player.transform.rotation, true);
+                }
+            }), true);
+            new Terminal.ConsoleCommand("globalkeys", "", (args =>
             {
                 if (ZoneSystem.instance != null)
                 {
-                    __instance.AddString("> Print Global Keys:");
+                    args.Context.AddString("> Print Global Keys:");
                     foreach (var globalKey in ZoneSystem.instance.GetGlobalKeys())
                     {
-                        __instance.AddString("> " + globalKey);
+                        args.Context.AddString("> " + globalKey);
                     }
                 }
-            }
-            else if (Command(command, "fixresistances"))
+            }));
+            new Terminal.ConsoleCommand("fixresistances", "", (args =>
             {
                 FixResistances(player);
-            }
-            else if (Command(command, "lucktest"))
+            }));
+            new Terminal.ConsoleCommand("lucktest", "", (args =>
             {
                 var lootTable = args.Length > 1 ? args[1] : "Greydwarf";
                 var luckFactor = args.Length > 2 ? float.Parse(args[2]) : 0;
                 LootRoller.PrintLuckTest(lootTable, luckFactor);
-            }
-            else if (Command(command, "lootres"))
+            }));
+            new Terminal.ConsoleCommand("lootres", "", (args =>
             {
                 var lootTable = args.Length > 1 ? args[1] : "Greydwarf";
                 var level = args.Length > 2 ? int.Parse(args[2]) : 1;
                 var itemIndex = args.Length > 3 ? int.Parse(args[3]) : 0;
                 LootRoller.PrintLootResolutionTest(lootTable, level, itemIndex);
-            }
-            else if (CheatCommand(command, "resetcooldowns"))
+            }));
+            new Terminal.ConsoleCommand("resetcooldowns", "", (args =>
             {
                 if (player != null)
                 {
@@ -168,19 +204,7 @@ namespace EpicLoot
                         }
                     }
                 }
-            }
-
-            return true;
-        }
-
-        private static bool Command(string command, params string[] args)
-        {
-            return args.Contains(command);
-        }
-
-        private static bool CheatCommand(string command, params string[] args)
-        {
-            return Console.instance.IsCheatsEnabled() && args.Contains(command);
+            }), true);
         }
 
         private static void TestTreasureMap(string[] args)
@@ -238,10 +262,10 @@ namespace EpicLoot
             EpicLoot.LogWarning(output);
         }
 
-        private static void ToggleAlwaysDrop(Console __instance)
+        private static void ToggleAlwaysDrop(Terminal context)
         {
             EpicLoot.AlwaysDropCheat = !EpicLoot.AlwaysDropCheat;
-            __instance.AddString($"> Always Drop: {EpicLoot.AlwaysDropCheat}");
+            context.AddString($"> Always Drop: {EpicLoot.AlwaysDropCheat}");
         }
 
         private static void SpawnMagicCraftingMaterials()
@@ -260,14 +284,14 @@ namespace EpicLoot
             }
         }
 
-        public static void MagicItem(Console __instance, string[] args)
+        public static void MagicItem(Terminal context, string[] args)
         {
             var rarityArg = args.Length >= 2 ? args[1] : "random";
             var itemArg = args.Length >= 3 ? args[2] : "random";
             var count = args.Length >= 4 ? int.Parse(args[3]) : 1;
             var effectCount = args.Length >= 5 ? int.Parse(args[4]) : -1;
 
-            __instance.AddString($"magicitem - rarity:{rarityArg}, item:{itemArg}, count:{count}");
+            context.AddString($"magicitem - rarity:{rarityArg}, item:{itemArg}, count:{count}");
 
             var allItemNames = ObjectDB.instance.m_items
                 .Where(x => EpicLoot.CanBeMagicItem(x.GetComponent<ItemDrop>().m_itemData))
@@ -294,11 +318,11 @@ namespace EpicLoot
 
                 if (ObjectDB.instance.GetItemPrefab(item) == null)
                 {
-                    __instance.AddString($"> Could not find item: {item}");
+                    context.AddString($"> Could not find item: {item}");
                     break;
                 }
 
-                __instance.AddString($">  {i + 1} - rarity: [{string.Join(", ", rarityTable)}], item: {item}");
+                context.AddString($">  {i + 1} - rarity: [{string.Join(", ", rarityTable)}], item: {item}");
 
                 var loot = new LootTable()
                 {
@@ -322,7 +346,7 @@ namespace EpicLoot
             LootRoller.CheatEffectCount = -1;
         }
 
-        public static void SpawnMagicItemWithEffect(Console __instance, string[] args)
+        public static void SpawnMagicItemWithEffect(Terminal context, string[] args)
         {
             if (args.Length < 3)
             {
@@ -334,26 +358,26 @@ namespace EpicLoot
 
             var effectArg = args[1];
             var itemPrefabNameArg = args[2];
-            __instance.AddString($"magicitem - {itemPrefabNameArg} with effect: {effectArg}");
+            context.AddString($"magicitem - {itemPrefabNameArg} with effect: {effectArg}");
 
             var magicItemEffectDef = MagicItemEffectDefinitions.Get(effectArg);
             if (magicItemEffectDef == null)
             {
-                __instance.AddString($"> Could not find effect: {effectArg}");
+                context.AddString($"> Could not find effect: {effectArg}");
                 return;
             }
 
             var itemPrefab = ObjectDB.instance.GetItemPrefab(itemPrefabNameArg);
             if (itemPrefab == null)
             {
-                __instance.AddString($"> Could not find item: {itemPrefabNameArg}");
+                context.AddString($"> Could not find item: {itemPrefabNameArg}");
                 return;
             }
 
             var fromItemData = itemPrefab.GetComponent<ItemDrop>().m_itemData;
             if (!EpicLoot.CanBeMagicItem(fromItemData))
             {
-                __instance.AddString($"> Can't be magic item: {itemPrefabNameArg}");
+                context.AddString($"> Can't be magic item: {itemPrefabNameArg}");
                 return;
             }
 
@@ -405,28 +429,28 @@ namespace EpicLoot
             return rarityTable;
         }
 
-        private static void SpawnLegendaryMagicItem(Console __instance, string[] args)
+        private static void SpawnLegendaryMagicItem(Terminal context, string[] args)
         {
             if (args.Length < 2)
             {
-                __instance.AddString("> Specify legendaryID, itemID (optional)");
+                context.AddString("> Specify legendaryID, itemID (optional)");
                 return;
             }
 
             var legendaryID = args[1];
             var itemType = args.Length >= 3 ? args[2] : null;
 
-            __instance.AddString($"magicitemlegendary - legendaryID:{legendaryID}");
-            SpawnLegendaryItemHelper(legendaryID, itemType, __instance);
+            context.AddString($"magicitemlegendary - legendaryID:{legendaryID}");
+            SpawnLegendaryItemHelper(legendaryID, itemType, context);
         }
 
-        private static void SpawnLegendaryItemHelper(string legendaryID, string itemType, Console __instance)
+        private static void SpawnLegendaryItemHelper(string legendaryID, string itemType, Terminal context)
         {
             if (!UniqueLegendaryHelper.TryGetLegendaryInfo(legendaryID, out var legendaryInfo))
             {
-                if (__instance != null)
+                if (context != null)
                 {
-                    __instance.AddString($"> Could not find info for legendaryID: ({legendaryID})");
+                    context.AddString($"> Could not find info for legendaryID: ({legendaryID})");
                 }
                 return;
             }
@@ -490,35 +514,35 @@ namespace EpicLoot
             LootRoller.CheatDisableGating = previousDisableGatingState;
         }
 
-        private static void SpawnMagicItemSet(Console console, string[] args)
+        private static void SpawnMagicItemSet(Terminal terminal, string[] args)
         {
             if (args.Length < 2)
             {
-                console.AddString("> Specify Set ID");
+                terminal.AddString("> Specify Set ID");
                 return;
             }
 
             var setID = args[1];
-            console.AddString($"magicitemset - setID:{setID}");
+            terminal.AddString($"magicitemset - setID:{setID}");
 
             if (!UniqueLegendaryHelper.TryGetLegendarySetInfo(setID, out var setInfo))
             {
-                console.AddString($"> Could not find set info for setID: ({setID})");
+                terminal.AddString($"> Could not find set info for setID: ({setID})");
                 return;
             }
 
             foreach (var legendaryID in setInfo.LegendaryIDs)
             {
-                SpawnLegendaryItemHelper(legendaryID, null, console);
+                SpawnLegendaryItemHelper(legendaryID, null, terminal);
             }
         }
 
-        public static void CheckStackQuality(Console __instance)
+        public static void CheckStackQuality(Terminal context)
         {
-            __instance.AddString("CheckStackQuality");
+            context.AddString("CheckStackQuality");
             if (ObjectDB.instance == null)
             {
-                __instance.AddString("> ObjectDB is null");
+                context.AddString("> ObjectDB is null");
                 return;
             }
 
@@ -536,13 +560,13 @@ namespace EpicLoot
                 if (itemData.m_shared.m_maxStackSize > 1 && itemData.m_shared.m_maxQuality > 1)
                 {
                     count++;
-                    __instance.AddString($"> {itemDrop.name}");
+                    context.AddString($"> {itemDrop.name}");
                 }
             }
 
             if (count == 0)
             {
-                __instance.AddString("> (none)");
+                context.AddString("> (none)");
             }
         }
 
