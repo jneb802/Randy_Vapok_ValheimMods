@@ -36,6 +36,7 @@ namespace EpicLoot
         public bool ItemHasArmor;
         public bool ItemHasBackstabBonus;
         public bool ItemUsesStaminaOnAttack;
+        public bool ItemUsesEitrOnAttack;
 
         public List<string> CustomFlags;
 
@@ -56,6 +57,7 @@ namespace EpicLoot
             if (ItemHasArmor) _flags.Add(nameof(ItemHasArmor));
             if (ItemHasBackstabBonus) _flags.Add(nameof(ItemHasBackstabBonus));
             if (ItemUsesStaminaOnAttack) _flags.Add(nameof(ItemUsesStaminaOnAttack));
+            if (ItemUsesEitrOnAttack) _flags.Add(nameof(ItemUsesEitrOnAttack));
 
             if (_flags.Count > 0)
             {
@@ -306,6 +308,11 @@ namespace EpicLoot
             }
 
             if (ItemUsesStaminaOnAttack && itemData.m_shared.m_attack.m_attackStamina <= 0 && itemData.m_shared.m_secondaryAttack.m_attackStamina <= 0)
+            {
+                return false;
+            }
+            
+            if (ItemUsesEitrOnAttack && itemData.m_shared.m_attack.m_attackEitr <= 0 && itemData.m_shared.m_secondaryAttack.m_attackEitr <= 0)
             {
                 return false;
             }
