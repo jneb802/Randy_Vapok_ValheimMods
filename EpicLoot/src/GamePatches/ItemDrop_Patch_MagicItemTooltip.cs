@@ -171,6 +171,11 @@ namespace EpicLoot
                     var eitrUsePercentage = 1 - magicItem.GetTotalEffectValue(MagicEffectType.ModifyAttackEitrUse, 0.01f);
                     var totalEitrUse = eitrUsePercentage * item.m_shared.m_attack.m_attackEitr;
                     
+                    var magicAttackHealth = magicItem.HasEffect(MagicEffectType.ModifyAttackHealthUse);
+                    var magicAttackHealthColor = magicAttackHealth ? magicColor : "orange";
+                    var healthUsePercentage = 1 - magicItem.GetTotalEffectValue(MagicEffectType.ModifyAttackHealthUse, 0.01f);
+                    var totalHealthPercentageUse = healthUsePercentage * item.m_shared.m_attack.m_attackHealthPercentage;
+                    
                     if (item.m_shared.m_attack.m_attackStamina > 0.0)
                         text.Append($"\n$item_staminause: <color={magicAttackStaminaColor}>{totalStaminaUse:#.#}</color>");
                     if (item.m_shared.m_attack.m_attackEitr > 0.0)
@@ -179,8 +184,7 @@ namespace EpicLoot
                         text.Append($"\n$item_healthuse: " +
                             $"<color=orange>{item.m_shared.m_attack.m_attackHealth}</color>");
                     if (item.m_shared.m_attack.m_attackHealthPercentage > 0.0)
-                        text.Append($"\n$item_healthuse: " +
-                            $"<color=orange>{item.m_shared.m_attack.m_attackHealthPercentage:0.0}%</color>");
+                        text.Append($"\n$item_healthuse: <color={magicAttackHealthColor}>{(totalHealthPercentageUse / 100):##.#%}</color>");
                     if (item.m_shared.m_attack.m_drawStaminaDrain > 0.0)
                         text.Append($"\n$item_staminahold: " +
                             $"<color=orange>{item.m_shared.m_attack.m_drawStaminaDrain}</color>/s");
