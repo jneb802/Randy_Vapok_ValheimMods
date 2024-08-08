@@ -3,7 +3,7 @@
 namespace EpicLoot.MagicItemEffects
 {
     [HarmonyPatch(typeof(Attack), nameof(Attack.GetAttackHealth))]
-    public class ModifyAttackEitr_Attack_GetAttackHealth_Patch
+    public class ModifyAttackHealth_Attack_GetAttackHealth_Patch
     {
         public static void Postfix(Attack __instance, ref float __result)
         {
