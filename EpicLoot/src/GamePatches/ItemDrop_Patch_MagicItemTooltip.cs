@@ -49,7 +49,7 @@ namespace EpicLoot
             var text = new StringBuilder(256);
 
             var magicItem = item.GetMagicItem();
-
+            
             if (magicItem == null)
                 return true;
 
@@ -139,7 +139,13 @@ namespace EpicLoot
                     {
                         text.AppendFormat("\n$item_food_health: <color=orange>{0}</color>", item.m_shared.m_food);
                         text.AppendFormat("\n$item_food_stamina: <color=orange>{0}</color>", item.m_shared.m_foodStamina);
-                        text.AppendFormat("\n$item_food_duration: <color=orange>{0}s</color>", item.m_shared.m_foodBurnTime);
+
+                        var magicFoodDuration = localPlayer.HasActiveMagicEffect(MagicEffectType.ModifyFoodDuration);
+                        var magicFoodDurationColor = magicFoodDuration ? magicColor : "orange";
+                        var foodDurationPercentage = 1 + magicItem.GetTotalEffectValue(MagicEffectType.ModifyFoodDuration, 0.01f);
+                        var totalFoodDuration = foodDurationPercentage * (item.m_shared.m_foodBurnTime / 60f);
+                        if (item.m_shared.m_foodBurnTime > 0.0)
+                            text.Append($"\n$item_food_duration: <color={magicFoodDurationColor}>{totalFoodDuration:#.#}m</color>");
                         text.AppendFormat("\n$item_food_regen: <color=orange>{0} hp/tick</color>", item.m_shared.m_foodRegen);
                     }
 

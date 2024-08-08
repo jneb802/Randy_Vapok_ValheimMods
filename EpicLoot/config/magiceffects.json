@@ -1765,6 +1765,48 @@
       ]
     },
     {
+      "Type" : "ModifyFoodDuration",
+      "DisplayText" : "$mod_epicloot_me_modifyfoodduration_display",
+      "Description" : "$mod_epicloot_me_modifyfoodduration_desc",
+      "Requirements" : {
+        "AllowedItemTypes" : [
+          "Helmet",
+          "Chest",
+          "Legs",
+          "Shoulder",
+          "Utility"
+        ],
+        "ExcludedItemTypes" : [
+          "Shield",
+          "OneHandedWeapon",
+          "TwoHandedWeapon",
+          "TwoHandedWeaponLeft",
+          "Staff",
+          "Tool"
+        ],
+        "ExcludedItemNames" : [
+          "$item_hammer",
+          "$item_hoe",
+          "$item_cultivator",
+          "$item_fishingrod"
+        ]
+      },
+      "ValuesPerRarity" : {
+        "Magic"     : { "MinValue" : 2, "MaxValue" : 5, "Increment" : 1 },
+        "Rare"      : { "MinValue" : 5, "MaxValue" : 7, "Increment" : 1 },
+        "Epic"      : { "MinValue" : 7, "MaxValue" : 10, "Increment" : 1 },
+        "Legendary" : { "MinValue" : 10, "MaxValue" : 13, "Increment" : 1 },
+        "Mythic"    : { "MinValue" : 13, "MaxValue" : 20, "Increment" : 1 }
+      },
+      "SelectionWeight" : 1,
+      "Prefixes": [
+        "$mod_epicloot_me_modifyfoodduration_prefix1"
+      ],
+      "Suffixes": [
+        "$mod_epicloot_me_modifyfoodduration_suffix1"
+      ]
+    },
+    {
       "Type" : "ModifyBlockStaminaUse",
       "DisplayText" : "$mod_epicloot_me_modifyblockstaminause_display",
       "Description" : "$mod_epicloot_me_modifyblockstaminause_desc",
