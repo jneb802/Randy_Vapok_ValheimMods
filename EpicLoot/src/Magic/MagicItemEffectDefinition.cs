@@ -60,6 +60,8 @@ namespace EpicLoot
             if (ItemHasBackstabBonus) _flags.Add(nameof(ItemHasBackstabBonus));
             if (ItemUsesStaminaOnAttack) _flags.Add(nameof(ItemUsesStaminaOnAttack));
             if (ItemUsesEitrOnAttack) _flags.Add(nameof(ItemUsesEitrOnAttack));
+            if (ItemUsesHealthOnAttack) _flags.Add(nameof(ItemUsesHealthOnAttack));
+            if (ItemUsesDrawStaminaOnAttack) _flags.Add(nameof(ItemUsesDrawStaminaOnAttack));
 
             if (_flags.Count > 0)
             {
