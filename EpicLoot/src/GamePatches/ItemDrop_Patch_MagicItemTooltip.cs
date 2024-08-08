@@ -184,9 +184,14 @@ namespace EpicLoot
                     var totalHealthPercentageUse = healthUsePercentage * item.m_shared.m_attack.m_attackHealthPercentage;
                     if (item.m_shared.m_attack.m_attackHealthPercentage > 0.0)
                         text.Append($"\n$item_healthuse: <color={magicAttackHealthColor}>{(totalHealthPercentageUse / 100):##.#%}</color>");
+                    
+                    var attackDrawStamina = magicItem.HasEffect(MagicEffectType.ModifyDrawStaminaUse);
+                    var attackDrawStaminaColor = attackDrawStamina ? magicColor : "orange";
+                    var attackDrawStaminaPercentage = 1 - magicItem.GetTotalEffectValue(MagicEffectType.ModifyDrawStaminaUse, 0.01f);
+                    var totalattackDrawStamina = attackDrawStaminaPercentage * item.m_shared.m_attack.m_drawStaminaDrain;
                     if (item.m_shared.m_attack.m_drawStaminaDrain > 0.0)
                         text.Append($"\n$item_staminahold: " +
-                            $"<color=orange>{item.m_shared.m_attack.m_drawStaminaDrain}</color>/s");
+                            $"<color={attackDrawStaminaColor}>{totalattackDrawStamina:#.#}/s");
 
                     var baseBlockPower1 = item.GetBaseBlockPower(qualityLevel);
                     var blockPowerTooltipValue = item.GetBlockPowerTooltip(qualityLevel);

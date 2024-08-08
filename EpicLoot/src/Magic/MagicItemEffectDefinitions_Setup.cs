@@ -13,6 +13,7 @@ namespace EpicLoot
         public static string ModifyPhysicalDamage = nameof(ModifyPhysicalDamage);
         public static string ModifyElementalDamage = nameof(ModifyElementalDamage);
         public static string ModifyDurability = nameof(ModifyDurability);
+        public static string ModifyDrawStaminaUse = nameof(ModifyDrawStaminaUse);
         public static string ReduceWeight = nameof(ReduceWeight);
         public static string RemoveSpeedPenalty = nameof(RemoveSpeedPenalty);
         public static string ModifyBlockPower = nameof(ModifyBlockPower);

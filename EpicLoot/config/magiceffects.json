@@ -1693,6 +1693,49 @@
       ]
     },
     {
+      "Type" : "ModifyDrawStaminaUse",
+      "DisplayText" : "$mod_epicloot_me_modifydrawstaminause_display",
+      "Description" : "$mod_epicloot_me_modifydrawstaminause_desc",
+      "Requirements" : {
+        "AllowedItemTypes" : [
+          "Bow"
+        ],
+        "ExcludedItemTypes" : [
+          "Shield",
+          "OneHandedWeapon",
+          "TwoHandedWeapon",
+          "TwoHandedWeaponLeft",
+          "Staff",
+          "Tool",
+          "Helmet",
+          "Chest",
+          "Legs",
+          "Shoulder"
+        ],
+        "ExcludedItemNames" : [
+          "$item_hammer",
+          "$item_hoe",
+          "$item_cultivator",
+          "$item_fishingrod"
+        ],
+        "ItemUsesDrawStaminaOnAttack" : true
+      },
+      "ValuesPerRarity" : {
+        "Magic"     : { "MinValue" : 1, "MaxValue" : 3, "Increment" : 1 },
+        "Rare"      : { "MinValue" : 2, "MaxValue" : 6, "Increment" : 1 },
+        "Epic"      : { "MinValue" : 4, "MaxValue" : 9, "Increment" : 1 },
+        "Legendary" : { "MinValue" : 6, "MaxValue" : 12, "Increment" : 1 },
+        "Mythic"    : { "MinValue" : 9, "MaxValue" : 15, "Increment" : 1 }
+      },
+      "SelectionWeight" : 1,
+      "Prefixes": [
+        "$mod_epicloot_me_modifydrawstaminause_prefix1"
+      ],
+      "Suffixes": [
+        "$mod_epicloot_me_modifydrawstaminause_suffix1"
+      ]
+    },
+    {
       "Type" : "ModifyBlockStaminaUse",
       "DisplayText" : "$mod_epicloot_me_modifyblockstaminause_display",
       "Description" : "$mod_epicloot_me_modifyblockstaminause_desc",

@@ -38,6 +38,7 @@ namespace EpicLoot
         public bool ItemUsesStaminaOnAttack;
         public bool ItemUsesEitrOnAttack;
         public bool ItemUsesHealthOnAttack;
+        public bool ItemUsesDrawStaminaOnAttack;
 
         public List<string> CustomFlags;
 
@@ -319,6 +320,11 @@ namespace EpicLoot
             }
             
             if (ItemUsesHealthOnAttack && itemData.m_shared.m_attack.m_attackHealth <= 0 && itemData.m_shared.m_secondaryAttack.m_attackHealth <= 0)
+            {
+                return false;
+            }
+            
+            if (ItemUsesDrawStaminaOnAttack && itemData.m_shared.m_attack.m_drawStaminaDrain <= 0 && itemData.m_shared.m_secondaryAttack.m_drawStaminaDrain <= 0)
             {
                 return false;
             }
