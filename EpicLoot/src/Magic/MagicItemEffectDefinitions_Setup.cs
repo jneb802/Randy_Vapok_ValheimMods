@@ -60,6 +60,7 @@ namespace EpicLoot
         public static string ModifyAttackHealthUse = nameof(ModifyAttackHealthUse);
         public static string ModifyBlockStaminaUse = nameof(ModifyBlockStaminaUse);
         public static string ModifySummonHealth = nameof(ModifySummonHealth);
+        public static string ModifySummonDamage = nameof(ModifySummonDamage);
         public static string Indestructible = nameof(Indestructible);
         public static string Weightless = nameof(Weightless);
         public static string LifeSteal = nameof(LifeSteal);
