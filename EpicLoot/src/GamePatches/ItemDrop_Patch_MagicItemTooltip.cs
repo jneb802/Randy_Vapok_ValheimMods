@@ -159,13 +159,16 @@ namespace EpicLoot
                 case ItemDrop.ItemData.ItemType.Torch:
                     text.Append(GetDamageTooltipString(magicItem, item.GetDamage(qualityLevel,Game.m_worldLevel),
                         item.m_shared.m_skillType, magicColor));
-
+                    
+                    // This is used to remove the stamina use line in addition to showing health use line
+                    var magicBloodlust = magicItem.HasEffect(MagicEffectType.Bloodlust);
+                    
                     var magicAttackStamina = magicItem.HasEffect(MagicEffectType.ModifyAttackStaminaUse) ||
                         magicItem.HasEffect(MagicEffectType.ModifyBlockStaminaUse);
                     var magicAttackStaminaColor = magicAttackStamina ? magicColor : "orange";
                     var staminaUsePercentage = 1 - magicItem.GetTotalEffectValue(MagicEffectType.ModifyAttackStaminaUse, 0.01f);
                     var totalStaminaUse = staminaUsePercentage * item.m_shared.m_attack.m_attackStamina;
-                    if (item.m_shared.m_attack.m_attackStamina > 0.0)
+                    if (item.m_shared.m_attack.m_attackStamina > 0.0 && !magicBloodlust)
                         text.Append($"\n$item_staminause: <color={magicAttackStaminaColor}>{totalStaminaUse:#.#}</color>");
                     
                     var magicAttackEitr = magicItem.HasEffect(MagicEffectType.ModifyAttackEitrUse);
@@ -174,9 +177,16 @@ namespace EpicLoot
                     var totalEitrUse = eitrUsePercentage * item.m_shared.m_attack.m_attackEitr;
                     if (item.m_shared.m_attack.m_attackEitr > 0.0)
                         text.Append($"\n$item_eitruse: <color={magicAttackEitrColor}>{totalEitrUse:#.#}</color>");
-                    if (item.m_shared.m_attack.m_attackHealth > 0.0)
-                        text.Append($"\n$item_healthuse: " +
-                            $"<color=orange>{item.m_shared.m_attack.m_attackHealth}</color>");
+                    
+                    var magicBloodlustColor = magicBloodlust ? magicColor : "orange";
+                    var bloodlustHealthUse = item.m_shared.m_attack.m_attackHealth;
+                    if (magicBloodlust)
+                        text.Append($"\n$item_healthuse: <color={magicBloodlustColor}>{(bloodlustHealthUse):#}</color>");
+                    else
+                    {
+                        if (item.m_shared.m_attack.m_attackHealth > 0.0)
+                            text.Append($"\n$item_healthuse: " + $"<color=orange>{item.m_shared.m_attack.m_attackHealth}</color>");  
+                    }
                     
                     var magicAttackHealth = magicItem.HasEffect(MagicEffectType.ModifyAttackHealthUse);
                     var magicAttackHealthColor = magicAttackHealth ? magicColor : "orange";
