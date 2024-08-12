@@ -10,7 +10,7 @@ public class ModifySummonHealth
     private static readonly Dictionary<Humanoid, float> originalHealth = new Dictionary<Humanoid, float>();
     
     [HarmonyPatch(typeof(Attack), nameof(Attack.FireProjectileBurst))]
-    public class ModifySummonHealth_Attack_GetAttackHealth_Patch
+    public class ModifySummonHealth_Attack_FireProjectileBurst_Patch
     {
         public static void Prefix(Attack __instance)
         {
