@@ -2385,6 +2385,30 @@
       ]
     },
     {
+      "Type" : "ModifySummonHealth",
+      "DisplayText" : "$mod_epicloot_me_modifysummonhealth_display",
+      "Description" : "$mod_epicloot_me_modifysummonhealth_desc",
+      "Requirements" : {
+        "AllowedSkillTypes" : [
+          "BloodMagic"
+        ]
+      },
+      "ValuesPerRarity" : {
+        "Magic"     : { "MinValue" : 5, "MaxValue" : 10, "Increment" : 1 },
+        "Rare"      : { "MinValue" : 10, "MaxValue" : 15, "Increment" : 1 },
+        "Epic"      : { "MinValue" : 15, "MaxValue" : 20, "Increment" : 1 },
+        "Legendary" : { "MinValue" : 20, "MaxValue" : 30, "Increment" : 1 },
+        "Mythic"    : { "MinValue" : 30, "MaxValue" : 50, "Increment" : 1 }
+      },
+      "SelectionWeight" : 1,
+      "Prefixes": [
+        "$mod_epicloot_me_modifysummonhealth_prefix1"
+      ],
+      "Suffixes": [
+        "$mod_epicloot_me_modifysummonhealth_suffix1"
+      ]
+    },
+    {
       "Type" : "AddElementalMagicSkill",
       "DisplayText" : "$mod_epicloot_me_addelementalmagicskill_display",
       "Description" : "$mod_epicloot_me_addelementalmagicskill_desc",
