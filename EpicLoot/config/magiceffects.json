@@ -2019,6 +2019,23 @@
       ]
     },
     {
+      "Type" : "Warmth",
+      "DisplayText" : "$mod_epicloot_me_warmth_display",
+      "Description" : "$mod_epicloot_me_warmth_desc",
+      "Requirements" : {
+        "AllowedItemTypes" : [
+          "Shoulder"
+        ]
+      },
+      "SelectionWeight" : 1,
+      "Prefixes": [
+        "$mod_epicloot_me_warmth_prefix1"
+      ],
+      "Suffixes": [
+        "$mod_epicloot_me_warmth_suffix1"
+      ]
+    },
+    {
       "Type" : "Paralyze",
       "DisplayText" : "$mod_epicloot_me_paralyze_display",
       "Description" : "$mod_epicloot_me_paralyze_desc",
