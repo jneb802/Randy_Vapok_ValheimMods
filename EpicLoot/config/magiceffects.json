@@ -1940,6 +1940,45 @@
       ]
     },
     {
+      "Type" : "EitrLeech",
+      "DisplayText" : "$mod_epicloot_me_eitrleech_display",
+      "Description" : "$mod_epicloot_me_eitrleech_desc",
+      "Requirements" : {
+        "AllowedItemTypes" : [
+          "OneHandedWeapon",
+          "TwoHandedWeapon",
+          "TwoHandedWeaponLeft",
+          "Bow"
+        ],
+        "ExcludedSkillTypes": [
+          "Pickaxes"
+        ],
+        "AllowedRarities" : [
+          "Rare",
+          "Epic",
+          "Legendary",
+          "Mythic"
+        ],
+        "ExcludedItemNames": [
+          "$item_fishingrod"
+        ],
+        "ItemUsesStaminaOnAttack" : true
+      },
+      "ValuesPerRarity" : {
+        "Rare"      : { "MinValue" : 2, "MaxValue" : 5, "Increment" : 1 },
+        "Epic"      : { "MinValue" : 5, "MaxValue" : 10, "Increment" : 1 },
+        "Legendary" : { "MinValue" : 10, "MaxValue" : 15, "Increment" : 1 },
+        "Mythic"    : { "MinValue" : 15, "MaxValue" : 20, "Increment" : 1 }
+      },
+      "SelectionWeight" : 1,
+      "Prefixes": [
+        "$mod_epicloot_me_eitrleech_prefix1"
+      ],
+      "Suffixes": [
+        "$mod_epicloot_me_eitrleech_suffix1"
+      ]
+    },
+    {
       "Type" : "ModifyAttackSpeed",
       "DisplayText" : "$mod_epicloot_me_modifyattackspeed_display",
       "Description" : "$mod_epicloot_me_modifyattackspeed_desc",
