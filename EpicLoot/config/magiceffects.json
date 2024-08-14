@@ -2530,6 +2530,30 @@
       ]
     },
     {
+      "Type" : "ModifyWispRange",
+      "DisplayText" : "$mod_epicloot_me_modifywisprange_display",
+      "Description" : "$mod_epicloot_me_modifywisprange_desc",
+      "Requirements": {
+        "AllowedItemNames": [
+          "$item_demister"
+        ]
+      },
+      "ValuesPerRarity" : {
+        "Magic"     : { "MinValue" : 25, "MaxValue" : 50, "Increment" : 1 },
+        "Rare"      : { "MinValue" : 50, "MaxValue" : 75, "Increment" : 1 },
+        "Epic"      : { "MinValue" : 75, "MaxValue" : 100, "Increment" : 1 },
+        "Legendary" : { "MinValue" : 100, "MaxValue" : 150, "Increment" : 1 },
+        "Mythic"    : { "MinValue" : 150, "MaxValue" : 200, "Increment" : 1 }
+      },
+      "SelectionWeight" : 1,
+      "Prefixes": [
+        "$mod_epicloot_me_modifywisprange_prefix1"
+      ],
+      "Suffixes": [
+        "$mod_epicloot_me_modifywisprange_suffix1"
+      ]
+    },
+    {
       "Type" : "AddMovementSkills",
       "DisplayText" : "$mod_epicloot_me_addmovementskills_display",
       "Description" : "$mod_epicloot_me_addmovementskills_desc",
