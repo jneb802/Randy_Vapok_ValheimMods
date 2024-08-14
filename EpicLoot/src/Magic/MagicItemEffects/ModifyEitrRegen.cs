@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using System;
+using HarmonyLib;
 
 namespace EpicLoot.MagicItemEffects
 {
@@ -15,6 +16,11 @@ namespace EpicLoot.MagicItemEffects
                 ModifyWithLowHealth.Apply(player, MagicEffectType.ModifyEitrRegen, effect =>
                 {
                     regenValue += player.GetTotalActiveMagicEffectValue(effect, 0.01f);
+                });
+                ModifyPerSummonCount.ApplyOnlyForPerSummon(player, MagicEffectType.ModifyEitrRegen, effect =>
+                {
+                    var totalModifier = Math.Max(0, ModifyPerSummonCount.GetActiveSummons(player));
+                    regenValue += (totalModifier * player.GetTotalActiveMagicEffectValue(effect, 0.01f));
                 });
                 eitrMultiplier += regenValue;
             }

@@ -2907,6 +2907,44 @@
       ]
     },
     {
+      "Type" : "ModifyEitrRegenPerSummon",
+      "DisplayText" : "$mod_epicloot_me_modifyeitrregenpersummon_display",
+      "Description" : "$mod_epicloot_me_modifyeitrregenpersummon_desc",
+      "Requirements" : {
+        "AllowedItemTypes" : [
+          "Helmet",
+          "Chest",
+          "Legs",
+          "Shoulder",
+          "Utility",
+          "Shield",
+          "Tool",
+          "Torch",
+          "TwoHandedWeaponLeft"
+        ],
+        "ExcludedItemNames" : [
+          "$item_hammer",
+          "$item_hoe",
+          "$item_cultivator",
+          "$item_fishingrod"
+        ]
+      },
+      "ValuesPerRarity" : {
+        "Magic"     : { "MinValue" : 4, "MaxValue" : 8, "Increment" : 1 },
+        "Rare"      : { "MinValue" : 6, "MaxValue" : 13, "Increment" : 1 },
+        "Epic"      : { "MinValue" : 11, "MaxValue" : 18, "Increment" : 1 },
+        "Legendary" : { "MinValue" : 16, "MaxValue" : 23, "Increment" : 1 },
+        "Mythic"    : { "MinValue" : 21, "MaxValue" : 28, "Increment" : 1 }
+      },
+      "SelectionWeight" : 1,
+      "Prefixes": [
+        "$mod_epicloot_me_modifyeitrregenpersummon_prefix1"
+      ],
+      "Suffixes": [
+        "$mod_epicloot_me_modifyeitrregenpersummon_suffix1"
+      ]
+    },
+    {
       "Type" : "ModifyArmorLowHealth",
       "DisplayText" : "$mod_epicloot_me_modifyarmorlowhealth_display",
       "Description" : "$mod_epicloot_me_modifyarmorlowhealth_desc",
