@@ -168,10 +168,14 @@ namespace EpicLoot
                     if (item.m_shared.m_attack.m_attackStamina > 0.0)
                         text.Append($"\n$item_staminause: <color={magicAttackStaminaColor}>{totalStaminaUse:#.#}</color>");
                     
-                    var magicAttackEitr = magicItem.HasEffect(MagicEffectType.ModifyAttackEitrUse);
+                    var magicAttackEitr = magicItem.HasEffect(MagicEffectType.ModifyAttackEitrUse) || magicItem.HasEffect(MagicEffectType.DoubleMagicShot);
+                    var doubleMagicShot = magicItem.HasEffect(MagicEffectType.DoubleMagicShot);
                     var magicAttackEitrColor = magicAttackEitr ? magicColor : "orange";
                     var eitrUsePercentage = 1 - magicItem.GetTotalEffectValue(MagicEffectType.ModifyAttackEitrUse, 0.01f);
-                    var totalEitrUse = eitrUsePercentage * item.m_shared.m_attack.m_attackEitr;
+                    var totalEitrUse = doubleMagicShot
+                        ? eitrUsePercentage * (item.m_shared.m_attack.m_attackEitr * 2)
+                        : eitrUsePercentage * item.m_shared.m_attack.m_attackEitr;
+                       
                     if (item.m_shared.m_attack.m_attackEitr > 0.0)
                         text.Append($"\n$item_eitruse: <color={magicAttackEitrColor}>{totalEitrUse:#.#}</color>");
                     if (item.m_shared.m_attack.m_attackHealth > 0.0)
