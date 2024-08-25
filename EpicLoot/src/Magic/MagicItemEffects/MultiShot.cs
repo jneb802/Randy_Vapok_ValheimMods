@@ -1,4 +1,8 @@
-﻿using HarmonyLib;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection.Emit;
+using HarmonyLib;
 using UnityEngine;
 
 namespace EpicLoot.MagicItemEffects
@@ -6,6 +10,8 @@ namespace EpicLoot.MagicItemEffects
     [HarmonyPatch]
     public static class MultiShot
     {
+        public static bool isTripleShotActive = false;
+        
         [HarmonyPatch(typeof(Attack), nameof(Attack.FireProjectileBurst))]
         [HarmonyPrefix]
         public static void Attack_FireProjectileBurst_Prefix(Attack __instance)
@@ -42,4 +48,41 @@ namespace EpicLoot.MagicItemEffects
             }
         }
     }
+    
+    
+    /// <summary>
+    /// Patch to remove thrice ammo when using TripleShot
+    /// </summary>
+    [HarmonyPatch(typeof(Attack), nameof(Attack.UseAmmo))]
+    public static class UseAmmoTranspilerPatch
+    {
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var code = new List<CodeInstruction>(instructions);
+
+            
+            var removeItemMethod = AccessTools.Method(typeof(Inventory), nameof(Inventory.RemoveItem), new Type[] { typeof(ItemDrop.ItemData), typeof(int) });
+            
+            for (int i = 0; i < code.Count; i++)
+            {
+                if (code[i].Calls(removeItemMethod))
+                {
+                    code[i] = new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(UseAmmoTranspilerPatch), nameof(CustomRemoveItem)));
+                }
+            }
+            
+            return code.AsEnumerable();
+        }
+        
+        public static bool CustomRemoveItem(Inventory inventory, ItemDrop.ItemData item, int amount)
+        {
+            if (MultiShot.isTripleShotActive)
+            {
+                return inventory.RemoveItem(item, amount * 3);
+            }
+            
+            return inventory.RemoveItem(item, amount);
+        }
+    }
+
 }
