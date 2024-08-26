@@ -1,17 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Emit;
-using HarmonyLib;
-using UnityEngine;
+﻿using HarmonyLib;
 
 namespace EpicLoot.MagicItemEffects
 {
     [HarmonyPatch]
     public static class MultiShot
     {
-        public static bool isTripleShotActive = false;
-        
         [HarmonyPatch(typeof(Attack), nameof(Attack.FireProjectileBurst))]
         [HarmonyPrefix]
         public static void Attack_FireProjectileBurst_Prefix(Attack __instance)
@@ -38,18 +31,7 @@ namespace EpicLoot.MagicItemEffects
                 // this forces them to appear distinct and still feels good (greater AOE in lieu of accuracy)
                 if (__instance.m_projectileAccuracy < 2)
                     __instance.m_projectileAccuracy = 2;
-                
-                // The StaffIceShards uses a different system of calculating projectiles which is based on bursts.
-                // The StaffIceShards m_projectileBursts is set to 999 so conditional "!= 1" is meant to identify the StaffIceShards and similar modded weapons.
-                if (__instance.m_projectileBursts != 1)
-                {
-                    __instance.m_projectiles = 2;
-                }
-                else
-                {
-                    __instance.m_projectiles *= 2;
-                }
-                
+                __instance.m_projectiles = 2;
             }
             else if (tripleShot && itemType == ItemDrop.ItemData.ItemType.Bow && (skillType == Skills.SkillType.Bows || skillType == Skills.SkillType.Crossbows))
             {
@@ -59,41 +41,4 @@ namespace EpicLoot.MagicItemEffects
             }
         }
     }
-    
-    
-    /// <summary>
-    /// Patch to remove thrice ammo when using TripleShot
-    /// </summary>
-    [HarmonyPatch(typeof(Attack), nameof(Attack.UseAmmo))]
-    public static class UseAmmoTranspilerPatch
-    {
-        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
-        {
-            var code = new List<CodeInstruction>(instructions);
-
-            
-            var removeItemMethod = AccessTools.Method(typeof(Inventory), nameof(Inventory.RemoveItem), new Type[] { typeof(ItemDrop.ItemData), typeof(int) });
-            
-            for (int i = 0; i < code.Count; i++)
-            {
-                if (code[i].Calls(removeItemMethod))
-                {
-                    code[i] = new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(UseAmmoTranspilerPatch), nameof(CustomRemoveItem)));
-                }
-            }
-            
-            return code.AsEnumerable();
-        }
-        
-        public static bool CustomRemoveItem(Inventory inventory, ItemDrop.ItemData item, int amount)
-        {
-            if (MultiShot.isTripleShotActive)
-            {
-                return inventory.RemoveItem(item, amount * 3);
-            }
-            
-            return inventory.RemoveItem(item, amount);
-        }
-    }
-
 }
