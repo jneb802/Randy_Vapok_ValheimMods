@@ -38,7 +38,18 @@ namespace EpicLoot.MagicItemEffects
                 // this forces them to appear distinct and still feels good (greater AOE in lieu of accuracy)
                 if (__instance.m_projectileAccuracy < 2)
                     __instance.m_projectileAccuracy = 2;
-                __instance.m_projectiles = 2;
+                
+                // The StaffIceShards uses a different system of calculating projectiles which is based on bursts.
+                // The StaffIceShards m_projectileBursts is set to 999 so conditional "!= 1" is meant to identify the StaffIceShards and similar modded weapons.
+                if (__instance.m_projectileBursts != 1)
+                {
+                    __instance.m_projectiles = 2;
+                }
+                else
+                {
+                    __instance.m_projectiles *= 2;
+                }
+                
             }
             else if (tripleShot && itemType == ItemDrop.ItemData.ItemType.Bow && (skillType == Skills.SkillType.Bows || skillType == Skills.SkillType.Crossbows))
             {
