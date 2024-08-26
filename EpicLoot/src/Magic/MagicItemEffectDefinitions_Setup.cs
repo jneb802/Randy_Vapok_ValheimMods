@@ -66,6 +66,7 @@ namespace EpicLoot
         public static string Weightless = nameof(Weightless);
         public static string LifeSteal = nameof(LifeSteal);
         public static string EitrLeech = nameof(EitrLeech);
+        public static string Bloodlust = nameof(Bloodlust);
         public static string AddCarryWeight = nameof(AddCarryWeight);
         public static string ModifyAttackSpeed = nameof(ModifyAttackSpeed);
         public static string Throwable = nameof(Throwable);

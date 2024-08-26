@@ -1687,6 +1687,9 @@
       "DisplayText" : "$mod_epicloot_me_modifyattackstaminause_display",
       "Description" : "$mod_epicloot_me_modifyattackstaminause_desc",
       "Requirements" : {
+        "ExclusiveEffectTypes" : [
+          "Bloodlust"
+        ],
         "AllowedItemTypes" : [
           "OneHandedWeapon",
           "TwoHandedWeapon",
@@ -1719,6 +1722,41 @@
       ],
       "Suffixes": [
         "$mod_epicloot_me_modifyattackstaminause_suffix1"
+      ]
+    },
+    {
+      "Type" : "Bloodlust",
+      "DisplayText" : "$mod_epicloot_me_bloodlust_display",
+      "Description" : "$mod_epicloot_me_bloodlust_desc",
+      "Requirements" : {
+        "ExclusiveEffectTypes" : [
+          "ModifyAttackStaminaUse"
+        ],
+        "AllowedItemTypes" : [
+          "OneHandedWeapon",
+          "TwoHandedWeapon",
+          "TwoHandedWeaponLeft",
+          "Bow",
+          "Torch",
+          "Tool"
+        ],
+        "ExcludedItemTypes" : [
+          "Staff"
+        ],
+        "ExcludedItemNames" : [
+          "$item_hammer",
+          "$item_hoe",
+          "$item_cultivator",
+          "$item_fishingrod"
+        ],
+        "ItemUsesStaminaOnAttack" : true
+      },
+      "SelectionWeight" : 1,
+      "Prefixes": [
+        "$mod_epicloot_me_bloodlust_prefix1"
+      ],
+      "Suffixes": [
+        "$mod_epicloot_me_bloodlust_suffix1"
       ]
     },
     {
