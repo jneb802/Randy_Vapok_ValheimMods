@@ -1,3 +1,8 @@
+## Version 0.10.3
+
+* Hot fix for Sacrificing item selecting the wrong item in the inventory.
+* Increased minimum required version to 10.0.
+
 ## Version 0.10.2
 
 * Set fallback gambling Coins from 1 to 10000 when misconfigured.
