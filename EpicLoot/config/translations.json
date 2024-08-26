@@ -152,6 +152,9 @@
     "mod_epicloot_se_berserker_tooltip": "You cannot regenerate health, but deal +50% to +200% damage based on health missing.",
     "mod_epicloot_se_berserker_startmessage": "Raaaage!!",
 
+    "mod_epicloot_itemtooltip_rarity": "Rarity",
+    "mod_epicloot_itemtooltip_effects": "Effects",
+
     "mod_epicloot_bounties_claimedmsg": "Bounty Claimed!",
     "mod_epicloot_bounties_completemsg": "Bounty Vanquished!",
     "mod_epicloot_bounties_locatingmsg": "Locating Bounty Target...",
