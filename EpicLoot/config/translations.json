@@ -752,7 +752,7 @@
     "mod_epicloot_me_modifyattackstaminause_suffix1": "the Gladiator",
     "mod_epicloot_me_modifyattackstaminause_desc": "Reduce the player's attack stamina usage by -<b><color=yellow>X</color></b>%.",
     "mod_epicloot_me_bloodlust_display": "Bloodlust",
-    "mod_epicloot_mebloodlust_prefix1": "Vampires",
+    "mod_epicloot_me_bloodlust_prefix1": "Vampire's",
     "mod_epicloot_me_bloodlust_suffix1": "the Vampire",
     "mod_epicloot_me_bloodlust_desc": "Attacks use health instead of stamina, equal to original stamina use.",
     "mod_epicloot_me_modifyattackeitruse_display": "Attack Eitr Use -{0:0.#}%",
