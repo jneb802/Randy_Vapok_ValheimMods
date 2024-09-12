@@ -38,15 +38,20 @@ namespace EpicLoot.MagicItemEffects
                 // in case weapon's durability is destroyed after hit?
                 // OR in case damage is delayed and player hides weapon
                 if (weapon == null || !weapon.IsMagic() || !(attacker is Player player))
-                    return;
+                {
+                    return; 
+                }
+                    
 
                 var eitrleechMultiplier = 0f;
                 eitrleechMultiplier += MagicEffectsHelper.GetTotalActiveMagicEffectValueForWeapon(
                     player, weapon, MagicEffectType.EitrLeech, 0.01f);
-                    
+
 
                 if (eitrleechMultiplier == 0)
-                    return;
+                {
+                    return; 
+                }
                 
                 float eitrLeechAmount = hit.m_damage.GetTotalDamage() * eitrleechMultiplier;
                 
