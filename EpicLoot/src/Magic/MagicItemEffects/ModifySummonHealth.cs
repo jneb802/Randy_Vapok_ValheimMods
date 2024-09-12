@@ -14,59 +14,67 @@ public class ModifySummonHealth
     {
         public static void Prefix(Attack __instance)
         {
-            if (__instance.m_character is Player player 
-                    && MagicEffectsHelper.HasActiveMagicEffect(player, __instance.m_weapon, MagicEffectType.ModifySummonHealth)
-                    && __instance.m_attackProjectile != null)
+            if (!(__instance.m_character is Player player) || 
+                !MagicEffectsHelper.HasActiveMagicEffect(player, __instance.m_weapon, MagicEffectType.ModifySummonHealth) || 
+                __instance.m_attackProjectile == null)
             {
-                // Debug.Log("Item with name " + __instance.m_weapon.m_shared.m_name + " has ModifySummonHealth and AttackProjectile is not null");
-                
-                var spawnProjectile = __instance.m_attackProjectile;
-                if (spawnProjectile.TryGetComponent<SpawnAbility>(out var spawnAbility))
-                {
-                    // Debug.Log("Got spawnAbility with name: " + spawnAbility);
-                    var spawnPrefab = spawnAbility.m_spawnPrefab[0];
-                    if (spawnPrefab != null)
-                    {
-                        // Debug.Log("Got spawnPrefab with name: " + spawnPrefab);
-                        if (spawnPrefab.TryGetComponent<Humanoid>(out var humanoid))
-                        {
-                            if (!originalHealth.ContainsKey(humanoid))
-                            {
-                                originalHealth[humanoid] = humanoid.m_health;
-                            }
-                            
-                            // Debug.Log("Got humanoid with name:");
-                            // Debug.Log("Original summon health is: " + humanoid.m_health);
-                            float modifier = player.GetTotalActiveMagicEffectValue(MagicEffectType.ModifySummonHealth, 0.01f);
-                            humanoid.m_health *= 1 + modifier;
-                            // Debug.Log("Updated summon health is: " + humanoid.m_health);
-                        }
-                    }
-                }
+                return;
             }
+            
+            if (!__instance.m_attackProjectile.TryGetComponent<SpawnAbility>(out var spawnAbility))
+            {
+                return;
+            }
+            
+            var spawnPrefab = spawnAbility.m_spawnPrefab[0];
+            if (spawnPrefab == null)
+            {
+                return;
+            }
+            
+            if (!spawnPrefab.TryGetComponent<Humanoid>(out var humanoid))
+            {
+                return;
+            }
+            
+            if (!originalHealth.ContainsKey(humanoid))
+            {
+                originalHealth[humanoid] = humanoid.m_health;
+            }
+            
+            float modifier = player.GetTotalActiveMagicEffectValue(MagicEffectType.ModifySummonHealth, 0.01f);
+            humanoid.m_health *= 1 + modifier;
         }
 
         public static void Postfix(Attack __instance)
         {
-            if (__instance.m_attackProjectile != null)
+            if (__instance.m_attackProjectile == null)
             {
-                var spawnProjectile = __instance.m_attackProjectile;
-                if (spawnProjectile.TryGetComponent<SpawnAbility>(out var spawnAbility))
-                {
-                    var spawnPrefab = spawnAbility.m_spawnPrefab[0];
-                    if (spawnPrefab != null)
-                    {
-                        if (spawnPrefab.TryGetComponent<Humanoid>(out var humanoid))
-                        {
-                            if (originalHealth.TryGetValue(humanoid, out var origHealth))
-                            {
-                                // Revert health back to original value
-                                humanoid.m_health = origHealth;
-                                originalHealth.Remove(humanoid); // Clean up the dictionary
-                            }
-                        }
-                    }
-                }
+                return;
+            }
+            
+            var spawnProjectile = __instance.m_attackProjectile;
+            if (!spawnProjectile.TryGetComponent<SpawnAbility>(out var spawnAbility))
+            {
+                return;
+            }
+            
+            var spawnPrefab = spawnAbility.m_spawnPrefab[0];
+            
+            if (spawnPrefab == null)
+            {
+                return;
+            }
+            
+            if (!spawnPrefab.TryGetComponent<Humanoid>(out var humanoid))
+            {
+                return;
+            }
+            
+            if (originalHealth.TryGetValue(humanoid, out var origHealth))
+            {
+                humanoid.m_health = origHealth;
+                originalHealth.Remove(humanoid);
             }
         }
     }
