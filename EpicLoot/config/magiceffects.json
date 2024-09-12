@@ -1615,14 +1615,6 @@
       "DisplayText" : "$mod_epicloot_me_modifyattackeitruse_display",
       "Description" : "$mod_epicloot_me_modifyattackeitruse_desc",
       "Requirements" : {
-        "AllowedItemTypes" : [
-          "Staff"
-        ],
-        "ExcludedItemTypes" : [
-          "Bow",
-          "Torch",
-          "Tool"
-        ],
         "ExcludedItemNames" : [
           "$item_hammer",
           "$item_hoe",
@@ -1651,14 +1643,6 @@
       "DisplayText" : "$mod_epicloot_me_modifyattackhealthuse_display",
       "Description" : "$mod_epicloot_me_modifyattackhealthuse_desc",
       "Requirements" : {
-        "AllowedItemTypes" : [
-          "Staff"
-        ],
-        "ExcludedItemTypes" : [
-          "Bow",
-          "Torch",
-          "Tool"
-        ],
         "ExcludedItemNames" : [
           "$item_hammer",
           "$item_hoe",
@@ -1735,13 +1719,7 @@
         "AllowedItemTypes" : [
           "OneHandedWeapon",
           "TwoHandedWeapon",
-          "TwoHandedWeaponLeft",
-          "Bow",
-          "Torch",
-          "Tool"
-        ],
-        "ExcludedItemTypes" : [
-          "Staff"
+          "TwoHandedWeaponLeft"
         ],
         "ExcludedItemNames" : [
           "$item_hammer",
@@ -1766,18 +1744,6 @@
       "Requirements" : {
         "AllowedItemTypes" : [
           "Bow"
-        ],
-        "ExcludedItemTypes" : [
-          "Shield",
-          "OneHandedWeapon",
-          "TwoHandedWeapon",
-          "TwoHandedWeaponLeft",
-          "Staff",
-          "Tool",
-          "Helmet",
-          "Chest",
-          "Legs",
-          "Shoulder"
         ],
         "ExcludedItemNames" : [
           "$item_hammer",
@@ -1999,8 +1965,7 @@
         ],
         "ExcludedItemNames": [
           "$item_fishingrod"
-        ],
-        "ItemUsesStaminaOnAttack" : true
+        ]
       },
       "ValuesPerRarity" : {
         "Rare"      : { "MinValue" : 2, "MaxValue" : 5, "Increment" : 1 },
