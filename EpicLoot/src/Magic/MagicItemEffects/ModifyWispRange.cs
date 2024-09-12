@@ -10,30 +10,31 @@ namespace EpicLoot.MagicItemEffects
         
         public static void Prefix(SE_Demister __instance)
         {
-            if (__instance.m_character.IsPlayer())
+            if (!__instance.m_character.IsPlayer() || __instance.m_ballPrefab == null)
             {
-                var player = (Player)__instance.m_character;
+                return;
+            }
+            
+            var forceField = __instance.m_ballPrefab.GetComponentInChildren<ParticleSystemForceField>();
+            if (forceField == null)
+            {
+                return;
+            }
+            
+            if (_originalEndRange < 0)
+            {
+                _originalEndRange = forceField.endRange;
+            }
+            
+            Player player = (Player)__instance.m_character;
+            if (player.HasActiveMagicEffect(MagicEffectType.ModifyWispRange))
+            {
                 var multiplier = player.GetTotalActiveMagicEffectValue(MagicEffectType.ModifyWispRange, 0.01f);
-                
-                var ball = __instance.m_ballPrefab;
-                if (ball != null)
-                {
-                    var forceField = ball.GetComponentInChildren<ParticleSystemForceField>();
-                    if (forceField != null)
-                    {
-                        if (_originalEndRange < 0)
-                        {
-                            _originalEndRange = forceField.endRange;
-                        }
-                        
-                        if (player.HasActiveMagicEffect(MagicEffectType.ModifyWispRange))
-                        {
-                            forceField.endRange = _originalEndRange * (1 + multiplier);
-                            return;
-                        }
-                        forceField.endRange = _originalEndRange;
-                    }
-                }
+                forceField.endRange = _originalEndRange * (1 + multiplier);
+            }
+            else
+            {
+                forceField.endRange = _originalEndRange;
             }
         }
     }
