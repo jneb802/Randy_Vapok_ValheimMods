@@ -1725,7 +1725,12 @@
           "$item_hammer",
           "$item_hoe",
           "$item_cultivator",
-          "$item_fishingrod"
+          "$item_fishingrod",
+          "$item_pickaxe_antler",
+          "$item_pickaxe_blackmetal",
+          "$item_pickaxe_bronze",
+          "$item_pickaxe_iron",
+          "$item_pickaxe_stone"
         ],
         "ItemUsesStaminaOnAttack" : true
       },
