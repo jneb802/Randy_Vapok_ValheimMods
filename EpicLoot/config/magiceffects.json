@@ -404,9 +404,9 @@
       ]
     },
     {
-      "Type" : "IncreaseOreDrop",
-      "DisplayText" : "$mod_epicloot_me_increaseoredrop_display",
-      "Description" : "$mod_epicloot_me_increaseoredrop_desc",
+      "Type" : "IncreaseMiningDrop",
+      "DisplayText" : "$mod_epicloot_me_increaseminingdrop_display",
+      "Description" : "$mod_epicloot_me_increaseminingdrop_desc",
       "Requirements" : {
         "AllowedItemNames": [
           "$item_pickaxe_antler",
@@ -428,10 +428,10 @@
       },
       "SelectionWeight" : 1,
       "Prefixes": [
-        "$mod_epicloot_me_increaseoredrop_prefix1"
+        "$mod_epicloot_me_increaseminingdrop_prefix1"
       ],
       "Suffixes": [
-        "$mod_epicloot_me_increaseoredrop_suffix1"
+        "$mod_epicloot_me_increaseminingdrop_suffix1"
       ]
     },
     {

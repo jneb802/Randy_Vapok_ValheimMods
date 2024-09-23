@@ -20,7 +20,7 @@ namespace EpicLoot
         public static string ModifyParry = nameof(ModifyParry);
         public static string ModifyArmor = nameof(ModifyArmor);
         public static string ModifyBackstab = nameof(ModifyBackstab);
-        public static string IncreaseOreDrop = nameof(IncreaseOreDrop);
+        public static string IncreaseMiningDrop = nameof(IncreaseMiningDrop);
         public static string IncreaseHealth = nameof(IncreaseHealth);
         public static string IncreaseStamina = nameof(IncreaseStamina);
         public static string IncreaseEitr = nameof(IncreaseEitr);
