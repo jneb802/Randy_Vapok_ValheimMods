@@ -560,6 +560,36 @@
       ]
     },
     {
+      "Type" : "DecreaseForsakenCooldown",
+      "DisplayText" : "$mod_epicloot_me_decreaseforsakencooldown_display",
+      "Description" : "$mod_epicloot_me_decreaseforsakencooldown_desc",
+      "Requirements" : {
+        "AllowedItemTypes" : [
+          "Helmet",
+          "Utility"
+        ],
+        "AllowedRarities" : [
+          "Rare",
+          "Epic",
+          "Legendary",
+          "Mythic"
+        ]
+      },
+      "ValuesPerRarity" : {
+        "Rare"      : { "MinValue" : 5, "MaxValue" : 10, "Increment" : 1 },
+        "Epic"      : { "MinValue" : 10, "MaxValue" : 15, "Increment" : 1 },
+        "Legendary" : { "MinValue" : 15, "MaxValue" : 20, "Increment" : 1 },
+        "Mythic"    : { "MinValue" : 20, "MaxValue" : 25, "Increment" : 1 }
+      },
+      "SelectionWeight" : 1,
+      "Prefixes": [
+        "$mod_epicloot_me_decreaseforsakencooldown_prefix1"
+      ],
+      "Suffixes": [
+        "$mod_epicloot_me_decreaseforsakencooldown_suffix1"
+      ]
+    },
+    {
       "Type" : "ModifyHealthRegen",
       "DisplayText" : "$mod_epicloot_me_modifyhealthregen_display",
       "Description" : "$mod_epicloot_me_modifyhealthregen_desc",

@@ -25,6 +25,7 @@ namespace EpicLoot
         public static string IncreaseHealth = nameof(IncreaseHealth);
         public static string IncreaseStamina = nameof(IncreaseStamina);
         public static string IncreaseEitr = nameof(IncreaseEitr);
+        public static string DecreaseForsakenCooldown = nameof(DecreaseForsakenCooldown);
         public static string ModifyHealthRegen = nameof(ModifyHealthRegen);
         public static string AddHealthRegen = nameof(AddHealthRegen);
         public static string ModifyStaminaRegen = nameof(ModifyStaminaRegen);
