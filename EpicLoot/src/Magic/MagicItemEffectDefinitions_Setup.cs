@@ -66,6 +66,7 @@ namespace EpicLoot
         public static string ModifySummonDamage = nameof(ModifySummonDamage);
         public static string ModifyWispRange = nameof(ModifyWispRange);
         public static string Indestructible = nameof(Indestructible);
+        public static string CoinHoarder = nameof(CoinHoarder);
         public static string Weightless = nameof(Weightless);
         public static string LifeSteal = nameof(LifeSteal);
         public static string EitrLeech = nameof(EitrLeech);

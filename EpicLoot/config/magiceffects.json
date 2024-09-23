@@ -1929,6 +1929,40 @@
       ]
     },
     {
+      "Type" : "CoinHoarder",
+      "DisplayText" : "$mod_epicloot_me_coinhoarder_display",
+      "Description" : "$mod_epicloot_me_coinhoarder_desc",
+      "Requirements" : {
+        "ExclusiveEffectTypes" : [
+          "ModifyDamage",
+          "ModifyElementalDamage"
+        ],
+        "AllowedItemTypes" : [
+          "OneHandedWeapon",
+          "TwoHandedWeapon",
+          "TwoHandedWeaponLeft",
+          "Staff"
+        ],
+        "ExcludedItemNames" : [
+          "$item_fishingrod"
+        ]
+      },
+      "ValuesPerRarity" : {
+        "Magic"     : { "MinValue" : 1, "MaxValue" : 2, "Increment" : 1 },
+        "Rare"      : { "MinValue" : 2, "MaxValue" : 4, "Increment" : 1 },
+        "Epic"      : { "MinValue" : 4, "MaxValue" : 6, "Increment" : 1 },
+        "Legendary" : { "MinValue" : 6, "MaxValue" : 8, "Increment" : 1 },
+        "Mythic"    : { "MinValue" : 8, "MaxValue" : 10, "Increment" : 1 }
+      },
+      "SelectionWeight" : 1,
+      "Prefixes": [
+        "$mod_epicloot_me_coinhoarder_prefix1"
+      ],
+      "Suffixes": [
+        "$mod_epicloot_me_coinhoarder_suffix1"
+      ]
+    },
+    {
       "Type" : "Weightless",
       "DisplayText" : "$mod_epicloot_me_weightless_display",
       "Description" : "$mod_epicloot_me_weightless_desc",

@@ -2,6 +2,7 @@
 using System.Text;
 using EpicLoot.Crafting;
 using EpicLoot.Data;
+using EpicLoot.MagicItemEffects;
 using HarmonyLib;
 using JetBrains.Annotations;
 using UnityEngine;
@@ -402,6 +403,7 @@ namespace EpicLoot
             var lightningMagic = item.HasEffect(MagicEffectType.AddLightningDamage);
             var poisonMagic = item.HasEffect(MagicEffectType.AddPoisonDamage);
             var spiritMagic = item.HasEffect(MagicEffectType.AddSpiritDamage);
+            var coinHoarderMagic = CoinHoarder.GetCoinHoarderValue(Player.m_localPlayer) > 0;
             Player.m_localPlayer.GetSkills().GetRandomSkillRange(out var min, out var max, skillType);
             var str = "";
             if (instance.m_damage != 0.0)
@@ -410,42 +412,42 @@ namespace EpicLoot
             }
             if (instance.m_blunt != 0.0)
             {
-                var magic = allMagic || physMagic || bluntMagic;
+                var magic = allMagic || physMagic || bluntMagic || coinHoarderMagic;
                 str = str + "\n$inventory_blunt: " + DamageRange(instance.m_blunt, min, max, magic, magicColor);
             }
             if (instance.m_slash != 0.0)
             {
-                var magic = allMagic || physMagic || slashMagic;
+                var magic = allMagic || physMagic || slashMagic || coinHoarderMagic;
                 str = str + "\n$inventory_slash: " + DamageRange(instance.m_slash, min, max, magic, magicColor);
             }
             if (instance.m_pierce != 0.0)
             {
-                var magic = allMagic || physMagic || pierceMagic;
+                var magic = allMagic || physMagic || pierceMagic || coinHoarderMagic;
                 str = str + "\n$inventory_pierce: " + DamageRange(instance.m_pierce, min, max, magic, magicColor);
             }
             if (instance.m_fire != 0.0)
             {
-                var magic = allMagic || elemMagic || fireMagic;
+                var magic = allMagic || elemMagic || fireMagic || coinHoarderMagic;
                 str = str + "\n$inventory_fire: " + DamageRange(instance.m_fire, min, max, magic, magicColor);
             }
             if (instance.m_frost != 0.0)
             {
-                var magic = allMagic || elemMagic || frostMagic;
+                var magic = allMagic || elemMagic || frostMagic || coinHoarderMagic;
                 str = str + "\n$inventory_frost: " + DamageRange(instance.m_frost, min, max, magic, magicColor);
             }
             if (instance.m_lightning != 0.0)
             {
-                var magic = allMagic || elemMagic || lightningMagic;
+                var magic = allMagic || elemMagic || lightningMagic || coinHoarderMagic;
                 str = str + "\n$inventory_lightning: " + DamageRange(instance.m_lightning, min, max, magic, magicColor);
             }
             if (instance.m_poison != 0.0)
             {
-                var magic = allMagic || elemMagic || poisonMagic;
+                var magic = allMagic || elemMagic || poisonMagic || coinHoarderMagic;
                 str = str + "\n$inventory_poison: " + DamageRange(instance.m_poison, min, max, magic, magicColor);
             }
             if (instance.m_spirit != 0.0)
             {
-                var magic = allMagic || elemMagic || spiritMagic;
+                var magic = allMagic || elemMagic || spiritMagic || coinHoarderMagic;
                 str = str + "\n$inventory_spirit: " + DamageRange(instance.m_spirit, min, max, magic, magicColor);
             }
             return str;
