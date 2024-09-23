@@ -28,6 +28,7 @@ namespace EpicLoot
         public List<string> ExcludedItemNames = new List<string>();
         public bool ItemHasPhysicalDamage;
         public bool ItemHasElementalDamage;
+        public bool ItemHasChopDamage;
         public bool ItemUsesDurability;
         public bool ItemHasNegativeMovementSpeedModifier;
         public bool ItemHasBlockPower;
@@ -51,6 +52,7 @@ namespace EpicLoot
             if (ExclusiveSelf) _flags.Add(nameof(ExclusiveSelf));
             if (ItemHasPhysicalDamage) _flags.Add(nameof(ItemHasPhysicalDamage));
             if (ItemHasElementalDamage) _flags.Add(nameof(ItemHasElementalDamage));
+            if (ItemHasChopDamage) _flags.Add(nameof(ItemHasChopDamage));
             if (ItemUsesDurability) _flags.Add(nameof(ItemUsesDurability));
             if (ItemHasNegativeMovementSpeedModifier) _flags.Add(nameof(ItemHasNegativeMovementSpeedModifier));
             if (ItemHasBlockPower) _flags.Add(nameof(ItemHasBlockPower));
@@ -272,6 +274,11 @@ namespace EpicLoot
             }
 
             if (ItemHasElementalDamage && itemData.m_shared.m_damages.GetTotalElementalDamage() <= 0)
+            {
+                return false;
+            }
+            
+            if (ItemHasChopDamage && itemData.m_shared.m_damages.m_chop <= 0)
             {
                 return false;
             }
