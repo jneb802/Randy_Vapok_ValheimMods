@@ -404,6 +404,37 @@
       ]
     },
     {
+      "Type" : "IncreaseOreDrop",
+      "DisplayText" : "$mod_epicloot_me_increaseoredrop_display",
+      "Description" : "$mod_epicloot_me_increaseoredrop_desc",
+      "Requirements" : {
+        "AllowedItemNames": [
+          "$item_pickaxe_antler",
+          "$item_pickaxe_blackmetal",
+          "$item_pickaxe_bronze",
+          "$item_pickaxe_iron",
+          "$item_pickaxe_stone"
+        ],
+        "AllowedRarities" : [
+          "Epic",
+          "Legendary",
+          "Mythic"
+        ]
+      },
+      "ValuesPerRarity" : {
+        "Epic"      : { "MinValue" : 1, "MaxValue" : 1, "Increment" : 1 },
+        "Legendary" : { "MinValue" : 1, "MaxValue" : 2, "Increment" : 1 },
+        "Mythic"    : { "MinValue" : 2, "MaxValue" : 3, "Increment" : 1 }
+      },
+      "SelectionWeight" : 1,
+      "Prefixes": [
+        "$mod_epicloot_me_increaseoredrop_prefix1"
+      ],
+      "Suffixes": [
+        "$mod_epicloot_me_increaseoredrop_suffix1"
+      ]
+    },
+    {
       "Type" : "IncreaseHealth",
       "DisplayText" : "$mod_epicloot_me_increasehealth_display",
       "Description" : "$mod_epicloot_me_increasehealth_desc",
