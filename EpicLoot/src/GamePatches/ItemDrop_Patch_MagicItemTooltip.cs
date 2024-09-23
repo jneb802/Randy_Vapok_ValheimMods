@@ -91,10 +91,23 @@ namespace EpicLoot
                 magicItem.HasEffect(MagicEffectType.Weightless) ? magicColor : "orange";
             text.Append($"\n$item_weight: <color={weightColor}>{item.GetWeight():0.0}</color>");
 
-            if (item.m_shared.m_maxQuality > 1)
+            var magicWeaponQuality = localPlayer.HasActiveMagicEffect(MagicEffectType.ModifyWeaponQuality);
+            var weaponQualityModifier = localPlayer.GetTotalActiveMagicEffectValue(MagicEffectType.ModifyWeaponQuality);
+            var weaponQuality = qualityLevel;
+            var totalMagicQuality = weaponQuality + weaponQualityModifier;
+            if ((magicWeaponQuality || item.m_shared.m_maxQuality > 0) && localPlayer != null && item.m_equipped)
             {
-                text.AppendFormat("\n$item_quality: <color=orange>{0}</color>", qualityLevel);
+                var magicQualityColor = magicWeaponQuality ? magicColor : "orange";
+                text.Append($"\n$item_quality: <color={magicQualityColor}>{totalMagicQuality:#.#}</color>");
             }
+            else
+            {
+                if (item.m_shared.m_maxQuality > 1)
+                {
+                    text.AppendFormat("\n$item_quality: <color=orange>{0}</color>", qualityLevel);
+                } 
+            }
+            
 
             var indestructible = magicItem.HasEffect(MagicEffectType.Indestructible);
             if (!indestructible && item.m_shared.m_useDurability)

@@ -54,6 +54,7 @@ namespace EpicLoot
         public static string AddPiercingResistancePercentage = nameof(AddPiercingResistancePercentage);
         public static string AddChoppingResistancePercentage = nameof(AddChoppingResistancePercentage);
         public static string AddPhysicalResistancePercentage = nameof(AddPhysicalResistancePercentage);
+        public static string ModifyWeaponQuality = nameof(ModifyWeaponQuality);
         public static string ModifyMovementSpeed = nameof(ModifyMovementSpeed);
         public static string ModifySprintStaminaUse = nameof(ModifySprintStaminaUse);
         public static string ModifyDodgeStaminaUse = nameof(ModifyDodgeStaminaUse);
