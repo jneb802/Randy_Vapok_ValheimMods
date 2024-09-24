@@ -209,7 +209,8 @@
       "Description" : "$mod_epicloot_me_reduceweight_desc",
       "Requirements" : {
         "ExclusiveEffectTypes" : [
-          "Weightless"
+          "Weightless",
+          "ReduceInventoryWeight"
         ],
         "AllowedItemTypes" : [
           "OneHandedWeapon",
@@ -241,6 +242,36 @@
       ],
       "Suffixes": [
         "$mod_epicloot_me_reduceweight_suffix1"
+      ]
+    },
+    {
+      "Type" : "ReduceInventoryWeight",
+      "DisplayText" : "$mod_epicloot_me_reduceinventoryweight_display",
+      "Description" : "$mod_epicloot_me_reduceinventoryweight_desc",
+      "Requirements" : {
+        "ExclusiveEffectTypes" : [
+          "Weightless",
+          "ReduceWeight"
+        ],
+        "AllowedItemTypes" : [
+          "Helmet",
+          "Shoulder",
+          "Utility"
+        ]
+      },
+      "ValuesPerRarity" : {
+        "Magic"     : { "MinValue" : 2, "MaxValue" : 4, "Increment" : 1 },
+        "Rare"      : { "MinValue" : 4, "MaxValue" : 6, "Increment" : 1 },
+        "Epic"      : { "MinValue" : 6, "MaxValue" : 10, "Increment" : 1 },
+        "Legendary" : { "MinValue" : 10, "MaxValue" : 15, "Increment" : 1 },
+        "Mythic"    : { "MinValue" : 15, "MaxValue" : 20, "Increment" : 1 }
+      },
+      "SelectionWeight" : 1,
+      "Prefixes": [
+        "$mod_epicloot_me_reduceinventoryweight_prefix1"
+      ],
+      "Suffixes": [
+        "$mod_epicloot_me_reduceinventoryweight_suffix1"
       ]
     },
     {
@@ -1968,7 +1999,8 @@
       "Description" : "$mod_epicloot_me_weightless_desc",
       "Requirements" : {
         "ExclusiveEffectTypes" : [
-          "ReduceWeight"
+          "ReduceWeight",
+          "ReduceInventoryWeight"
         ],
         "AllowedItemTypes" : [
           "OneHandedWeapon",
