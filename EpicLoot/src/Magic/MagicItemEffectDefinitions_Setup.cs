@@ -107,6 +107,7 @@ namespace EpicLoot
         public static string ModifyDiscoveryRadius = nameof(ModifyDiscoveryRadius);
         public static string FreeBuild = nameof(FreeBuild);
         public static string Comfortable = nameof(Comfortable);
+        public static string ModifyLowHealth = nameof(ModifyLowHealth);
         public static string ModifyMovementSpeedLowHealth = nameof(ModifyMovementSpeedLowHealth);
         public static string ModifyHealthRegenLowHealth = nameof(ModifyHealthRegenLowHealth);
         public static string ModifyStaminaRegenLowHealth = nameof(ModifyStaminaRegenLowHealth);

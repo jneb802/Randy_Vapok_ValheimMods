@@ -653,6 +653,32 @@
       ]
     },
     {
+      "Type" : "ModifyLowHealth",
+      "DisplayText" : "$mod_epicloot_me_modifylowhealth_display",
+      "Description" : "$mod_epicloot_me_modifylowhealth_desc",
+      "Requirements" : {
+        "AllowedItemTypes" : [
+          "Helmet",
+          "Shoulder",
+          "Utility"
+        ]
+      },
+      "ValuesPerRarity" : {
+        "Magic"     : { "MinValue" : 5, "MaxValue" : 10, "Increment" : 1 },
+        "Rare"      : { "MinValue" : 10, "MaxValue" : 15, "Increment" : 1 },
+        "Epic"      : { "MinValue" : 15, "MaxValue" : 20, "Increment" : 1 },
+        "Legendary" : { "MinValue" : 20, "MaxValue" : 25, "Increment" : 1 },
+        "Mythic"    : { "MinValue" : 25, "MaxValue" : 30, "Increment" : 1 }
+      },
+      "SelectionWeight" : 1,
+      "Prefixes": [
+        "$mod_epicloot_me_modifylowhealth_prefix1"
+      ],
+      "Suffixes": [
+        "$mod_epicloot_me_modifylowhealth_suffix1"
+      ]
+    },
+    {
       "Type" : "AddHealthRegen",
       "DisplayText" : "$mod_epicloot_me_addhealthregen_display",
       "Description" : "$mod_epicloot_me_addhealthregen_desc",
