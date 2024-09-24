@@ -2153,6 +2153,38 @@
       ]
     },
     {
+      "Type" : "FireAbsorption",
+      "DisplayText" : "$mod_epicloot_me_fireabsorption_display",
+      "Description" : "$mod_epicloot_me_fireabsorption_desc",
+      "Requirements" : {
+        "AllowedItemTypes" : [
+          "Shield",
+          "Utility",
+          "Head",
+          "Shoulders"
+        ],
+        "AllowedRarities" : [
+          "Rare",
+          "Epic",
+          "Legendary",
+          "Mythic"
+        ]
+      },
+      "ValuesPerRarity" : {
+        "Rare"      : { "MinValue" : 2, "MaxValue" : 4, "Increment" : 0.2 },
+        "Epic"      : { "MinValue" : 4, "MaxValue" : 6, "Increment" : 0.2 },
+        "Legendary" : { "MinValue" : 6, "MaxValue" : 8, "Increment" : 0.2 },
+        "Mythic"    : { "MinValue" : 8, "MaxValue" : 10, "Increment" : 0.2 }
+      },
+      "SelectionWeight" : 1,
+      "Prefixes": [
+        "$mod_epicloot_me_fireabsorption_prefix1"
+      ],
+      "Suffixes": [
+        "$mod_epicloot_me_fireabsorption_suffix1"
+      ]
+    },
+    {
       "Type" : "EitrLeech",
       "DisplayText" : "$mod_epicloot_me_eitrleech_display",
       "Description" : "$mod_epicloot_me_eitrleech_desc",
