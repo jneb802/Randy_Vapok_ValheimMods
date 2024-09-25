@@ -2024,10 +2024,8 @@
           "ModifyElementalDamage"
         ],
         "AllowedItemTypes" : [
-          "OneHandedWeapon",
-          "TwoHandedWeapon",
-          "TwoHandedWeaponLeft",
-          "Staff"
+          "Helmet",
+          "Utility"
         ],
         "ExcludedItemNames" : [
           "$item_fishingrod"
