@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using HarmonyLib;
 using UnityEngine;
@@ -29,8 +30,8 @@ public class CoinHoarder
                 float totalCoins = mcoins.Sum(coin => coin.m_stack);
                 float coin_hoarder_effect_value =
                     Player.m_localPlayer.GetTotalActiveMagicEffectValue(MagicEffectType.CoinHoarder, 0.01f);
-                float coinHoarderBonus = (totalCoins / 999f) * coin_hoarder_effect_value;
-                float coinHoarderDamageMultiplier = 1 + coinHoarderBonus;
+                float coinHoarderBonus = Mathf.Log10(coin_hoarder_effect_value * totalCoins) * 8.7f;
+                float coinHoarderDamageMultiplier = 1 + (coinHoarderBonus / 100f);
                 // Debug.Log(
                 //    $"Coinhorder bonus multipler {coinHoarderDamageMultiplier} coinhorder bonus: {coinHoarderBonus} inv coins: {totalCoins} coinhorder power: {coin_hoarder_effect_value}");
 
