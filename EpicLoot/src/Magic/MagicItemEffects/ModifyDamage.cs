@@ -75,7 +75,7 @@ namespace EpicLoot.MagicItemEffects
                 __result.m_spirit *= modifier;
             }
             
-            if (MagicEffectsHelper.HasActiveMagicEffectOnWeapon(player, __instance, MagicEffectType.CoinHoarder))
+            if (player.HasActiveMagicEffect(MagicEffectType.CoinHoarder));
             {
                 var modifier = CoinHoarder.GetCoinHoarderValue(player);
                 if (modifier > 0)
