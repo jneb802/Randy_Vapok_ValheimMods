@@ -30,6 +30,7 @@ namespace EpicLoot.MagicItemEffects
             var magicItemskillType = __instance.m_shared.m_skillType;
 
             var player = PlayerExtensions.GetPlayerWithEquippedItem(__instance);
+            var localPlayer = Player.m_localPlayer;
 
             // Add damages first
             __result.m_blunt        += totalDamage * MagicEffectsHelper.GetTotalActiveMagicEffectValueForWeapon(player, __instance, MagicEffectType.AddBluntDamage);
@@ -75,9 +76,45 @@ namespace EpicLoot.MagicItemEffects
                 __result.m_spirit *= modifier;
             }
             
-            if (player.HasActiveMagicEffect(MagicEffectType.CoinHoarder));
+            if (localPlayer.HasActiveMagicEffect(MagicEffectType.CoinHoarder));
             {
-                var modifier = CoinHoarder.GetCoinHoarderValue(player);
+                var modifier = CoinHoarder.GetCoinHoarderValue(localPlayer);
+                if (modifier > 0)
+                {
+                    __result.m_blunt *= modifier;
+                    __result.m_slash *= modifier;
+                    __result.m_pierce *= modifier;
+                    __result.m_chop *= modifier;
+                    __result.m_pickaxe *= modifier;
+                    __result.m_fire *= modifier;
+                    __result.m_frost *= modifier;
+                    __result.m_lightning *= modifier;
+                    __result.m_poison *= modifier;
+                    __result.m_spirit *= modifier; 
+                }
+            }
+            
+            if (localPlayer.HasActiveMagicEffect(MagicEffectType.AddDamageBurning) && localPlayer.GetSEMan().HaveStatusEffect("Burning".GetStableHashCode()))
+            {
+                var modifier = 1 + localPlayer.GetTotalActiveMagicEffectValue(MagicEffectType.AddDamageBurning, 0.01f);
+                if (modifier > 0)
+                {
+                    __result.m_blunt *= modifier;
+                    __result.m_slash *= modifier;
+                    __result.m_pierce *= modifier;
+                    __result.m_chop *= modifier;
+                    __result.m_pickaxe *= modifier;
+                    __result.m_fire *= modifier;
+                    __result.m_frost *= modifier;
+                    __result.m_lightning *= modifier;
+                    __result.m_poison *= modifier;
+                    __result.m_spirit *= modifier; 
+                }
+            }
+            
+            if (localPlayer.HasActiveMagicEffect(MagicEffectType.AddDamagePoison) && localPlayer.GetSEMan().HaveStatusEffect("Poison".GetStableHashCode()))
+            {
+                var modifier = 1 + localPlayer.GetTotalActiveMagicEffectValue(MagicEffectType.AddDamagePoison, 0.01f);
                 if (modifier > 0)
                 {
                     __result.m_blunt *= modifier;

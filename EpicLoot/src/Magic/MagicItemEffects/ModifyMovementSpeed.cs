@@ -16,6 +16,16 @@ namespace EpicLoot.MagicItemEffects
                 {
                     __instance.m_equipmentModifierValues[i] += __instance.GetTotalActiveMagicEffectValue(effect, 0.01f);
                 });
+
+                if (__instance.HasActiveMagicEffect(MagicEffectType.AddSpeedBurning) && __instance.GetSEMan().HaveStatusEffect("Burning".GetStableHashCode()))
+                {
+                    __instance.m_equipmentModifierValues[i] += __instance.GetTotalActiveMagicEffectValue(MagicEffectType.AddSpeedBurning, 0.01f);
+                }
+                
+                if (__instance.HasActiveMagicEffect(MagicEffectType.AddSpeedPoison) && __instance.GetSEMan().HaveStatusEffect("Poison".GetStableHashCode()))
+                {
+                    __instance.m_equipmentModifierValues[i] += __instance.GetTotalActiveMagicEffectValue(MagicEffectType.AddSpeedPoison, 0.01f); 
+                }
             }
             
         }

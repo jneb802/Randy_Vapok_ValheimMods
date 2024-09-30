@@ -40,6 +40,10 @@ namespace EpicLoot
         public static string AddLightningDamage = nameof(AddLightningDamage);
         public static string AddPoisonDamage = nameof(AddPoisonDamage);
         public static string AddSpiritDamage = nameof(AddSpiritDamage);
+        public static string AddDamageBurning = nameof(AddDamageBurning);
+        public static string AddSpeedBurning = nameof(AddDamageBurning);
+        public static string AddDamagePoison = nameof(AddDamagePoison);
+        public static string AddSpeedPoison = nameof(AddDamagePoison);
         public static string AddFireResistance = nameof(AddFireResistance);
         public static string AddFireResistancePercentage = nameof(AddFireResistancePercentage);
         public static string AddFrostResistance = nameof(AddFrostResistance);
