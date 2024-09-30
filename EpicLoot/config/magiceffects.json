@@ -209,8 +209,7 @@
       "Description" : "$mod_epicloot_me_reduceweight_desc",
       "Requirements" : {
         "ExclusiveEffectTypes" : [
-          "Weightless",
-          "ReduceInventoryWeight"
+          "Weightless"
         ],
         "AllowedItemTypes" : [
           "OneHandedWeapon",
@@ -242,36 +241,6 @@
       ],
       "Suffixes": [
         "$mod_epicloot_me_reduceweight_suffix1"
-      ]
-    },
-    {
-      "Type" : "ReduceInventoryWeight",
-      "DisplayText" : "$mod_epicloot_me_reduceinventoryweight_display",
-      "Description" : "$mod_epicloot_me_reduceinventoryweight_desc",
-      "Requirements" : {
-        "ExclusiveEffectTypes" : [
-          "Weightless",
-          "ReduceWeight"
-        ],
-        "AllowedItemTypes" : [
-          "Helmet",
-          "Shoulder",
-          "Utility"
-        ]
-      },
-      "ValuesPerRarity" : {
-        "Magic"     : { "MinValue" : 2, "MaxValue" : 4, "Increment" : 1 },
-        "Rare"      : { "MinValue" : 4, "MaxValue" : 6, "Increment" : 1 },
-        "Epic"      : { "MinValue" : 6, "MaxValue" : 10, "Increment" : 1 },
-        "Legendary" : { "MinValue" : 10, "MaxValue" : 15, "Increment" : 1 },
-        "Mythic"    : { "MinValue" : 15, "MaxValue" : 20, "Increment" : 1 }
-      },
-      "SelectionWeight" : 1,
-      "Prefixes": [
-        "$mod_epicloot_me_reduceinventoryweight_prefix1"
-      ],
-      "Suffixes": [
-        "$mod_epicloot_me_reduceinventoryweight_suffix1"
       ]
     },
     {
@@ -439,12 +408,8 @@
       "DisplayText" : "$mod_epicloot_me_increaseminingdrop_display",
       "Description" : "$mod_epicloot_me_increaseminingdrop_desc",
       "Requirements" : {
-        "AllowedItemNames": [
-          "$item_pickaxe_antler",
-          "$item_pickaxe_blackmetal",
-          "$item_pickaxe_bronze",
-          "$item_pickaxe_iron",
-          "$item_pickaxe_stone"
+        "AllowedSkillTypes": [
+          "Pickaxes"
         ],
         "AllowedRarities" : [
           "Epic",
@@ -454,8 +419,8 @@
       },
       "ValuesPerRarity" : {
         "Epic"      : { "MinValue" : 1, "MaxValue" : 1, "Increment" : 1 },
-        "Legendary" : { "MinValue" : 1, "MaxValue" : 2, "Increment" : 1 },
-        "Mythic"    : { "MinValue" : 2, "MaxValue" : 3, "Increment" : 1 }
+        "Legendary" : { "MinValue" : 2, "MaxValue" : 2, "Increment" : 1 },
+        "Mythic"    : { "MinValue" : 3, "MaxValue" : 3, "Increment" : 1 }
       },
       "SelectionWeight" : 1,
       "Prefixes": [
@@ -474,10 +439,10 @@
       },
       "ValuesPerRarity" : {
         "Magic"     : { "MinValue" : 1, "MaxValue" : 1, "Increment" : 1 },
-        "Rare"      : { "MinValue" : 1, "MaxValue" : 2, "Increment" : 1 },
-        "Epic"      : { "MinValue" : 2, "MaxValue" : 3, "Increment" : 1 },
-        "Legendary" : { "MinValue" : 3, "MaxValue" : 4, "Increment" : 1 },
-        "Mythic"    : { "MinValue" : 5, "MaxValue" : 6, "Increment" : 1 }
+        "Rare"      : { "MinValue" : 2, "MaxValue" : 2, "Increment" : 1 },
+        "Epic"      : { "MinValue" : 3, "MaxValue" : 3, "Increment" : 1 },
+        "Legendary" : { "MinValue" : 4, "MaxValue" : 4, "Increment" : 1 },
+        "Mythic"    : { "MinValue" : 5, "MaxValue" : 5, "Increment" : 1 }
       },
       "SelectionWeight" : 1,
       "Prefixes": [
@@ -525,9 +490,7 @@
       "Description" : "$mod_epicloot_me_increaseheatresistance_desc",
       "Requirements" : {
         "AllowedItemTypes" : [
-          "Shoulder",
-          "Utility",
-          "Torch"
+          "Shoulder"
         ],
         "AllowedRarities" : [
           "Epic",
@@ -688,7 +651,6 @@
       "Requirements" : {
         "AllowedItemTypes" : [
           "Helmet",
-          "Shoulder",
           "Utility"
         ]
       },
@@ -1890,16 +1852,14 @@
           "TwoHandedWeapon",
           "TwoHandedWeaponLeft"
         ],
+        "ExcludedSkillTypes": [
+          "Pickaxes"
+        ],
         "ExcludedItemNames" : [
           "$item_hammer",
           "$item_hoe",
           "$item_cultivator",
-          "$item_fishingrod",
-          "$item_pickaxe_antler",
-          "$item_pickaxe_blackmetal",
-          "$item_pickaxe_bronze",
-          "$item_pickaxe_iron",
-          "$item_pickaxe_stone"
+          "$item_fishingrod"
         ],
         "ItemUsesStaminaOnAttack" : true
       },
@@ -1918,12 +1878,6 @@
       "Requirements" : {
         "AllowedItemTypes" : [
           "Bow"
-        ],
-        "ExcludedItemNames" : [
-          "$item_hammer",
-          "$item_hoe",
-          "$item_cultivator",
-          "$item_fishingrod"
         ],
         "ItemUsesDrawStaminaOnAttack" : true
       },
@@ -2052,8 +2006,7 @@
       "Description" : "$mod_epicloot_me_weightless_desc",
       "Requirements" : {
         "ExclusiveEffectTypes" : [
-          "ReduceWeight",
-          "ReduceInventoryWeight"
+          "ReduceWeight"
         ],
         "AllowedItemTypes" : [
           "OneHandedWeapon",
@@ -2660,11 +2613,11 @@
         ]
       },
       "ValuesPerRarity" : {
-        "Magic"     : { "MinValue" : 2, "MaxValue" : 5, "Increment" : 1 },
-        "Rare"      : { "MinValue" : 5, "MaxValue" : 7, "Increment" : 1 },
-        "Epic"      : { "MinValue" : 7, "MaxValue" : 10, "Increment" : 1 },
-        "Legendary" : { "MinValue" : 10, "MaxValue" : 15, "Increment" : 1 },
-        "Mythic"    : { "MinValue" : 15, "MaxValue" : 25, "Increment" : 1 }
+        "Magic"     : { "MinValue" : 1, "MaxValue" : 5, "Increment" : 1 },
+        "Rare"      : { "MinValue" : 3, "MaxValue" : 10, "Increment" : 1 },
+        "Epic"      : { "MinValue" : 8, "MaxValue" : 15, "Increment" : 1 },
+        "Legendary" : { "MinValue" : 13, "MaxValue" : 20, "Increment" : 1 },
+        "Mythic"    : { "MinValue" : 18, "MaxValue" : 25, "Increment" : 1 }
       },
       "SelectionWeight" : 1,
       "Prefixes": [
@@ -2684,11 +2637,11 @@
         ]
       },
       "ValuesPerRarity" : {
-        "Magic"     : { "MinValue" : 5, "MaxValue" : 10, "Increment" : 1 },
-        "Rare"      : { "MinValue" : 10, "MaxValue" : 15, "Increment" : 1 },
-        "Epic"      : { "MinValue" : 15, "MaxValue" : 20, "Increment" : 1 },
-        "Legendary" : { "MinValue" : 20, "MaxValue" : 30, "Increment" : 1 },
-        "Mythic"    : { "MinValue" : 30, "MaxValue" : 50, "Increment" : 1 }
+        "Magic"     : { "MinValue" : 1, "MaxValue" : 5, "Increment" : 1 },
+        "Rare"      : { "MinValue" : 3, "MaxValue" : 10, "Increment" : 1 },
+        "Epic"      : { "MinValue" : 8, "MaxValue" : 15, "Increment" : 1 },
+        "Legendary" : { "MinValue" : 13, "MaxValue" : 20, "Increment" : 1 },
+        "Mythic"    : { "MinValue" : 18, "MaxValue" : 25, "Increment" : 1 }
       },
       "SelectionWeight" : 1,
       "Prefixes": [
@@ -2805,11 +2758,11 @@
         ]
       },
       "ValuesPerRarity" : {
-        "Magic"     : { "MinValue" : 25, "MaxValue" : 50, "Increment" : 1 },
-        "Rare"      : { "MinValue" : 50, "MaxValue" : 75, "Increment" : 1 },
-        "Epic"      : { "MinValue" : 75, "MaxValue" : 100, "Increment" : 1 },
-        "Legendary" : { "MinValue" : 100, "MaxValue" : 150, "Increment" : 1 },
-        "Mythic"    : { "MinValue" : 150, "MaxValue" : 200, "Increment" : 1 }
+        "Magic"     : { "MinValue" : 25, "MaxValue" : 50, "Increment" : 5 },
+        "Rare"      : { "MinValue" : 50, "MaxValue" : 75, "Increment" : 5 },
+        "Epic"      : { "MinValue" : 75, "MaxValue" : 100, "Increment" : 5 },
+        "Legendary" : { "MinValue" : 100, "MaxValue" : 150, "Increment" : 5 },
+        "Mythic"    : { "MinValue" : 150, "MaxValue" : 200, "Increment" : 5 }
       },
       "SelectionWeight" : 1,
       "Prefixes": [

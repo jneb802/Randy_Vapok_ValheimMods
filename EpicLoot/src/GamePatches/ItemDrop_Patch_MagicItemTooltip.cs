@@ -89,8 +89,7 @@ namespace EpicLoot
             }
 
             var weightColor = magicItem.HasEffect(MagicEffectType.ReduceWeight) ||
-                magicItem.HasEffect(MagicEffectType.Weightless) ||
-                magicItem.HasEffect(MagicEffectType.ReduceInventoryWeight) ? magicColor : "orange";
+                magicItem.HasEffect(MagicEffectType.Weightless) ? magicColor : "orange";
             text.Append($"\n$item_weight: <color={weightColor}>{item.GetWeight():0.0}</color>");
 
             if (item.m_shared.m_maxQuality > 1)
@@ -527,8 +526,7 @@ namespace EpicLoot
 
                     case "$item_weight":
                         if (magicItem.HasEffect(MagicEffectType.ReduceWeight) ||
-                            magicItem.HasEffect(MagicEffectType.Weightless) ||
-                            magicItem.HasEffect(MagicEffectType.ReduceInventoryWeight))
+                            magicItem.HasEffect(MagicEffectType.Weightless))
                         {
                             value = $"<color={magicColor}>{value}</color>";
                         }
