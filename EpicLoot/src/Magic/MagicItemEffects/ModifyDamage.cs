@@ -75,9 +75,9 @@ namespace EpicLoot.MagicItemEffects
                 __result.m_spirit *= modifier;
             }
             
-            if (player.HasActiveMagicEffect(MagicEffectType.CoinHoarder));
+            if (Player.m_localPlayer.HasActiveMagicEffect(MagicEffectType.CoinHoarder));
             {
-                var modifier = CoinHoarder.GetCoinHoarderValue(player);
+                var modifier = 1 + CoinHoarder.GetCoinHoarderValue(Player.m_localPlayer);
                 if (modifier > 0)
                 {
                     __result.m_blunt *= modifier;
