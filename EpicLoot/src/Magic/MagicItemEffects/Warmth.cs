@@ -30,7 +30,7 @@ namespace EpicLoot.MagicItemEffects
                 if (AddingStatusFromEnv > 0 && __instance.m_character.IsPlayer() && nameHash == "Freezing".GetHashCode())
                 {
                     var player = (Player) __instance.m_character;
-                    var hasWarmthEquipment = player.HasActiveMagicEffect(MagicEffectType.Warmth);
+                    var hasWarmthEquipment = player.HasActiveMagicEffect(MagicEffectType.Warmth, out float effectValue);
                     if (hasWarmthEquipment)
                     {
                         return false;

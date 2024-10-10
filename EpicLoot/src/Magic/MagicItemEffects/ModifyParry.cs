@@ -17,9 +17,10 @@ namespace EpicLoot.MagicItemEffects
             });
 
             __result *= 1.0f + totalParryMod;
-            if (player != null && player.m_leftItem == null && MagicEffectsHelper.HasActiveMagicEffect(player, __instance, MagicEffectType.Duelist))
+            if (player != null && player.m_leftItem == null &&
+                MagicEffectsHelper.HasActiveMagicEffectOnWeapon(player, __instance, MagicEffectType.Duelist, out float effectValue, 0.01f))
             {
-                __result += __instance.GetDamage().GetTotalDamage() / 2 * MagicEffectsHelper.GetTotalActiveMagicEffectValueForWeapon(player, __instance, MagicEffectType.Duelist, 0.01f);
+                __result += __instance.GetDamage().GetTotalDamage() / 2 * effectValue;
             }
 
             __result = (float) Math.Round(__result, 1);
@@ -47,7 +48,7 @@ namespace EpicLoot.MagicItemEffects
             var totalParryBonusMod = 0f;
             ModifyWithLowHealth.Apply(player, MagicEffectType.ModifyParry, effect =>
             {
-                if (player.HasActiveMagicEffect(effect))
+                if (player.HasActiveMagicEffect(effect, out float effectValue, 0.01f))
                 {
                     if (!Override)
                     {
@@ -55,7 +56,7 @@ namespace EpicLoot.MagicItemEffects
                         OriginalValue = currentBlocker.m_shared.m_timedBlockBonus;
                     }
 
-                    totalParryBonusMod += player.GetTotalActiveMagicEffectValue(effect, 0.01f);
+                    totalParryBonusMod += effectValue;
                 }
             });
 

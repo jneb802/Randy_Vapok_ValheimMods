@@ -3,16 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
 using HarmonyLib;
-using UnityEngine;
 
 namespace EpicLoot.MagicItemEffects
 {
-    [HarmonyPatch]
     public static class MultiShot
     {
-        
         public static bool isTripleShotActive = false;
-        
+
         [HarmonyPatch(typeof(Attack), nameof(Attack.FireProjectileBurst))]
         [HarmonyPrefix]
         public static void Attack_FireProjectileBurst_Prefix(Attack __instance)
@@ -21,20 +18,12 @@ namespace EpicLoot.MagicItemEffects
             {
                 return;
             }
-               
 
-            var weaponDamage = __instance.GetWeapon()?.GetDamage();
-            if (!weaponDamage.HasValue)
-            {
-                return;
-            }
-                
+            var weaponDamage = __instance.GetWeapon().GetDamage();
 
             var player = (Player)__instance.m_character;
-            var doubleShot = player.HasActiveMagicEffect(MagicEffectType.DoubleMagicShot);
-            var tripleShot = player.HasActiveMagicEffect(MagicEffectType.TripleBowShot);
 
-            if (tripleShot)
+            if (player.HasActiveMagicEffect(MagicEffectType.TripleBowShot, out float tripleBowEffectValue))
             {
                 isTripleShotActive = true;
                 
@@ -49,14 +38,15 @@ namespace EpicLoot.MagicItemEffects
             {
                 isTripleShotActive = false;
             }
-            
-            if (doubleShot)
+
+            if (player.HasActiveMagicEffect(MagicEffectType.DoubleMagicShot, out float doubleMagicEffectValue))
             {
                 if (__instance.m_projectileAccuracy < 2)
                 {
                     __instance.m_projectileAccuracy = 2;
                 }
 
+                // TODO figure out what this is doing
                 if (__instance.m_projectileBursts != 1)
                 {
                     __instance.m_projectiles = 2;
@@ -68,7 +58,7 @@ namespace EpicLoot.MagicItemEffects
             }
         }
     }
-    
+
     /// <summary>
     /// Patch to remove thrice ammo when using TripleShot
     /// </summary>
@@ -79,8 +69,8 @@ namespace EpicLoot.MagicItemEffects
         {
             var code = new List<CodeInstruction>(instructions);
 
-            
-            var removeItemMethod = AccessTools.Method(typeof(Inventory), nameof(Inventory.RemoveItem), new Type[] { typeof(ItemDrop.ItemData), typeof(int) });
+            var removeItemMethod = AccessTools.Method(typeof(Inventory), nameof(Inventory.RemoveItem),
+                new Type[] { typeof(ItemDrop.ItemData), typeof(int) });
             
             for (int i = 0; i < code.Count; i++)
             {
@@ -89,7 +79,7 @@ namespace EpicLoot.MagicItemEffects
                     code[i] = new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(UseAmmoTranspilerPatch), nameof(CustomRemoveItem)));
                 }
             }
-            
+
             return code.AsEnumerable();
         }
         
@@ -97,9 +87,10 @@ namespace EpicLoot.MagicItemEffects
         {
             if (MultiShot.isTripleShotActive)
             {
+                MultiShot.isTripleShotActive = false;
                 return inventory.RemoveItem(item, amount * 3);
             }
-            
+
             return inventory.RemoveItem(item, amount);
         }
     }

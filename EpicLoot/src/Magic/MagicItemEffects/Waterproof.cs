@@ -30,7 +30,7 @@ namespace EpicLoot.MagicItemEffects
                 if (AddingStatusFromEnv > 0 && __instance.m_character.IsPlayer() && nameHash == "Wet".GetHashCode())
                 {
                     var player = (Player) __instance.m_character;
-                    var hasWaterproofEquipment = player.HasActiveMagicEffect(MagicEffectType.Waterproof);
+                    var hasWaterproofEquipment = player.HasActiveMagicEffect(MagicEffectType.Waterproof, out float effectValue);
                     if (hasWaterproofEquipment)
                     {
                         return false;

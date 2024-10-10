@@ -27,10 +27,9 @@ namespace EpicLoot.MagicItemEffects
             }
             
             Player player = (Player)__instance.m_character;
-            if (player.HasActiveMagicEffect(MagicEffectType.ModifyWispRange))
+            if (player.HasActiveMagicEffect(MagicEffectType.ModifyWispRange, out float effectValue, 0.01f))
             {
-                var multiplier = player.GetTotalActiveMagicEffectValue(MagicEffectType.ModifyWispRange, 0.01f);
-                forceField.endRange = _originalEndRange * (1 + multiplier);
+                forceField.endRange = _originalEndRange * (1 + effectValue);
             }
             else
             {

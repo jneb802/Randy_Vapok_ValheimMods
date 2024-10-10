@@ -14,13 +14,13 @@ public class ModifySummonDamage
         public static void Prefix(Attack __instance)
         {
             if (!(__instance.m_character is Player player) || 
-                !MagicEffectsHelper.HasActiveMagicEffect(player, __instance.m_weapon, MagicEffectType.ModifySummonDamage) ||
+                !MagicEffectsHelper.HasActiveMagicEffectOnWeapon(player, __instance.m_weapon, MagicEffectType.ModifySummonDamage, out float effectValue, 0.01f) ||
                 __instance.m_attackProjectile == null)
             {
                 return;
             }
 
-            float modifier = 1 + player.GetTotalActiveMagicEffectValue(MagicEffectType.ModifySummonDamage, 0.01f);
+            float modifier = 1 + effectValue;
             var spawnProjectile = __instance.m_attackProjectile;
 
             if (!spawnProjectile.TryGetComponent<SpawnAbility>(out var spawnAbility))

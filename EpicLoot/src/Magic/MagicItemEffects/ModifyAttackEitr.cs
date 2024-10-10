@@ -9,7 +9,7 @@ namespace EpicLoot.MagicItemEffects
         {
             if (__instance.m_character is Player player)
             {
-                if (player.HasActiveMagicEffect(MagicEffectType.DoubleMagicShot))
+                if (player.HasActiveMagicEffect(MagicEffectType.DoubleMagicShot, out float effectValue))
                 {
                     __result *= 2;
                 }

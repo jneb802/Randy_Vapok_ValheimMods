@@ -40,13 +40,13 @@ namespace EpicLoot.MagicItemEffects
                 return true;
             }
 
-            if (__instance.m_character is Player player && player.HasActiveMagicEffect(MagicEffectType.ModifyBackstab))
+            if (__instance.m_character is Player player && MagicEffectsHelper.HasActiveMagicEffectOnWeapon(
+                player, __instance.m_weapon, MagicEffectType.ModifyBackstab, out float effectValue, 0.01f))
             {
                 Override = true;
                 OriginalValue = weapon.m_shared.m_backstabBonus;
 
-                var totalBackstabMod = MagicEffectsHelper.GetTotalActiveMagicEffectValueForWeapon(player, __instance.m_weapon, MagicEffectType.ModifyBackstab, 0.01f);
-                weapon.m_shared.m_backstabBonus *= 1.0f + totalBackstabMod;
+                weapon.m_shared.m_backstabBonus *= 1.0f + effectValue;
             }
 
             return true;

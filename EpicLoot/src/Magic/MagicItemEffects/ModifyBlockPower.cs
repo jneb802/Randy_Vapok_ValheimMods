@@ -18,9 +18,10 @@ namespace EpicLoot.MagicItemEffects
 
             __result *= 1.0f + totalBlockPowerMod;
 
-            if (player != null && player.m_leftItem == null && player.HasActiveMagicEffect(MagicEffectType.Duelist))
+            if (player != null && player.m_leftItem == null &&
+                player.HasActiveMagicEffect(MagicEffectType.Duelist, out float effectValue, 0.01f))
             {
-                __result += __instance.GetDamage().GetTotalDamage() * player.GetTotalActiveMagicEffectValue(MagicEffectType.Duelist, 0.01f);
+                __result += __instance.GetDamage().GetTotalDamage() * effectValue;
             }
 
             __result = (float)Math.Round(__result, 1);

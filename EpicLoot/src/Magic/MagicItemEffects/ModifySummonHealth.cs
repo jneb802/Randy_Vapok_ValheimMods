@@ -14,8 +14,8 @@ public class ModifySummonHealth
     {
         public static void Prefix(Attack __instance)
         {
-            if (!(__instance.m_character is Player player) || 
-                !MagicEffectsHelper.HasActiveMagicEffect(player, __instance.m_weapon, MagicEffectType.ModifySummonHealth) || 
+            if (!(__instance.m_character is Player player) ||
+                !MagicEffectsHelper.HasActiveMagicEffect(player, __instance.m_weapon, MagicEffectType.ModifySummonHealth, out float effectValue) ||
                 __instance.m_attackProjectile == null)
             {
                 return;
@@ -42,8 +42,7 @@ public class ModifySummonHealth
                 originalHealth[humanoid] = humanoid.m_health;
             }
             
-            float modifier = player.GetTotalActiveMagicEffectValue(MagicEffectType.ModifySummonHealth, 0.01f);
-            humanoid.m_health *= 1 + modifier;
+            humanoid.m_health *= 1 + effectValue;
         }
 
         public static void Postfix(Attack __instance)

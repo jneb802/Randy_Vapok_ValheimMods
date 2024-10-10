@@ -666,7 +666,8 @@ namespace EpicLoot
             return sets;
         }
 
-        public static float GetTotalActiveMagicEffectValue(this Player player, string effectType, float scale = 1.0f, ItemDrop.ItemData ignoreThisItem = null)
+        public static float GetTotalActiveMagicEffectValue(this Player player, string effectType,
+            float scale = 1.0f, ItemDrop.ItemData ignoreThisItem = null)
         {
             var totalValue = scale * (EquipmentEffectCache.Get(player, effectType, () =>
             {
@@ -682,9 +683,11 @@ namespace EpicLoot
             return totalValue;
         }
 
-        public static bool HasActiveMagicEffect(this Player player, string effectType, ItemDrop.ItemData ignoreThisItem = null)
+        public static bool HasActiveMagicEffect(this Player player, string effectType, out float effectValue,
+            float scale = 1.0f, ItemDrop.ItemData ignoreThisItem = null)
         {
-            return GetTotalActiveMagicEffectValue(player, effectType, 1, ignoreThisItem) > 0;
+            effectValue = GetTotalActiveMagicEffectValue(player, effectType, scale, ignoreThisItem);
+            return effectValue > 0;
         }
 
         public static List<ItemDrop.ItemData> GetEquippedSetPieces(this Player player, string setName)

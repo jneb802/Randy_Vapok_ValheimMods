@@ -403,7 +403,7 @@ namespace EpicLoot
             var lightningMagic = item.HasEffect(MagicEffectType.AddLightningDamage);
             var poisonMagic = item.HasEffect(MagicEffectType.AddPoisonDamage);
             var spiritMagic = item.HasEffect(MagicEffectType.AddSpiritDamage);
-            var coinHoarderMagic = CoinHoarder.GetCoinHoarderValue(Player.m_localPlayer) > 0;
+            var coinHoarderMagic = CoinHoarder.HasCoinHoarder(out float coinHoarderEffectValue);
             Player.m_localPlayer.GetSkills().GetRandomSkillRange(out var min, out var max, skillType);
             var str = "";
             if (instance.m_damage != 0.0)

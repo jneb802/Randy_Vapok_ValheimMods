@@ -3,6 +3,7 @@ using HarmonyLib;
 
 namespace EpicLoot.MagicItemEffects
 {
+    // TODO: this does not properly remove after augmenting an item
     public class Bloodlust
     {
         public class BloodlustItemData
@@ -24,7 +25,7 @@ namespace EpicLoot.MagicItemEffects
                 itemDataDictionary[weapon.GetMagicItem().DisplayName] = new BloodlustItemData
                 {
                     ItemName = weapon.GetMagicItem().DisplayName,
-                    StaminaUsage = weapon.m_shared.m_attack.m_attackStamina,
+                    StaminaUsage = weapon.m_shared.m_attack.m_attackStamina
                 }; 
             }
         }
@@ -36,7 +37,7 @@ namespace EpicLoot.MagicItemEffects
         public static void Prefix(Attack __instance, ref float __result)
         {
             if (__instance.m_character is Player player &&
-                MagicEffectsHelper.HasActiveMagicEffectOnWeapon(player, __instance.m_weapon, MagicEffectType.Bloodlust))
+                MagicEffectsHelper.HasActiveMagicEffectOnWeapon(player, __instance.m_weapon, MagicEffectType.Bloodlust, out float effectValue))
             {
                 Bloodlust.SetBloodlustStamina(__instance.m_weapon);
                 
@@ -52,9 +53,11 @@ namespace EpicLoot.MagicItemEffects
     {
         public static void Postfix(Attack __instance, ref float __result)
         {
-            if (__instance.m_character is Player player && MagicEffectsHelper.HasActiveMagicEffectOnWeapon(player, __instance.m_weapon, MagicEffectType.Bloodlust))
+            if (__instance.m_character is Player player &&
+                MagicEffectsHelper.HasActiveMagicEffectOnWeapon(player, __instance.m_weapon, MagicEffectType.Bloodlust, out float effectValue))
             {
-                if (Bloodlust.itemDataDictionary.TryGetValue(__instance.m_weapon.GetMagicItem().DisplayName, out Bloodlust.BloodlustItemData bloodlustItemData))
+                if (Bloodlust.itemDataDictionary.TryGetValue(__instance.m_weapon.GetMagicItem().DisplayName,
+                    out Bloodlust.BloodlustItemData bloodlustItemData))
                 {
                     float newAttackHealth = bloodlustItemData.StaminaUsage;
                     __instance.m_weapon.m_shared.m_attack.m_attackHealth = bloodlustItemData.StaminaUsage;

@@ -9,7 +9,9 @@ namespace EpicLoot.MagicItemEffects
         [UsedImplicitly]
         private static void Prefix(Humanoid __instance, ref float ___m_blockTimer, ref float __state)
         {
-            if (__instance is Player player && player.HasActiveMagicEffect(MagicEffectType.ModifyParryWindow) && ___m_blockTimer > -1)
+            if (__instance is Player player &&
+                player.HasActiveMagicEffect(MagicEffectType.ModifyParryWindow, out float effectValue) &&
+                ___m_blockTimer > -1)
             {
                 var parryFrameIncrease = player.GetTotalActiveMagicEffectValue(MagicEffectType.ModifyParryWindow);
                 ___m_blockTimer -= parryFrameIncrease / 1000;
@@ -20,7 +22,9 @@ namespace EpicLoot.MagicItemEffects
         [UsedImplicitly]
         private static void Postfix(Humanoid __instance, ref float ___m_blockTimer, float __state)
         {
-            if (__instance is Player player && player.HasActiveMagicEffect(MagicEffectType.ModifyParryWindow) && ___m_blockTimer > -1)
+            if (__instance is Player player &&
+                player.HasActiveMagicEffect(MagicEffectType.ModifyParryWindow, out float effectValue) &&
+                ___m_blockTimer > -1)
             {
                 ___m_blockTimer += __state / 1000;
             }
