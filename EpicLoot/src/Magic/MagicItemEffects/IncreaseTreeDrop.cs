@@ -1,112 +1,104 @@
-using System.Collections.Generic;
-using System.Linq.Expressions;
 using HarmonyLib;
-using UnityEngine;
 
 namespace EpicLoot.MagicItemEffects;
 
-public class IncreaseTreeDrop
+public class IncreaseTreeDrop : IncreaseDrop
 {
-    [HarmonyPatch(typeof(DropTable), nameof(DropTable.GetDropList), typeof(int))]
-    public static class IncreaseTreeDrop_DropTable_GetDropList_Patch
+    public static IncreaseTreeDrop Instance { get; private set; }
+
+    static IncreaseTreeDrop()
     {
-        private static void Prefix(ref int amount)
+        Instance = new IncreaseTreeDrop()
         {
-            if (!IncreaseTreeDrop_Attack_OnAttackTrigger_Patch.playerHasIncreaseTreeDropEffect)
-            {
-                if (!IncreaseTreeDrop_TreeLog_RPC_Damage_Patch.IsCuttingTree)
-                {
-                    return; 
-                }
-            }
-            
-            int magicEffectValue = Mathf.FloorToInt(IncreaseTreeDrop_Attack_OnAttackTrigger_Patch.increaseTreeDropEffectValue);
-            amount += magicEffectValue;
-        }
+            MagicEffect = MagicEffectType.IncreaseTreeDrop,
+            ZDOVar = "el-tree"
+        };
     }
 
-    [HarmonyPatch(typeof(Attack), nameof(Attack.GetAttackStamina))]
-    public static class IncreaseTreeDrop_Attack_OnAttackTrigger_Patch
+    // Reset ZDO variable on equipment change
+    [HarmonyPatch(typeof(Humanoid), nameof(Humanoid.EquipItem))]
+    [HarmonyPatch(typeof(Humanoid), nameof(Humanoid.UnequipItem))]
+    public static class IncreaseTreeDrop_Player_EquipmentChange_Patches
     {
-        public static bool playerHasIncreaseTreeDropEffect = false;
-        public static float increaseTreeDropEffectValue = 0;
-
-        private static void Prefix(Attack __instance)
+        public static void Postfix(Humanoid __instance)
         {
-            if (__instance.m_character is Player player)
+            if (__instance == Player.m_localPlayer && __instance.m_nview.GetZDO().GetInt(Instance.ZDOVar) != 0)
             {
-                if (player.HasActiveMagicEffect(MagicEffectType.IncreaseTreeDrop))
-                {
-                    playerHasIncreaseTreeDropEffect = true;
-                    increaseTreeDropEffectValue = MagicEffectsHelper.GetTotalActiveMagicEffectValueForWeapon(player,
-                        __instance.m_weapon, MagicEffectType.IncreaseTreeDrop, 1f);
-                }
-                
-                playerHasIncreaseTreeDropEffect = false;
+                EpicLoot.Log("Resetting tree drop variable");
+                __instance.m_nview.GetZDO().Set(Instance.ZDOVar, 0);
             }
         }
     }
 
-    [HarmonyPatch(typeof(TreeLog), nameof(TreeLog.RPC_Damage))]
-    public static class IncreaseTreeDrop_TreeLog_RPC_Damage_Patch
+    [HarmonyPatch(typeof(TreeLog), nameof(TreeLog.Damage))]
+    public static class IncreaseTreeDrop_TreeLog_Damage_Patch
     {
-        public static bool IsCuttingTree = false;
-
-        private static bool Prefix(HitData hit)
+        private static void Prefix(TreeLog __instance, HitData hit)
         {
-            return HandleCutting(hit);
-        }
-
-        public static bool HandleCutting(HitData hit)
-        {
-            if (hit.GetAttacker() is not Player player)
-            {
-                return true;
-            }
-
-            IsCuttingTree = true;
-            return true;
-        }
-
-        private static void Finalizer()
-        {
-            IsCuttingTree = false;
+            Instance.DoPrefix(hit);
         }
     }
-    
+
+    [HarmonyPatch(typeof(TreeLog), nameof(TreeLog.Destroy))]
+    public static class IncreaseTreeDrop_TreeLog_Destroy_Patch
+    {
+        private static void Prefix(TreeLog __instance, HitData hitData)
+        {
+            if (hitData != null)
+            {
+                Instance.TryDropExtraItems(hitData.GetAttacker(), __instance.m_dropWhenDestroyed, __instance.transform.position);
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(TreeBase), nameof(TreeBase.Damage))]
+    public static class IncreaseTreeDrop_TreeBase_Damage_Patch
+    {
+        private static void Prefix(TreeBase __instance, HitData hit)
+        {
+            Instance.DoPrefix(hit);
+        }
+    }
+
     [HarmonyPatch(typeof(TreeBase), nameof(TreeBase.RPC_Damage))]
     public static class IncreaseTreeDrop_TreeBase_RPC_Damage_Patch
     {
-        private static bool Prefix(TreeBase __instance, HitData hit)
+        private static void Postfix(TreeBase __instance, HitData hit)
         {
-            if (!IncreaseTreeDrop_TreeLog_RPC_Damage_Patch.IsCuttingTree && __instance.m_damageModifiers.m_chop == HitData.DamageModifier.Normal && __instance.m_damageModifiers.m_chop != HitData.DamageModifier.Immune)
-            {            
-                return IncreaseTreeDrop_TreeLog_RPC_Damage_Patch.HandleCutting(hit);
+            if (hit != null && __instance.m_nview == null && !__instance.gameObject.activeSelf)
+            {
+                Instance.TryDropExtraItems(hit.GetAttacker(), __instance.m_dropWhenDestroyed, __instance.transform.position);
             }
-            return true;
-        }
-
-        private static void Finalizer()
-        {
-            IncreaseTreeDrop_TreeLog_RPC_Damage_Patch.IsCuttingTree = false;
         }
     }
-    
-    [HarmonyPatch(typeof(Destructible), nameof(Destructible.RPC_Damage))]
-    public static class IncreaseTreeDrop_Destructible_RPC_Damage_Patch
-    {
-        private static bool Prefix(Destructible __instance, HitData hit)
-        {
-            if (!IncreaseTreeDrop_TreeLog_RPC_Damage_Patch.IsCuttingTree && __instance.m_destructibleType == DestructibleType.Tree && __instance.m_damages.m_chop == HitData.DamageModifier.Normal)
-            {            
-                return IncreaseTreeDrop_TreeLog_RPC_Damage_Patch.HandleCutting(hit);
-            }
-            return true;
-        }
 
-        private static void Finalizer()
+    [HarmonyPatch(typeof(Destructible), nameof(Destructible.Damage))]
+    public static class IncreaseTreeDrop_Destructible_Damage_Patch
+    {
+        private static void Prefix(Destructible __instance, HitData hit)
         {
-            IncreaseTreeDrop_TreeLog_RPC_Damage_Patch.IsCuttingTree = false;
+            if (__instance.GetDestructibleType() == DestructibleType.Tree)
+            {
+                Instance.DoPrefix(hit);
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(Destructible), nameof(Destructible.Destroy))]
+    public static class IncreaseTreeDrop_Destructible_Destroy_Patch
+    {
+        private static void Prefix(Destructible __instance, HitData hit)
+        {
+            if (hit != null && __instance.GetDestructibleType() == DestructibleType.Tree)
+            {
+                var dropList = __instance.gameObject.GetComponent<DropOnDestroyed>();
+                if (dropList == null)
+                {
+                    return;
+                }
+
+                Instance.TryDropExtraItems(hit.GetAttacker(), dropList.m_dropWhenDestroyed, __instance.transform.position);
+            }
         }
     }
 }

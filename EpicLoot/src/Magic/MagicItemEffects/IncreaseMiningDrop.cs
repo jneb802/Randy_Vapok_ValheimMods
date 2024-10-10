@@ -1,94 +1,112 @@
-using System.Collections.Generic;
-using System.Linq.Expressions;
 using HarmonyLib;
 using UnityEngine;
 
 namespace EpicLoot.MagicItemEffects;
 
-public class IncreaseMiningDrop
+public class IncreaseMiningDrop : IncreaseDrop
 {
-    [HarmonyPatch(typeof(DropTable), nameof(DropTable.GetDropList), typeof(int))]
-    public static class IncreaseMiningDrop_DropTable_GetDropList_Patch
+    public static IncreaseMiningDrop Instance { get; private set; }
+
+    static IncreaseMiningDrop()
     {
-        private static void Prefix(ref int amount)
+        Instance = new IncreaseMiningDrop()
         {
-            if (!IncreaseMiningDrop_Attack_OnAttackTrigger_Patch.playerHasIncreaseMiningDropEffect)
+            MagicEffect = MagicEffectType.IncreaseMiningDrop,
+            ZDOVar = "el-mining"
+        };
+    }
+
+    // Reset ZDO variable on equipment change
+    [HarmonyPatch(typeof(Humanoid), nameof(Humanoid.EquipItem))]
+    [HarmonyPatch(typeof(Humanoid), nameof(Humanoid.UnequipItem))]
+    public static class IncreaseMiningDrop_Player_EquipmentChange_Patches
+    {
+        public static void Postfix(Humanoid __instance)
+        {
+            if (__instance == Player.m_localPlayer && __instance.m_nview.GetZDO().GetInt(Instance.ZDOVar) != 0)
             {
-                if (!IncreaseMiningDrop_MineRock5_RPC_Damage_Patch.IsMining)
+                EpicLoot.Log("Resetting mining drop variable");
+                __instance.m_nview.GetZDO().Set(Instance.ZDOVar, 0);
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(MineRock), nameof(MineRock.Damage))]
+    public static class IncreaseMiningDrop_MineRock_Damage_Patch
+    {
+        private static void Prefix(MineRock __instance, HitData hit)
+        {
+            Instance.DoPrefix(hit);
+        }
+    }
+
+    [HarmonyPatch(typeof(MineRock), nameof(MineRock.RPC_Hit))]
+    public static class IncreaseMiningDrop_MineRock_RPC_Hit_Patch
+    {
+        private static void Postfix(MineRock __instance, HitData hit)
+        {
+            if (hit != null && __instance.m_nview == null)
+            {
+                Instance.TryDropExtraItems(hit.GetAttacker(), __instance.m_dropItems, __instance.transform.position);
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(MineRock5), nameof(MineRock5.Damage))]
+    public static class IncreaseMiningDrop_MineRock5_Damage_Patch
+    {
+        private static void Prefix(MineRock5 __instance, HitData hit)
+        {
+            Instance.DoPrefix(hit);
+        }
+    }
+
+    [HarmonyPatch(typeof(MineRock5), nameof(MineRock5.DamageArea))]
+    public static class IncreaseMiningDrop_MineRock5_RPC_Hit_Patch
+    {
+        private static void Postfix(MineRock5 __instance, HitData hit, int hitAreaIndex, ref bool __result)
+        {
+            if (hit != null && __result)
+            {
+                var hitArea = __instance.GetHitArea(hitAreaIndex);
+                Vector3 position = (__instance.m_hitEffectAreaCenter && hitArea.m_collider != null) ?
+                    hitArea.m_collider.bounds.center : hit.m_point;
+                Instance.TryDropExtraItems(hit.GetAttacker(), __instance.m_dropItems, position);
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(Destructible), nameof(Destructible.Damage))]
+    public static class IncreaseMiningDrop_Destructible_Damage_Patch
+    {
+        private static void Prefix(Destructible __instance, HitData hit)
+        {
+            if (__instance.GetDestructibleType() == DestructibleType.Default &&
+                __instance.m_damages.m_chop == HitData.DamageModifier.Immune &&
+                __instance.m_damages.m_pickaxe != HitData.DamageModifier.Immune)
+            {
+                Instance.DoPrefix(hit);
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(Destructible), nameof(Destructible.Destroy))]
+    public static class IncreaseMiningDrop_Destructible_Destroy_Patch
+    {
+        private static void Prefix(Destructible __instance, HitData hit)
+        {
+            if (hit != null && __instance.GetDestructibleType() == DestructibleType.Default &&
+                __instance.m_damages.m_chop == HitData.DamageModifier.Immune &&
+                __instance.m_damages.m_pickaxe != HitData.DamageModifier.Immune)
+            {
+                var dropList = __instance.gameObject.GetComponent<DropOnDestroyed>();
+                if (dropList == null)
                 {
-                    return; 
+                    return;
                 }
+
+                Instance.TryDropExtraItems(hit.GetAttacker(), dropList.m_dropWhenDestroyed, __instance.transform.position);
             }
-            
-            int magicEffectValue = Mathf.FloorToInt(IncreaseMiningDrop_Attack_OnAttackTrigger_Patch.increaseMiningDropEffectValue);
-            amount += magicEffectValue;
-        }
-    }
-
-    [HarmonyPatch(typeof(Attack), nameof(Attack.GetAttackStamina))]
-    public static class IncreaseMiningDrop_Attack_OnAttackTrigger_Patch
-    {
-        public static bool playerHasIncreaseMiningDropEffect = false;
-        public static float increaseMiningDropEffectValue = 0;
-
-        private static void Prefix(Attack __instance)
-        {
-            if (__instance.m_character is Player player)
-            {
-                if (player.HasActiveMagicEffect(MagicEffectType.IncreaseMiningDrop))
-                {
-                    playerHasIncreaseMiningDropEffect = true;
-                    increaseMiningDropEffectValue = MagicEffectsHelper.GetTotalActiveMagicEffectValueForWeapon(player,
-                        __instance.m_weapon, MagicEffectType.IncreaseMiningDrop, 1f);
-                }
-                
-                playerHasIncreaseMiningDropEffect = false;
-            }
-        }
-    }
-
-    [HarmonyPatch(typeof(MineRock5), nameof(MineRock5.RPC_Damage))]
-    public static class IncreaseMiningDrop_MineRock5_RPC_Damage_Patch
-    {
-        public static bool IsMining = false;
-
-        private static bool Prefix(HitData hit)
-        {
-            return HandleMining(hit);
-        }
-
-        public static bool HandleMining(HitData hit)
-        {
-            if (hit.GetAttacker() is not Player player)
-            {
-                return true;
-            }
-
-            IsMining = true;
-            return true;
-        }
-
-        private static void Finalizer()
-        {
-            IsMining = false;
-        }
-    }
-    
-    [HarmonyPatch(typeof(Destructible), nameof(Destructible.RPC_Damage))]
-    public static class IncreaseMiningDrop_Destructible_RPC_Damage_Patch
-    {
-        private static bool Prefix(Destructible __instance, HitData hit)
-        {
-            if (!IncreaseMiningDrop_MineRock5_RPC_Damage_Patch.IsMining && __instance.m_damages.m_pickaxe != HitData.DamageModifier.Immune && __instance.m_damages.m_chop == HitData.DamageModifier.Immune && __instance.m_destructibleType != DestructibleType.Tree)
-            {            
-                return IncreaseMiningDrop_MineRock5_RPC_Damage_Patch.HandleMining(hit);
-            }
-            return true;
-        }
-
-        private static void Finalizer()
-        {
-            IncreaseMiningDrop_MineRock5_RPC_Damage_Patch.IsMining = false;
         }
     }
 }
