@@ -9,11 +9,8 @@ namespace EpicLoot.MagicItemEffects
         {
             if (__instance.m_character is Player player)
             {
-                if (player.HasActiveMagicEffect(MagicEffectType.DoubleMagicShot, out float effectValue))
-                {
-                    __result *= 2;
-                }
-                __result *= 1 - MagicEffectsHelper.GetTotalActiveMagicEffectValueForWeapon(player, __instance.m_weapon, MagicEffectType.ModifyAttackEitrUse, 0.01f);
+                __result *= 1 - MagicEffectsHelper.GetTotalActiveMagicEffectValueForWeapon(
+                    player, __instance.m_weapon, MagicEffectType.ModifyAttackEitrUse, 0.01f);
             }
         }
     }

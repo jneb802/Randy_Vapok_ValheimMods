@@ -27,11 +27,7 @@ public class CoinHoarder
 
         float totalCoins = mcoins.Sum(coin => coin.m_stack);
         float coinHoarderBonus = Mathf.Log10(effectValue * totalCoins) * 8.7f;
-        float coinHoarderDamageMultiplier = 1 + (coinHoarderBonus / 100f);
-        // Debug.Log(
-        //    $"Coinhorder bonus multipler {coinHoarderDamageMultiplier} coinhorder bonus: {coinHoarderBonus} inv coins: {totalCoins} coinhorder power: {coin_hoarder_effect_value}");
-
-        return coinHoarderDamageMultiplier;
+        return coinHoarderBonus / 100f;
     }
 
     public static bool HasCoinHoarder(out float coinHoarderDamageMultiplier)

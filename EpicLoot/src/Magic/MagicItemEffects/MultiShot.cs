@@ -8,28 +8,50 @@ namespace EpicLoot.MagicItemEffects
 {
     public static class MultiShot
     {
+        private static HitData.DamageTypes modifyDamage = new HitData.DamageTypes
+        {
+            m_damage = 0.3f,
+            m_blunt = 0.3f,
+            m_slash = 0.3f,
+            m_pierce = 0.3f,
+            m_chop = 0.3f,
+            m_pickaxe = 0.3f,
+            m_fire = 0.3f,
+            m_frost = 0.3f,
+            m_lightning = 0.3f,
+            m_poison = 0.3f,
+            m_spirit = 0.3f
+        };
+
         public static bool isTripleShotActive = false;
 
         [HarmonyPatch(typeof(Attack), nameof(Attack.FireProjectileBurst))]
         [HarmonyPrefix]
-        public static void Attack_FireProjectileBurst_Prefix(Attack __instance)
+        public static void Attack_FireProjectileBurst_Prefix(Attack __instance, ref HitData.DamageTypes __state)
         {
             if (__instance?.GetWeapon() == null || __instance.m_character == null || !__instance.m_character.IsPlayer())
             {
                 return;
             }
 
-            var weaponDamage = __instance.GetWeapon().GetDamage();
+            __state = __instance.GetWeapon().m_shared.m_damages;
+            var weaponDamage = __instance.GetWeapon().m_shared.m_damages;
+            weaponDamage.Modify(modifyDamage);
+            __instance.GetWeapon().m_shared.m_damages = weaponDamage;
 
             var player = (Player)__instance.m_character;
 
             if (player.HasActiveMagicEffect(MagicEffectType.TripleBowShot, out float tripleBowEffectValue))
             {
                 isTripleShotActive = true;
-                
+
                 if (__instance.m_projectileAccuracy < 2)
                 {
                     __instance.m_projectileAccuracy = 2;
+                }
+                else
+                {
+                    __instance.m_projectileAccuracy *= 0.25f;
                 }
 
                 __instance.m_projectiles = 3;
@@ -45,17 +67,19 @@ namespace EpicLoot.MagicItemEffects
                 {
                     __instance.m_projectileAccuracy = 2;
                 }
-
-                // TODO figure out what this is doing
-                if (__instance.m_projectileBursts != 1)
-                {
-                    __instance.m_projectiles = 2;
-                }
                 else
                 {
-                    __instance.m_projectiles *= 2;
+                    __instance.m_projectileAccuracy *= 0.25f;
                 }
+
+                __instance.m_projectiles *= 2;
             }
+        }
+
+        [HarmonyPatch(typeof(Attack), nameof(Attack.FireProjectileBurst))]
+        public static void Postfix(Attack __instance, ref HitData.DamageTypes __state)
+        {
+            __instance.GetWeapon().m_shared.m_damages = __state;
         }
     }
 
@@ -92,6 +116,23 @@ namespace EpicLoot.MagicItemEffects
             }
 
             return inventory.RemoveItem(item, amount);
+        }
+    }
+
+    [HarmonyPriority(Priority.HigherThanNormal)]
+    [HarmonyPatch(typeof(Attack), nameof(Attack.GetAttackEitr))]
+    public class DoubleMagicShot_Attack_GetAttackEitr_Patch
+    {
+        public static void Postfix(Attack __instance, ref float __result)
+        {
+            if (__instance.m_character is Player player)
+            {
+                if (MagicEffectsHelper.HasActiveMagicEffectOnWeapon(
+                    player, __instance.m_weapon, MagicEffectType.DoubleMagicShot, out float effectValue))
+                {
+                    __result *= 2;
+                }
+            }
         }
     }
 }

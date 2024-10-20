@@ -4,21 +4,20 @@ namespace EpicLoot.MagicItemEffects
 {
     public static class Warmth
     {
-        public static int AddingStatusFromEnv;
+        public static bool AddingStatusFromEnv;
 
         //public void UpdateEnvStatusEffects(float dt)
         [HarmonyPatch(typeof(Player), nameof(Player.UpdateEnvStatusEffects))]
         public static class Warmth_Player_UpdateEnvStatusEffects_Patch
         {
-            public static bool Prefix()
+            public static void Prefix()
             {
-                AddingStatusFromEnv++;
-                return true;
+                AddingStatusFromEnv = true;
             }
 
             public static void Postfix(Player __instance)
             {
-                AddingStatusFromEnv--;
+                AddingStatusFromEnv = false;
             }
         }
 
@@ -27,11 +26,10 @@ namespace EpicLoot.MagicItemEffects
         {
             public static bool Prefix(SEMan __instance, int nameHash)
             {
-                if (AddingStatusFromEnv > 0 && __instance.m_character.IsPlayer() && nameHash == "Freezing".GetHashCode())
+                if (AddingStatusFromEnv && __instance.m_character is Player player &&
+                    (nameHash == "Freezing".GetHashCode() || nameHash == "Cold".GetHashCode())) //todo
                 {
-                    var player = (Player) __instance.m_character;
-                    var hasWarmthEquipment = player.HasActiveMagicEffect(MagicEffectType.Warmth, out float effectValue);
-                    if (hasWarmthEquipment)
+                    if (player.HasActiveMagicEffect(MagicEffectType.Warmth, out float effectValue))
                     {
                         return false;
                     }

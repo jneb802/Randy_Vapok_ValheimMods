@@ -9,7 +9,8 @@ namespace EpicLoot.MagicItemEffects
         {
             if (__instance.m_character is Player player)
             {
-                __result *= 1 - MagicEffectsHelper.GetTotalActiveMagicEffectValueForWeapon(player, __instance.m_weapon, MagicEffectType.ModifyAttackStaminaUse, 0.01f);
+                __result *= 1 - MagicEffectsHelper.GetTotalActiveMagicEffectValueForWeapon(
+                    player, __instance.m_weapon, MagicEffectType.ModifyAttackStaminaUse, 0.01f);
             }
         }
     }
