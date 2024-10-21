@@ -1,11 +1,12 @@
-﻿using System;
+﻿using HarmonyLib;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
-using HarmonyLib;
 
 namespace EpicLoot.MagicItemEffects
 {
+    [HarmonyPatch]
     public static class MultiShot
     {
         private static HitData.DamageTypes modifyDamage = new HitData.DamageTypes
@@ -45,13 +46,13 @@ namespace EpicLoot.MagicItemEffects
             {
                 isTripleShotActive = true;
 
-                if (__instance.m_projectileAccuracy < 2)
+                if (__instance.m_projectileAccuracy < 3)
                 {
-                    __instance.m_projectileAccuracy = 2;
+                    __instance.m_projectileAccuracy = 3;
                 }
                 else
                 {
-                    __instance.m_projectileAccuracy *= 0.25f;
+                    __instance.m_projectileAccuracy = __instance.m_weapon.m_shared.m_attack.m_projectileAccuracy * 1.25f;
                 }
 
                 __instance.m_projectiles = 3;
@@ -63,16 +64,17 @@ namespace EpicLoot.MagicItemEffects
 
             if (player.HasActiveMagicEffect(MagicEffectType.DoubleMagicShot, out float doubleMagicEffectValue))
             {
-                if (__instance.m_projectileAccuracy < 2)
+                if (__instance.m_projectileAccuracy < 5)
                 {
-                    __instance.m_projectileAccuracy = 2;
+                    __instance.m_projectileAccuracy = 5;
+                    __instance.m_projectileAccuracyMin = 3;
                 }
                 else
                 {
-                    __instance.m_projectileAccuracy *= 0.25f;
+                    __instance.m_projectileAccuracy = __instance.m_weapon.m_shared.m_attack.m_projectileAccuracy * 1.25f;
                 }
 
-                __instance.m_projectiles *= 2;
+                __instance.m_projectiles = __instance.m_weapon.m_shared.m_attack.m_projectiles * 2;
             }
         }
 
@@ -112,7 +114,7 @@ namespace EpicLoot.MagicItemEffects
             if (MultiShot.isTripleShotActive)
             {
                 MultiShot.isTripleShotActive = false;
-                return inventory.RemoveItem(item, amount * 3);
+                return inventory.RemoveItem(item, amount * 3); // TODO fix
             }
 
             return inventory.RemoveItem(item, amount);
