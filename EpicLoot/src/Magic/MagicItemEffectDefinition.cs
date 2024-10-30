@@ -334,7 +334,11 @@ namespace EpicLoot
             
             if (ItemUsesEitrOnAttack != null &&
                 ((ItemUsesEitrOnAttack == itemData.m_shared.m_attack.m_attackEitr <= 0) ||
-                (ItemUsesEitrOnAttack == itemData.m_shared.m_secondaryAttack.m_attackEitr <= 0)))
+                (ItemUsesEitrOnAttack == itemData.m_shared.m_attack.m_drawEitrDrain <= 0) ||
+                (ItemUsesEitrOnAttack == itemData.m_shared.m_attack.m_reloadEitrDrain <= 0) ||
+                (ItemUsesEitrOnAttack == itemData.m_shared.m_secondaryAttack.m_attackEitr <= 0) ||
+                (ItemUsesEitrOnAttack == itemData.m_shared.m_secondaryAttack.m_drawEitrDrain <= 0) ||
+                (ItemUsesEitrOnAttack == itemData.m_shared.m_secondaryAttack.m_reloadEitrDrain <= 0)))
             {
                 return false;
             }

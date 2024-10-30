@@ -37,7 +37,7 @@ namespace EpicLoot
 
     // Set the content of the tooltip
     [HarmonyPatch(typeof(ItemDrop.ItemData), nameof(ItemDrop.ItemData.GetTooltip),
-        typeof(ItemDrop.ItemData), typeof(int), typeof(bool), typeof(float))]
+        typeof(ItemDrop.ItemData), typeof(int), typeof(bool), typeof(float), typeof(int))]
     public static class MagicItemTooltip_ItemDrop_Patch
     {
         [UsedImplicitly]

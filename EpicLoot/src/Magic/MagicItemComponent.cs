@@ -1027,7 +1027,8 @@ namespace EpicLoot
         }
     }
 
-    [HarmonyPatch(typeof(Player), nameof(Player.GetActionProgress))]
+    [HarmonyPatch(typeof(Player), nameof(Player.GetActionProgress),
+        new Type[] { typeof(string), typeof(float) }, new ArgumentType[] { ArgumentType.Out, ArgumentType.Out })]
     public static class Player_GetActionProgress_Patch
     {
         public static void Postfix(Player __instance, ref string name)

@@ -996,7 +996,7 @@ namespace EpicLoot
                 }
             }
 
-            ObjectDB.instance.UpdateItemHashes();
+            ObjectDB.instance.UpdateRegisters();
 
             var pieceTables = new List<PieceTable>();
             foreach (var itemPrefab in ObjectDB.instance.m_items)

@@ -4,7 +4,7 @@
   "Priority": 2000,
   "RequireAll": true, 
   "Patches": [
-	  {
+    {
       "Path": "$.MagicItemEffects[?(@.Type == 'ModifyDamage')].ValuesPerRarity",
       "Action": "Overwrite",
       "Value": {

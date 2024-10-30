@@ -1746,12 +1746,6 @@
       "DisplayText" : "$mod_epicloot_me_modifyattackeitruse_display",
       "Description" : "$mod_epicloot_me_modifyattackeitruse_desc",
       "Requirements" : {
-        "ExcludedItemNames" : [
-          "$item_hammer",
-          "$item_hoe",
-          "$item_cultivator",
-          "$item_fishingrod"
-        ],
         "ItemUsesEitrOnAttack" : true
       },
       "ValuesPerRarity" : {
@@ -1774,12 +1768,6 @@
       "DisplayText" : "$mod_epicloot_me_modifyattackhealthuse_display",
       "Description" : "$mod_epicloot_me_modifyattackhealthuse_desc",
       "Requirements" : {
-        "ExcludedItemNames" : [
-          "$item_hammer",
-          "$item_hoe",
-          "$item_cultivator",
-          "$item_fishingrod"
-        ],
         "ItemUsesHealthOnAttack" : true
       },
       "ValuesPerRarity" : {
@@ -1809,7 +1797,6 @@
           "OneHandedWeapon",
           "TwoHandedWeapon",
           "TwoHandedWeaponLeft",
-          "Bow",
           "Torch",
           "Tool"
         ],
@@ -1875,9 +1862,6 @@
       "DisplayText" : "$mod_epicloot_me_modifydrawstaminause_display",
       "Description" : "$mod_epicloot_me_modifydrawstaminause_desc",
       "Requirements" : {
-        "AllowedItemTypes" : [
-          "Bow"
-        ],
         "ItemUsesDrawStaminaOnAttack" : true
       },
       "ValuesPerRarity" : {
@@ -1979,9 +1963,6 @@
         "AllowedItemTypes" : [
           "Helmet",
           "Utility"
-        ],
-        "ExcludedItemNames" : [
-          "$item_fishingrod"
         ]
       },
       "ValuesPerRarity" : {
@@ -2150,7 +2131,6 @@
           "OneHandedWeapon",
           "TwoHandedWeapon",
           "TwoHandedWeaponLeft",
-          "Bow",
           "Staff"
         ],
         "ExcludedSkillTypes": [
@@ -2608,6 +2588,7 @@
       "DisplayText" : "$mod_epicloot_me_modifysummonhealth_display",
       "Description" : "$mod_epicloot_me_modifysummonhealth_desc",
       "Requirements" : {
+        "NoRoll" : true,
         "AllowedSkillTypes" : [
           "BloodMagic"
         ]
@@ -2632,6 +2613,7 @@
       "DisplayText" : "$mod_epicloot_me_modifysummondamage_display",
       "Description" : "$mod_epicloot_me_modifysummondamage_desc",
       "Requirements" : {
+        "NoRoll" : true,
         "AllowedSkillTypes" : [
           "BloodMagic"
         ]

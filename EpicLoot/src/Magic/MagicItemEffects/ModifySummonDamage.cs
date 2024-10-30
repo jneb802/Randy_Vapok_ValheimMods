@@ -6,7 +6,7 @@ namespace EpicLoot.MagicItemEffects;
 
 public class ModifySummonDamage
 {
-    private static readonly Dictionary<Humanoid, Dictionary<ItemDrop, HitData.DamageTypes>> originalDamages = new Dictionary<Humanoid, Dictionary<ItemDrop, HitData.DamageTypes>>();
+    /*private static readonly Dictionary<Humanoid, Dictionary<ItemDrop, HitData.DamageTypes>> originalDamages = new Dictionary<Humanoid, Dictionary<ItemDrop, HitData.DamageTypes>>();
     
     [HarmonyPatch(typeof(Attack), nameof(Attack.FireProjectileBurst))]
     public class ModifySummonDamage_Attack_FireProjectileBurst_Patch
@@ -121,5 +121,5 @@ public class ModifySummonDamage
 
             originalDamages.Remove(humanoid);
         }
-    }
+    }*/
 }

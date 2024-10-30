@@ -1,3 +1,32 @@
+## Version 0.10.3
+
+* New configuration GatedFreebuildMode to control when items are unlocked when using the free build enchantment. Defaults to BossKillUnlocksCurrentBiomePieces.
+* DoubleMagicShot now uses twice the eitr plus tweaks to fix projectile amount on some staffs.
+* TripleShot now uses thrice the ammo and is less accurate at longer distances.
+* 16 New Magic Effects with new translations available (see Github for these new translation keys):
+  * Bloodlust
+  * CoinHoarder
+  * DecreaseForsakenCooldown
+  * EitrLeech
+  * IncreaseHeatResistance
+  * IncreaseMiningDrop
+  * IncreaseTreeDrop
+  * ModifyAttackEitrUse
+  * ModifyAttackHealthUse
+  * ModifyDodgeStaminaUse
+  * ModifyDrawStaminaUse
+  * ModifyLowHealth: Raises the health critical threshold
+  * ModifySummonDamage (Temporarily disabled for bug fixes)
+  * ModifySummonHealth (Temporarily disabled for bug fixes)
+  * ModifyWispRange
+  * Warmth: Prevents the cold and freezing debuffs
+* Additional new translations available:
+  * mod_epicloot_itemtooltip_rarity
+  * mod_epicloot_itemtooltip_effects
+* Updated mod_epicloot_me_doublemagicshot_desc translation
+* Added feature to allow some requirements in the MagicItemEffects json accept a value of false (such as ItemUsesEitrOnAttack).
+* Removed Bows from ModifyAttackStaminaUse and ModifyAttackSpeed (It does not actually work).
+
 ## Version 0.10.2
 
 * Set fallback gambling Coins from 1 to 10000 when misconfigured.

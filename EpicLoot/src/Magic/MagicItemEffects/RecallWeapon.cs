@@ -9,6 +9,7 @@ namespace EpicLoot.MagicItemEffects
     [HarmonyPatch]
     public class RecallWeapon_Projectile_SpawnOnHit_Patch
     {
+        // TODO investigate client to client connection bug with non-hosting zone player cannot recall spear, gets deleted
         public const float AutoRecallDistance = 80;
 
         private static ItemDrop IssueItemRecall(ItemDrop item, Projectile projectile)
