@@ -6,7 +6,7 @@ using UnityEngine;
 namespace EquipmentAndQuickSlots
 {
     //public bool CanAddItem(GameObject prefab, int stack = -1)
-    [HarmonyPatch(typeof(Inventory), "CanAddItem", typeof(GameObject), typeof(int))]
+    [HarmonyPatch(typeof(Inventory), nameof(Inventory.CanAddItem), typeof(GameObject), typeof(int))]
     public static class Inventory_CanAddItem_Patch
     {
         public static bool Prefix(Inventory __instance, ref bool __result, GameObject prefab, int stack)
@@ -22,7 +22,7 @@ namespace EquipmentAndQuickSlots
     }
 
     //public bool CanAddItem(ItemDrop.ItemData item, int stack = -1)
-    [HarmonyPatch(typeof(Inventory), "CanAddItem", typeof(ItemDrop.ItemData), typeof(int))]
+    [HarmonyPatch(typeof(Inventory), nameof(Inventory.CanAddItem), typeof(ItemDrop.ItemData), typeof(int))]
     public static class Inventory_CanAddItem2_Patch
     {
         public static bool Prefix(Inventory __instance, ref bool __result, ItemDrop.ItemData item, int stack)
@@ -38,7 +38,7 @@ namespace EquipmentAndQuickSlots
     }
 
     //public bool AddItem(ItemDrop.ItemData item)
-    [HarmonyPatch(typeof(Inventory), "AddItem", typeof(ItemDrop.ItemData))]
+    [HarmonyPatch(typeof(Inventory), nameof(Inventory.AddItem), typeof(ItemDrop.ItemData))]
     public static class Inventory_AddItem2_Patch
     {
         public static bool CallingExtended = false;
@@ -110,7 +110,7 @@ namespace EquipmentAndQuickSlots
     }
 
     //public bool ContainsItem(ItemDrop.ItemData item) => this.m_inventory.Contains(item);
-    [HarmonyPatch(typeof(Inventory), "ContainsItem")]
+    [HarmonyPatch(typeof(Inventory), nameof(Inventory.ContainsItem))]
     public static class Inventory_ContainsItem_Patch
     {
         public static bool Prefix(Inventory __instance, ref bool __result, ItemDrop.ItemData item)
@@ -126,7 +126,7 @@ namespace EquipmentAndQuickSlots
     }
 
     //public bool RemoveOneItem(ItemDrop.ItemData item)
-    [HarmonyPatch(typeof(Inventory), "RemoveOneItem")]
+    [HarmonyPatch(typeof(Inventory), nameof(Inventory.RemoveOneItem))]
     public static class Inventory_RemoveOneItem_Patch
     {
         public static bool Prefix(Inventory __instance, ref bool __result, ItemDrop.ItemData item)
@@ -142,7 +142,7 @@ namespace EquipmentAndQuickSlots
     }
 
     //public bool RemoveItem(ItemDrop.ItemData item)
-    [HarmonyPatch(typeof(Inventory), "RemoveItem", typeof(ItemDrop.ItemData))]
+    [HarmonyPatch(typeof(Inventory), nameof(Inventory.RemoveItem), typeof(ItemDrop.ItemData))]
     public static class Inventory_RemoveItem2_Patch
     {
         public static bool Prefix(Inventory __instance, ref bool __result, ItemDrop.ItemData item)
@@ -158,7 +158,7 @@ namespace EquipmentAndQuickSlots
     }
 
     //public bool RemoveItem(ItemDrop.ItemData item, int amount)
-    [HarmonyPatch(typeof(Inventory), "RemoveItem", typeof(ItemDrop.ItemData), typeof(int))]
+    [HarmonyPatch(typeof(Inventory), nameof(Inventory.RemoveItem), typeof(ItemDrop.ItemData), typeof(int))]
     public static class Inventory_RemoveItem3_Patch
     {
         public static bool Prefix(Inventory __instance, ref bool __result, ItemDrop.ItemData item, int amount)
@@ -189,8 +189,8 @@ namespace EquipmentAndQuickSlots
         }
     }
 
-    //public bool HaveItem(string name)
-    [HarmonyPatch(typeof(Inventory), nameof(Inventory.HaveItem))]
+    //public bool HaveItem(string name, bool matchWorldLevel = true)
+    [HarmonyPatch(typeof(Inventory), nameof(Inventory.HaveItem), new Type[] { typeof(string), typeof(bool)})]
     public static class Inventory_HaveItem_Patch
     {
         public static bool Prefix(Inventory __instance, ref bool __result, string name, bool matchWorldLevel = true)
@@ -205,8 +205,24 @@ namespace EquipmentAndQuickSlots
         }
     }
 
+    //public bool HaveItem(ItemDrop.ItemData.ItemType type, bool matchWorldLevel = true)
+    [HarmonyPatch(typeof(Inventory), nameof(Inventory.HaveItem), new Type[] { typeof(ItemDrop.ItemData.ItemType), typeof(bool) })]
+    public static class Inventory_HaveItem_Patch2
+    {
+        public static bool Prefix(Inventory __instance, ref bool __result, ItemDrop.ItemData.ItemType type, bool matchWorldLevel = true)
+        {
+            if (__instance.DoExtendedCall())
+            {
+                __result = __instance.Extended().OverrideHaveItem(type, matchWorldLevel);
+                return false;
+            }
+
+            return true;
+        }
+    }
+
     //public void GetAllPieceTables(List<PieceTable> tables)
-    [HarmonyPatch(typeof(Inventory), "GetAllPieceTables")]
+    [HarmonyPatch(typeof(Inventory), nameof(Inventory.GetAllPieceTables))]
     public static class Inventory_GetAllPieceTables_Patch
     {
         public static bool Prefix(Inventory __instance, List<PieceTable> tables)
@@ -238,7 +254,7 @@ namespace EquipmentAndQuickSlots
     }
 
     //public ItemDrop.ItemData GetItem(string name, int quality = -1, bool isPrefabName = false)
-    [HarmonyPatch(typeof(Inventory), "GetItem", typeof(string), typeof(int), typeof(bool))]
+    [HarmonyPatch(typeof(Inventory), nameof(Inventory.GetItem), typeof(string), typeof(int), typeof(bool))]
     public static class Inventory_GetItem2_Patch
     {
         public static bool Prefix(Inventory __instance, ref ItemDrop.ItemData __result, string name, int quality, bool isPrefabName)
@@ -254,7 +270,7 @@ namespace EquipmentAndQuickSlots
     }
 
     //public ItemDrop.ItemData GetAmmoItem(string ammoName, string matchPrefabName = null)
-    [HarmonyPatch(typeof(Inventory), "GetAmmoItem", typeof(string), typeof(string))]
+    [HarmonyPatch(typeof(Inventory), nameof(Inventory.GetAmmoItem), typeof(string), typeof(string))]
     public static class Inventory_GetAmmoItem_Patch
     {
         public static bool Prefix(Inventory __instance, ref ItemDrop.ItemData __result, string ammoName, string matchPrefabName)
@@ -286,7 +302,7 @@ namespace EquipmentAndQuickSlots
     }
 
     //public int NrOfItems() => this.m_inventory.Count;
-    [HarmonyPatch(typeof(Inventory), "NrOfItems")]
+    [HarmonyPatch(typeof(Inventory), nameof(Inventory.NrOfItems))]
     public static class Inventory_NrOfItems_Patch
     {
         public static bool Prefix(Inventory __instance, ref int __result)
@@ -302,7 +318,7 @@ namespace EquipmentAndQuickSlots
     }
 
     //public float SlotsUsedPercentage() => (float)((double)this.m_inventory.Count / (double)(this.m_width * this.m_height) * 100.0);
-    [HarmonyPatch(typeof(Inventory), "SlotsUsedPercentage")]
+    [HarmonyPatch(typeof(Inventory), nameof(Inventory.SlotsUsedPercentage))]
     public static class Inventory_SlotsUsedPercentage_Patch
     {
         public static bool Prefix(Inventory __instance, ref float __result)
@@ -318,7 +334,7 @@ namespace EquipmentAndQuickSlots
     }
 
     //public int GetEmptySlots() => this.m_height * this.m_width - this.m_inventory.Count;
-    [HarmonyPatch(typeof(Inventory), "GetEmptySlots")]
+    [HarmonyPatch(typeof(Inventory), nameof(Inventory.GetEmptySlots))]
     public static class Inventory_GetEmptySlots_Patch
     {
         public static bool Prefix(Inventory __instance, ref int __result)
@@ -334,7 +350,7 @@ namespace EquipmentAndQuickSlots
     }
 
     //public bool HaveEmptySlot() => this.m_inventory.Count < this.m_width * this.m_height;
-    [HarmonyPatch(typeof(Inventory), "HaveEmptySlot")]
+    [HarmonyPatch(typeof(Inventory), nameof(Inventory.HaveEmptySlot))]
     public static class Inventory_HaveEmptySlot_Patch
     {
         public static bool Prefix(Inventory __instance, ref bool __result)

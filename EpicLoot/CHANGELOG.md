@@ -1,4 +1,4 @@
-## Version 0.10.3
+## Version 0.10.4
 
 * New configuration GatedFreebuildMode to control when items are unlocked when using the free build enchantment. Defaults to BossKillUnlocksCurrentBiomePieces.
 * DoubleMagicShot now uses twice the eitr plus tweaks to fix projectile amount on some staffs.
@@ -26,6 +26,11 @@
 * Updated mod_epicloot_me_doublemagicshot_desc translation
 * Added feature to allow some requirements in the MagicItemEffects json accept a value of false (such as ItemUsesEitrOnAttack).
 * Removed Bows from ModifyAttackStaminaUse and ModifyAttackSpeed (It does not actually work).
+
+## Version 0.10.3
+
+* Hot fix for Sacrificing item selecting the wrong item in the inventory.
+* Increased minimum required version to 10.0.
 
 ## Version 0.10.2
 

@@ -258,6 +258,14 @@ namespace EquipmentAndQuickSlots
             return result;
         }
 
+        public bool OverrideHaveItem(ItemDrop.ItemData.ItemType type, bool matchWorldLevel)
+        {
+            CallBase = true;
+            var result = _inventories.Any(x => x.HaveItem(type, matchWorldLevel));
+            CallBase = false;
+            return result;
+        }
+
         public void OverrideGetAllPieceTables(List<PieceTable> tables)
         {
             CallBase = true;
