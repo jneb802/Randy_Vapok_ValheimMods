@@ -4,7 +4,6 @@ using HarmonyLib;
 
 namespace EpicLoot.MagicItemEffects
 {
-    //public override void ApplyArmorDamageMods(ref HitData.DamageModifiers mods)
     [HarmonyPatch(typeof(Player), nameof(Player.ApplyArmorDamageMods))]
     public static class ModifyResistance_Player_ApplyArmorDamageMods_Patch
     {
@@ -12,23 +11,23 @@ namespace EpicLoot.MagicItemEffects
         {
             var damageMods = new List<HitData.DamageModPair>();
 
-            if (__instance.HasActiveMagicEffect(MagicEffectType.AddFireResistance))
+            if (__instance.HasActiveMagicEffect(MagicEffectType.AddFireResistance, out float fireResistanceEffectValue))
             {
                 damageMods.Add(new HitData.DamageModPair() { m_type = HitData.DamageType.Fire, m_modifier = HitData.DamageModifier.Resistant});
             }
-            if (__instance.HasActiveMagicEffect(MagicEffectType.AddFrostResistance))
+            if (__instance.HasActiveMagicEffect(MagicEffectType.AddFrostResistance, out float frostResistanceEffectValue))
             {
                 damageMods.Add(new HitData.DamageModPair() { m_type = HitData.DamageType.Frost, m_modifier = HitData.DamageModifier.Resistant });
             }
-            if (__instance.HasActiveMagicEffect(MagicEffectType.AddLightningResistance))
+            if (__instance.HasActiveMagicEffect(MagicEffectType.AddLightningResistance, out float lightningResistanceEffectValue))
             {
                 damageMods.Add(new HitData.DamageModPair() { m_type = HitData.DamageType.Lightning, m_modifier = HitData.DamageModifier.Resistant });
             }
-            if (__instance.HasActiveMagicEffect(MagicEffectType.AddPoisonResistance))
+            if (__instance.HasActiveMagicEffect(MagicEffectType.AddPoisonResistance, out float poisonResistanceEffectValue))
             {
                 damageMods.Add(new HitData.DamageModPair() { m_type = HitData.DamageType.Poison, m_modifier = HitData.DamageModifier.Resistant });
             }
-            if (__instance.HasActiveMagicEffect(MagicEffectType.AddSpiritResistance))
+            if (__instance.HasActiveMagicEffect(MagicEffectType.AddSpiritResistance, out float spiritResistanceEffectValue))
             {
                 damageMods.Add(new HitData.DamageModPair() { m_type = HitData.DamageType.Spirit, m_modifier = HitData.DamageModifier.Resistant });
             }
@@ -42,34 +41,34 @@ namespace EpicLoot.MagicItemEffects
     {
         public static void Prefix(Character __instance, HitData hit)
         {
-            if (!(__instance is Player player))
+            if (__instance is not Player player)
             {
                 return;
             }
 
-            float sum(params string[] effects)
+            float sum(string effect, float additional)
             {
                 float value = 1;
-                foreach (var effect in effects)
-                {
-                    value -= player.GetTotalActiveMagicEffectValue(effect, 0.01f);
-                }
+                value -= player.GetTotalActiveMagicEffectValue(effect, 0.01f) + additional;
 
                 return Math.Max(value, 0);
             }
+            
+            float elementalResistance = player.GetTotalActiveMagicEffectValue(MagicEffectType.AddElementalResistancePercentage, 0.01f);
+            float physicalResistance = player.GetTotalActiveMagicEffectValue(MagicEffectType.AddPhysicalResistancePercentage, 0.01f);
 
             // elemental resistances
-            hit.m_damage.m_fire *= sum(MagicEffectType.AddFireResistancePercentage, MagicEffectType.AddElementalResistancePercentage);
-            hit.m_damage.m_frost *= sum(MagicEffectType.AddFrostResistancePercentage, MagicEffectType.AddElementalResistancePercentage);
-            hit.m_damage.m_lightning *= sum(MagicEffectType.AddLightningResistancePercentage, MagicEffectType.AddElementalResistancePercentage);
-            hit.m_damage.m_poison *= sum(MagicEffectType.AddPoisonResistancePercentage, MagicEffectType.AddElementalResistancePercentage);
-            hit.m_damage.m_spirit *= sum(MagicEffectType.AddSpiritResistancePercentage, MagicEffectType.AddElementalResistancePercentage);
+            hit.m_damage.m_fire *= sum(MagicEffectType.AddFireResistancePercentage, elementalResistance);
+            hit.m_damage.m_frost *= sum(MagicEffectType.AddFrostResistancePercentage, elementalResistance);
+            hit.m_damage.m_lightning *= sum(MagicEffectType.AddLightningResistancePercentage, elementalResistance);
+            hit.m_damage.m_poison *= sum(MagicEffectType.AddPoisonResistancePercentage, elementalResistance);
+            hit.m_damage.m_spirit *= sum(MagicEffectType.AddSpiritResistancePercentage, elementalResistance);
             
             // physical resistances
-            hit.m_damage.m_blunt *= sum(MagicEffectType.AddBluntResistancePercentage, MagicEffectType.AddPhysicalResistancePercentage);
-            hit.m_damage.m_slash *= sum(MagicEffectType.AddSlashingResistancePercentage, MagicEffectType.AddPhysicalResistancePercentage);
-            hit.m_damage.m_pierce *= sum(MagicEffectType.AddPiercingResistancePercentage, MagicEffectType.AddPhysicalResistancePercentage);
-            hit.m_damage.m_chop *= sum(MagicEffectType.AddChoppingResistancePercentage, MagicEffectType.AddPhysicalResistancePercentage);
+            hit.m_damage.m_blunt *= sum(MagicEffectType.AddBluntResistancePercentage, physicalResistance);
+            hit.m_damage.m_slash *= sum(MagicEffectType.AddSlashingResistancePercentage, physicalResistance);
+            hit.m_damage.m_pierce *= sum(MagicEffectType.AddPiercingResistancePercentage, physicalResistance);
+            hit.m_damage.m_chop *= sum(MagicEffectType.AddChoppingResistancePercentage, physicalResistance);
         }
     }
 }

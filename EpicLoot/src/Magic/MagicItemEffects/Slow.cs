@@ -68,9 +68,9 @@ namespace EpicLoot.MagicItemEffects
         private static void Postfix(Character __instance, HitData hit)
         {
             if (!__instance.IsBoss() && hit.GetAttacker() is Player player && 
-                player.HasActiveMagicEffect(MagicEffectType.Slow))
+                player.HasActiveMagicEffect(MagicEffectType.Slow, out float effectValue, 0.01f))
             {
-                var slowMultiplier = 1 - player.GetTotalActiveMagicEffectValue(MagicEffectType.Slow, 0.01f);
+                var slowMultiplier = 1 - effectValue;
                 if (!Mathf.Approximately(slowMultiplier, 1))
                 {
                     __instance.m_nview.InvokeRPC(ZRoutedRpc.Everybody, Slow.RPCKey, slowMultiplier);

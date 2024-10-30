@@ -87,7 +87,8 @@ namespace EpicLoot.MagicItemEffects
     {
         private static GameObject ChooseAttackProjectile(GameObject defaultAttackProjectile, Attack attack)
         {
-            if (attack.m_character == Player.m_localPlayer && Player.m_localPlayer.HasActiveMagicEffect(MagicEffectType.ExplosiveArrows))
+            if (attack.m_character == Player.m_localPlayer &&
+                Player.m_localPlayer.HasActiveMagicEffect(MagicEffectType.ExplosiveArrows, out float effectValue))
             {
                 return ObjectDB.instance.GetItemPrefab("ArrowFire").GetComponent<ItemDrop>().m_itemData.m_shared.m_attack.m_attackProjectile;
             }
@@ -97,7 +98,8 @@ namespace EpicLoot.MagicItemEffects
 
         private static GameObject MarkAttackProjectile(GameObject attackProjectile, Attack attack)
         {
-            if (attack.m_character == Player.m_localPlayer && Player.m_localPlayer.GetTotalActiveMagicEffectValue(MagicEffectType.ExplosiveArrows, 0.01f) is float explosiveStrength && explosiveStrength > 0)
+            if (attack.m_character == Player.m_localPlayer &&
+                Player.m_localPlayer.HasActiveMagicEffect(MagicEffectType.ExplosiveArrows, out float explosiveStrength, 0.01f))
             {
                 attackProjectile.GetComponent<ZNetView>().GetZDO().Set("el-aw", explosiveStrength);
             }
@@ -105,9 +107,14 @@ namespace EpicLoot.MagicItemEffects
             return attackProjectile;
         }
 
-        private static readonly MethodInfo AttackProjectileMarker = AccessTools.DeclaredMethod(typeof(ExplodingArrowInstantiation_Attack_FireProjectileBurst_Patch), nameof(MarkAttackProjectile));
-        private static readonly MethodInfo AttackProjectileChooser = AccessTools.DeclaredMethod(typeof(ExplodingArrowInstantiation_Attack_FireProjectileBurst_Patch), nameof(ChooseAttackProjectile));
-        private static readonly MethodInfo Instantiator = AccessTools.GetDeclaredMethods(typeof(Object)).Where(m => m.Name == "Instantiate" && m.GetGenericArguments().Length == 1).Select(m => m.MakeGenericMethod(typeof(GameObject))).First(m => m.GetParameters().Length == 3 && m.GetParameters()[1].ParameterType == typeof(Vector3));
+        private static readonly MethodInfo AttackProjectileMarker = AccessTools.DeclaredMethod(
+            typeof(ExplodingArrowInstantiation_Attack_FireProjectileBurst_Patch), nameof(MarkAttackProjectile));
+        private static readonly MethodInfo AttackProjectileChooser = AccessTools.DeclaredMethod(
+            typeof(ExplodingArrowInstantiation_Attack_FireProjectileBurst_Patch), nameof(ChooseAttackProjectile));
+        private static readonly MethodInfo Instantiator = AccessTools.GetDeclaredMethods(typeof(Object))
+            .Where(m => m.Name == "Instantiate" && m.GetGenericArguments().Length == 1)
+            .Select(m => m.MakeGenericMethod(typeof(GameObject)))
+            .First(m => m.GetParameters().Length == 3 && m.GetParameters()[1].ParameterType == typeof(Vector3));
 
         [UsedImplicitly]
         private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
