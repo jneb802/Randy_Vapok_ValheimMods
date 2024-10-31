@@ -2207,6 +2207,11 @@
       "Requirements" : {
         "AllowedItemTypes" : [
           "Shoulder"
+        ],
+        "AllowedRarities" : [
+          "Epic",
+          "Legendary",
+          "Mythic"
         ]
       },
       "SelectionWeight" : 1,

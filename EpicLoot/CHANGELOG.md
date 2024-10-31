@@ -1,3 +1,8 @@
+## Version 0.10.5
+
+* Fixed magiceffects ItemUsesStaminaOnAttack, ItemUsesEitrOnAttack, ItemUsesHealthOnAttack, and ItemUsesDrawStaminaOnAttack not resolving correctly when set to true.
+* Changed Warmth effect to only roll on Epic and above.
+
 ## Version 0.10.4
 
 * New configuration GatedFreebuildMode to control when items are unlocked when using the free build enchantment. Defaults to BossKillUnlocksCurrentBiomePieces.
