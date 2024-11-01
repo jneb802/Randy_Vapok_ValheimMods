@@ -1,8 +1,9 @@
-# Jam v1.0.8
-##### by RandyKnapp
-Source: [Github](https://github.com/RandyKnapp/ValheimMods)
-Discord: [RandyKnapp's Mod Community](https://discord.gg/randyknappmods)
-Patreon: [Randy's Patreon](https://www.patreon.com/randyknapp)
+# Jam
+
+Author: [RandyKnapp](https://discord.gg/ZNhYeavv3C)
+Source: [Github](https://github.com/RandyKnapp/ValheimMods/tree/main/Jam)
+Patreon: [patreon.com/randyknapp](https://www.patreon.com/randyknapp)
+Discord: [RandyKnapp's Mod Community](https://discord.gg/ZNhYeavv3C)
 
 Adds more jam to the game:
 
@@ -20,16 +21,20 @@ Adds more jam to the game:
 
 **Savory Eitrian Jam **x4**:** (8 Magecap, 8 Jotunn Puffs, 2 Onions, 8 Honey) Lasts 1500 seconds, gives 50 max HP, 50 max stamina, 55 max Eitr and 2HP regen per second
 
-### New in 1.0.8
-* Hildr's Request - Updated for Valheim 0.217.27
-
-### New in 1.0.7
-* Hildr's Request - Updated for Valheim BepInEx 5.4.2022
-
-### New in 1.0.6
-* Hildr's Request - 0.217.24
-
-
 ## Installation:
 Install with [BepInEx](https://valheim.thunderstore.io/package/denikson/BepInExPack_Valheim/)
 Copy the files in the "files" folder to a new folder called "Jam" in your BepInEx plugins folder.
+
+## Changelog
+
+### 1.0.9
+* Update for Valheim version 0.219.13 Bog Witch.
+
+### 1.0.8
+* Hildr's Request - Updated for Valheim 0.217.27
+
+### 1.0.7
+* Hildr's Request - Updated for Valheim BepInEx 5.4.2022
+
+### 1.0.6
+* Hildr's Request - 0.217.24
