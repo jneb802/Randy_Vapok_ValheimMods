@@ -1,8 +1,9 @@
-# AdvancedPortals
-Author: RandyKnapp
-Source: [Github](https://github.com/RandyKnapp/ValheimMods/tree/main/AdvancedPortals)
-Discord: [RandyKnapp's Mod Community](https://discord.gg/randyknappmods)
-Patreon: [Randy's Patreon](https://www.patreon.com/randyknapp)
+# Advanced Portals
+
+Author: [RandyKnapp](https://discord.gg/ZNhYeavv3C)
+Source: [Github](https://github.com/RandyKnapp/ValheimMods/tree/main/AdvancedPortals/)
+Patreon: [patreon.com/randyknapp](https://www.patreon.com/randyknapp)
+Discord: [RandyKnapp's Mod Community](https://discord.gg/ZNhYeavv3C)
 
 Adds three new portals to provide a lore-friendly and balanced way to reduce the item-transport slog!
 
@@ -43,23 +44,3 @@ Includes ServerSync.
 ## Installation:
   * Nexus: Drop the AdvancedPortals.dll right into your BepInEx/plugins folder
   * ThunderStore: Use r2modman to install, or manually drop the dll into your BepInEx/plugins folder
-
-### Changelist:
-
-#### 1.0.6
-* Restored Portal Connections on Dedicated Servers.
-#### 1.0.5
-  * Updated Portal Connection logic which was preventing Advanced Portals from connecting
-#### 1.0.4 
-  * Updates for Valheim 0.217.5
-#### 1.0.3
-  * Vapok fixed a bug that makes Adventure Backpacks work with Advanced Portals
-#### 1.0.2
-  * Added bronze to Ancient portal transport list (how could I forget?)
-  * Updated to support other mods that extend the inventory (Thanks Vapok)
-#### 1.0.1
-  * Added compatibility with AnyPortal and TargetPortal
-  * Fixed a bug with Obsidian and Black Marble portal recipes
-  * Added 5 BlackMetal to the default recipe for Black Marble portals (delete your config to automatically use the new recipe)
-#### 1.0.0
-  * Initial Release
