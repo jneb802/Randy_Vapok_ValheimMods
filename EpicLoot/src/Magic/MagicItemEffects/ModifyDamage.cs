@@ -10,6 +10,26 @@ namespace EpicLoot.MagicItemEffects
     {
         public static void Postfix(ItemDrop.ItemData __instance, ref HitData.DamageTypes __result)
         {
+            if (Player.m_localPlayer.HasActiveMagicEffect(MagicEffectType.CoinHoarder, out float coinHoarderEffectValue))
+            {
+                Debug.Log("Player has coinHoarder effect, modifying weapon damage");
+                var modifier = 1 + CoinHoarder.GetCoinHoarderValue(Player.m_localPlayer, coinHoarderEffectValue);
+                Debug.Log("Effect value is: " + modifier);
+                if (modifier > 0)
+                {
+                    __result.m_blunt *= modifier;
+                    __result.m_slash *= modifier;
+                    __result.m_pierce *= modifier;
+                    __result.m_chop *= modifier;
+                    __result.m_pickaxe *= modifier;
+                    __result.m_fire *= modifier;
+                    __result.m_frost *= modifier;
+                    __result.m_lightning *= modifier;
+                    __result.m_poison *= modifier;
+                    __result.m_spirit *= modifier; 
+                }
+            }
+            
             if (!__instance.IsMagic())
             {
                 return;
@@ -85,23 +105,7 @@ namespace EpicLoot.MagicItemEffects
                 __result.m_spirit *= modifier;
             }
             
-            if (Player.m_localPlayer.HasActiveMagicEffect(MagicEffectType.CoinHoarder, out float coinHoarderEffectValue))
-            {
-                var modifier = 1 + CoinHoarder.GetCoinHoarderValue(Player.m_localPlayer, coinHoarderEffectValue);
-                if (modifier > 0)
-                {
-                    __result.m_blunt *= modifier;
-                    __result.m_slash *= modifier;
-                    __result.m_pierce *= modifier;
-                    __result.m_chop *= modifier;
-                    __result.m_pickaxe *= modifier;
-                    __result.m_fire *= modifier;
-                    __result.m_frost *= modifier;
-                    __result.m_lightning *= modifier;
-                    __result.m_poison *= modifier;
-                    __result.m_spirit *= modifier; 
-                }
-            }
+            
 
             var damageMod = 0f;
             ModifyWithLowHealth.Apply(player, MagicEffectType.ModifyDamage, effect =>
