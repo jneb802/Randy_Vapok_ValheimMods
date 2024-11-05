@@ -6,10 +6,12 @@ using UnityEngine.UI;
 
 namespace ImprovedBuildHud
 {
-    [HarmonyPatch(typeof(InventoryGui), nameof(InventoryGui.SetupRequirement), new Type[] { typeof(Transform), typeof(Piece.Requirement), typeof(Player), typeof(bool), typeof(int) })]
+    [HarmonyPatch(typeof(InventoryGui), nameof(InventoryGui.SetupRequirement),
+        new Type[] { typeof(Transform), typeof(Piece.Requirement), typeof(Player), typeof(bool), typeof(int), typeof(int) })]
     public static class InventoryGui_SetupRequirement_Patch
     {
-        static bool Prefix(ref bool __result, Transform elementRoot, Piece.Requirement req, Player player, bool craft, int quality)
+        static bool Prefix(ref bool __result, Transform elementRoot, Piece.Requirement req, Player player,
+            bool craft, int quality, int craftMultiplier)
         {
             var icon = elementRoot.transform.Find("res_icon").GetComponent<Image>();
             var nameText = elementRoot.transform.Find("res_name").GetComponent<TMP_Text>();
@@ -25,7 +27,7 @@ namespace ImprovedBuildHud
                 tooltip.m_text = Localization.instance.Localize(req.m_resItem.m_itemData.m_shared.m_name);
                 nameText.text = Localization.instance.Localize(req.m_resItem.m_itemData.m_shared.m_name);
                 var num = ImprovedBuildHud.GetAvailableItems(req.m_resItem.m_itemData.m_shared.m_name);
-                var amount = req.GetAmount(quality);
+                var amount = req.GetAmount(quality) * craftMultiplier;
                 if (amount <= 0)
                 {
                     InventoryGui.HideRequirement(elementRoot);

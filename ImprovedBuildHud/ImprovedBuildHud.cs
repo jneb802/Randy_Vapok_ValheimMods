@@ -14,7 +14,7 @@ namespace ImprovedBuildHud
         public static ConfigEntry<string> CanBuildAmountColor;
     }
 
-    [BepInPlugin(PluginId, "Improved Build HUD", "1.0.6")]
+    [BepInPlugin(PluginId, "Improved Build HUD", "1.0.8")]
     [BepInProcess("valheim.exe")]
     [BepInDependency("aedenthorn.CraftFromContainers", BepInDependency.DependencyFlags.SoftDependency)]
     public class ImprovedBuildHud : BaseUnityPlugin
