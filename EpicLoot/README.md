@@ -26,9 +26,7 @@ Mythic sets have not been created for the base mod, but the feature is available
 
 ## Documentation
 
-**Magic Effects:** [Magic Effects Wiki](https://github.com/RandyKnapp/ValheimMods/wiki/Magic-Effects)
-**Loot Drops:** [info.md](https://github.com/RandyKnapp/ValheimMods/blob/main/EpicLoot/info.md)
-**Patching System:** [Config Patching](https://github.com/RandyKnapp/ValheimMods/wiki/Config-Patching)
+For more information please see the [wiki on thunderstore](https://thunderstore.io/c/valheim/p/RandyKnapp/EpicLoot/wiki/).
 
 ## Credits
 
@@ -52,22 +50,7 @@ Copy the contents of "plugins" to a new folder called "EpicLoot" in your BepInEx
 
 ## Cheats
 
-Enter these into the console (F5) after using `devcommands`:
-
-  * `magicitem <rarity> <itemtype> <amount>`: Roll a random magic item using the specified values. (alias: `mi`)
-    * `<rarity>`: (String) One of: magic, rare, epic, legendary, random. If left empty, uses random.
-  * `<itemtype>`: (String) The internal ID of an item. May be "random". If left empty, uses random.
-  * `<amount>`: (Int) The number of magic items to roll. If the other values are set to random, rerolls that random item each time. If left empty, uses 1.
-  * `<effectcount>`: (Int) The number of magic effects to roll on each item. If left empty, it rolls effect count as normal.
-  * `magicmats`: Spawns a bunch of all the magic crafting materials
-  * `magicitemwitheffect <effectID> <itemtype>`: Spawn a magic item with the specified magic effect. (alias: `mieffect`)
-    * `<effectID>`: (String) The type of magic effect you want to guarantee
-  * `<itemtype>`: (String) The internal ID of an item.
-  * `magicitemlegendary <legendaryID> <itemtype>`: Spawn a specific legendary item. (alias: `milegend`)
-  * `<legendaryID>`: (String) The ID of the legendary you want to spawn
-  * `<itemtype>`: (String) The internal ID of an item (optional, will use an item that meets the legendary definition's requirements)
-  * `magicitemset <setID>`: Spawn all the items in a legendary item set. (alias: `miset`)
-  * `<setID>`: (String) The ID of the legendary set you want to spawn
+Moved to a new page on the [Wiki](https://thunderstore.io/c/valheim/p/RandyKnapp/EpicLoot/wiki/2750-7cheatscommands/)!
 
 ## Current Known Mod Conflicts
 

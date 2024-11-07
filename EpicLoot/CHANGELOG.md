@@ -1,3 +1,8 @@
+## Version 0.10.6
+
+* Fixed Coin Hoarder not working unless on a weapon.
+* Fixed ranged damage from non-players not applying correctly.
+
 ## Version 0.10.5
 
 * Fixed magiceffects ItemUsesStaminaOnAttack, ItemUsesEitrOnAttack, ItemUsesHealthOnAttack, and ItemUsesDrawStaminaOnAttack not resolving correctly when set to true.

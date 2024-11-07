@@ -1,10 +1,8 @@
-﻿using System.Linq;
-using HarmonyLib;
+﻿using HarmonyLib;
 using UnityEngine;
 
 namespace EpicLoot.MagicItemEffects
 {
-    //public HitData.DamageTypes GetDamage(int quality)
     [HarmonyPatch(typeof(ItemDrop.ItemData), nameof(ItemDrop.ItemData.GetDamage), typeof(int), typeof(float))]
     public class ModifyDamage_ItemData_GetDamage_Patch
     {
@@ -12,9 +10,7 @@ namespace EpicLoot.MagicItemEffects
         {
             if (Player.m_localPlayer.HasActiveMagicEffect(MagicEffectType.CoinHoarder, out float coinHoarderEffectValue))
             {
-                Debug.Log("Player has coinHoarder effect, modifying weapon damage");
                 var modifier = 1 + CoinHoarder.GetCoinHoarderValue(Player.m_localPlayer, coinHoarderEffectValue);
-                Debug.Log("Effect value is: " + modifier);
                 if (modifier > 0)
                 {
                     __result.m_blunt *= modifier;
@@ -29,7 +25,7 @@ namespace EpicLoot.MagicItemEffects
                     __result.m_spirit *= modifier; 
                 }
             }
-            
+
             if (!__instance.IsMagic())
             {
                 return;
@@ -68,7 +64,7 @@ namespace EpicLoot.MagicItemEffects
                 player, __instance, MagicEffectType.AddPoisonDamage);
             __result.m_spirit       += totalDamage * MagicEffectsHelper.GetTotalActiveMagicEffectValueForWeapon(
                 player, __instance, MagicEffectType.AddSpiritDamage);
-            
+
             if (magicItemskillType == Skills.SkillType.Axes)
             {
                 __result.m_chop += totalDamage * MagicEffectsHelper.GetTotalActiveMagicEffectValueForWeapon(
@@ -104,8 +100,6 @@ namespace EpicLoot.MagicItemEffects
                 __result.m_poison *= modifier;
                 __result.m_spirit *= modifier;
             }
-            
-            
 
             var damageMod = 0f;
             ModifyWithLowHealth.Apply(player, MagicEffectType.ModifyDamage, effect =>
