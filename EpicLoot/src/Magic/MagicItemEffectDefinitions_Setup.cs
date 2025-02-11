@@ -31,6 +31,7 @@ namespace EpicLoot
         public static string AddHealthRegen = nameof(AddHealthRegen);
         public static string ModifyStaminaRegen = nameof(ModifyStaminaRegen);
         public static string ModifyEitrRegen = nameof(ModifyEitrRegen);
+        public static string ModifyDamageStatusFire = nameof(ModifyDamageStatusFire);
         public static string AddBluntDamage = nameof(AddBluntDamage);
         public static string AddSlashingDamage = nameof(AddSlashingDamage);
         public static string AddPiercingDamage = nameof(AddPiercingDamage);
