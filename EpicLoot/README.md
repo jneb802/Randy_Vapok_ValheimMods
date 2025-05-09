@@ -1,10 +1,10 @@
 # Epic Loot
 
 Author: [RandyKnapp](https://discord.gg/ZNhYeavv3C)
-Source: [Github](https://github.com/RandyKnapp/ValheimMods/blob/main/EpicLoot/)
+Source: [Github](https://github.com/OrianaVenture/Randy_Vapok_ValheimMods/tree/main/EpicLoot)
 Patreon: [patreon.com/randyknapp](https://www.patreon.com/randyknapp)
 Discord: [RandyKnapp's Mod Community](https://discord.gg/ZNhYeavv3C)
-Patch notes: [Github Patchnotes](https://github.com/RandyKnapp/ValheimMods/blob/main/EpicLoot/CHANGELOG.md)
+Patch notes: [Github Patchnotes](https://github.com/OrianaVenture/Randy_Vapok_ValheimMods/blob/main/EpicLoot/CHANGELOG.md)
 
 This mod aims to add a loot drop experience to Valheim similar to Diablo or other RPGs. Monsters and chests can now drop Magic, Rare, Epic, Legendary, or Mythic magic items. Each magic item has a number of magic effects on it, that give bonuses to the item or your character when that magic item is equipped.
 
