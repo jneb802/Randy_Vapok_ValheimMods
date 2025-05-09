@@ -25,37 +25,59 @@ namespace EpicLoot.Adventure.Feature
             RollOnListNTimes(random, availableGambles, AdventureDataManager.Config.Gamble.GamblesCount, results);
 
             var forestTokenGambles = new List<SecretStashItemInfo>();
-            RollOnListNTimes(random, availableGambles, AdventureDataManager.Config.Gamble.ForestTokenGamblesCount, forestTokenGambles);
+            RollOnListNTimes(random, availableGambles,
+                AdventureDataManager.Config.Gamble.ForestTokenGamblesCount, forestTokenGambles);
+
             foreach (var forestTokenGamble in forestTokenGambles)
             {
-                forestTokenGamble.Cost.Coins = (int)(forestTokenGamble.Cost.Coins * AdventureDataManager.Config.Gamble.ForestTokenGambleCoinsCost);
-                forestTokenGamble.Cost.ForestTokens = random.Next(AdventureDataManager.Config.Gamble.ForestTokenGambleCostMin, AdventureDataManager.Config.Gamble.ForestTokenGambleCostMax + 1);
-                forestTokenGamble.GuaranteedRarity = true;
-                forestTokenGamble.Rarity = ItemRarity.Rare;
-                results.Add(forestTokenGamble);
+                SecretStashItemInfo config = new SecretStashItemInfo(
+                    forestTokenGamble.ItemID, forestTokenGamble.Item, forestTokenGamble.Cost);
+                config.Cost.Coins = (int)(forestTokenGamble.Cost.Coins *
+                    AdventureDataManager.Config.Gamble.ForestTokenGambleCoinsCost);
+                config.Cost.ForestTokens = random.Next(
+                    AdventureDataManager.Config.Gamble.ForestTokenGambleCostMin,
+                    AdventureDataManager.Config.Gamble.ForestTokenGambleCostMax + 1);
+                config.Cost.IronBountyTokens = 0;
+                config.Cost.GoldBountyTokens = 0;
+                config.GuaranteedRarity = true;
+                config.Rarity = ItemRarity.Rare;
+                results.Add(config);
             }
 
             var ironBountyGambles = new List<SecretStashItemInfo>();
-            RollOnListNTimes(random, availableGambles, AdventureDataManager.Config.Gamble.IronBountyGamblesCount, ironBountyGambles);
+            RollOnListNTimes(random, availableGambles,
+                AdventureDataManager.Config.Gamble.IronBountyGamblesCount, ironBountyGambles);
             foreach (var ironBountyGamble in ironBountyGambles)
             {
-                ironBountyGamble.Cost.Coins = (int)(ironBountyGamble.Cost.Coins * AdventureDataManager.Config.Gamble.IronBountyGambleCoinsCost);
-                ironBountyGamble.Cost.IronBountyTokens = AdventureDataManager.Config.Gamble.IronBountyGambleCost;
-                ironBountyGamble.GuaranteedRarity = true;
-                ironBountyGamble.Rarity = ItemRarity.Epic;
-                results.Add(ironBountyGamble);
+                SecretStashItemInfo config = new SecretStashItemInfo(
+                    ironBountyGamble.ItemID, ironBountyGamble.Item, ironBountyGamble.Cost);
+                config.Cost.Coins = (int)(ironBountyGamble.Cost.Coins * AdventureDataManager.Config.Gamble.IronBountyGambleCoinsCost);
+                config.Cost.ForestTokens = 0;
+                config.Cost.IronBountyTokens = AdventureDataManager.Config.Gamble.IronBountyGambleCost;
+                config.Cost.GoldBountyTokens = 0;
+                config.GuaranteedRarity = true;
+                config.Rarity = ItemRarity.Epic;
+                results.Add(config);
             }
 
             var goldBountyGambles = new List<SecretStashItemInfo>();
-            RollOnListNTimes(random, availableGambles, AdventureDataManager.Config.Gamble.GoldBountyGamblesCount, goldBountyGambles);
+            RollOnListNTimes(random, availableGambles,
+                AdventureDataManager.Config.Gamble.GoldBountyGamblesCount, goldBountyGambles);
             foreach (var goldBountyGamble in goldBountyGambles)
             {
-                goldBountyGamble.Cost.Coins = (int)(goldBountyGamble.Cost.Coins * AdventureDataManager.Config.Gamble.GoldBountyGambleCoinsCost);
-                goldBountyGamble.Cost.GoldBountyTokens = AdventureDataManager.Config.Gamble.GoldBountyGambleCost;
-                goldBountyGamble.GuaranteedRarity = true;
-                goldBountyGamble.Rarity = ItemRarity.Legendary;
-                results.Add(goldBountyGamble);
+                SecretStashItemInfo config = new SecretStashItemInfo(
+                    goldBountyGamble.ItemID, goldBountyGamble.Item, goldBountyGamble.Cost);
+                config.Cost.Coins = (int)(goldBountyGamble.Cost.Coins *
+                    AdventureDataManager.Config.Gamble.GoldBountyGambleCoinsCost);
+                config.Cost.ForestTokens = 0;
+                config.Cost.IronBountyTokens = 0;
+                config.Cost.GoldBountyTokens = AdventureDataManager.Config.Gamble.GoldBountyGambleCost;
+                config.GuaranteedRarity = true;
+                config.Rarity = ItemRarity.Legendary;
+                results.Add(config);
             }
+
+            results = SortListByRarity(results);
 
             return results;
         }
@@ -63,37 +85,47 @@ namespace EpicLoot.Adventure.Feature
         private List<SecretStashItemInfo> GetAvailableGambles()
         {
             var availableGambles = new List<SecretStashItemInfo>();
+            var selectedItems = new HashSet<string>();
             foreach (var itemConfig in AdventureDataManager.Config.Gamble.Gambles)
             {
-                if (string.IsNullOrEmpty(itemConfig))
-                {
-                    EpicLoot.LogWarning($"Found empty itemConfig.. skipping.");
-                    continue;
-                }
-
+                // Entirely possible we want to pull out the number of items we grab here to be configurable
+                // If this is reduced to one, it means we basically grab current biome weapons 100% of the time-
+                // assuming that type is available
+                // Since vanilla is missing a handful of weapon types this does result in a few previous
+                // biome items and regular duplicates without grabbing 2 items
+                int itemsPerType = 2;
                 var gatingMode = EpicLoot.GetGatedItemTypeMode();
                 if (gatingMode == GatedItemTypeMode.Unlimited)
                 {
                     gatingMode = GatedItemTypeMode.PlayerMustKnowRecipe;
                 }
 
-                var itemId = GatedItemTypeHelper.GetItemFromCategory(itemConfig, gatingMode, 0);
-                if (string.IsNullOrEmpty(itemId))
+                for (int i = 0; i < itemsPerType; i++)
                 {
-                    EpicLoot.LogWarning($"[AdventureData] Could not find item id from Category (orig={itemConfig})!");
-                    continue;
-                }
-                var itemDrop = CreateItemDrop(itemId);
-                if (itemDrop == null)
-                {
-                    EpicLoot.LogWarning($"[AdventureData] Could not find item type (gated={itemId} orig={itemConfig}) in ObjectDB!");
-                    continue;
-                }
+                    if (string.IsNullOrEmpty(itemConfig))
+                    {
+                        continue;
+                    }
 
-                var itemData = itemDrop.m_itemData;
-                var cost = GetGambleCost(itemId);
-                availableGambles.Add(new SecretStashItemInfo(itemId, itemData, cost, true));
-                ZNetScene.instance.Destroy(itemDrop.gameObject);
+                    var itemId = GatedItemTypeHelper.GetGatedItemFromType(
+                        itemConfig, gatingMode, selectedItems, false, false, false);
+                    if (string.IsNullOrEmpty(itemId))
+                    {
+                        continue;
+                    }
+
+                    var itemDrop = CreateItemDrop(itemId);
+                    if (itemDrop == null)
+                    {
+                        continue;
+                    }
+
+                    var itemData = itemDrop.m_itemData;
+                    var cost = GetGambleCost(itemId);
+                    availableGambles.Add(new SecretStashItemInfo(itemId, itemData, cost, true));
+                    selectedItems.Add(itemId);
+                    ZNetScene.instance.Destroy(itemDrop.gameObject);
+                }
             }
 
             return availableGambles;
@@ -137,6 +169,7 @@ namespace EpicLoot.Adventure.Feature
                 gambleRarity.Length > 4 ? gambleRarity[4] : 1,
                 gambleRarity.Length > 5 ? gambleRarity[5] : 1
             };
+
             var lootTable = new LootTable()
             {
                 Object = "Console",

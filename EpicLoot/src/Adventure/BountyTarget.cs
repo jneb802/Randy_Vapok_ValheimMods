@@ -22,9 +22,24 @@ namespace EpicLoot.Adventure
             _character.m_onDeath += OnDeath;
             _zdo = _character.m_nview.GetZDO();
 
+            var beacon = gameObject.AddComponent<Beacon>();
+            beacon.m_range = EpicLoot.GetAndvaranautRange();
+
             if (HasBeenSetup())
             {
                 Reinitialize();
+            }
+            else
+            {
+                if (_zdo.IsOwner())
+                {
+                    var ai = gameObject.GetComponent<BaseAI>();
+                    if (ai)
+                    {
+                        ai.SetAlerted(true);
+                        //ai.SetAggravated(true, BaseAI.AggravatedReason.Damage);
+                    }
+                }
             }
         }
 
@@ -186,9 +201,9 @@ namespace EpicLoot.Adventure
                     return;
                 }
 
-                if (!string.IsNullOrEmpty(zdo.GetString(BountyIDKey)))
+                if (!instance.gameObject.GetComponent<BountyTarget>() && !string.IsNullOrEmpty(zdo.GetString(BountyIDKey)))
                 {
-                    var bountyTarget = instance.gameObject.AddComponent<BountyTarget>();
+                    instance.gameObject.AddComponent<BountyTarget>();
                 }
             }
         }
@@ -208,6 +223,24 @@ namespace EpicLoot.Adventure
             public static void Postfix(Character __instance)
             {
                 StartBountyTarget(__instance);
+            }
+        }
+
+        /// <summary>
+        /// Remove the beacon of bounty targets when they take damage.
+        /// </summary>
+        [HarmonyPatch(typeof(Humanoid), nameof(Humanoid.OnDamaged))]
+        [HarmonyPatch(typeof(Character), nameof(Character.OnDamaged))]
+        public static class Character_OnDamaged_Patch
+        {
+            public static void Postfix(Character __instance)
+            {
+                var target = __instance.GetComponent<BountyTarget>();
+                if (target)
+                {
+                    var beacon = __instance.GetComponent<Beacon>();
+                    UnityEngine.Object.Destroy(beacon);
+                }
             }
         }
     }

@@ -1,3 +1,42 @@
+## Version 0.11.0
+
+* New external dependency for Jotunn. You must install this for the mod to function!
+    * Added version requirement check such that server AND clients must have the mod installed and running for multiplayer.
+* Changes to how json files are handled:
+    * Improves installation process, all default json files are now embedded in the mod. You can no longer change them directly!
+    * Localization files are now loadable from Bepinex/config/EpicLoot/localizations.
+    * iteminfo.json file: New field "UngatedFallback" added to allow specifying fallback categories and failsafe fallback items separately.
+    * Patch files are now live-reloadable from the Bepinex/config/EpicLoot/patches folder without restarting the server.
+    * New patch action "MultiAdd" which allows patching the same values into multiple locations.
+* Added a terminal command "printconfig" which allows logging any of the current configurations available. Must be an admin.
+    * This allows inspected the result of patch operations and what configs a client has received from the server
+* Bug Fixes:
+    * Magic effect DoubleJump fixed to prevent infinite jumping.
+    * Gambling system reworked to allow better, more random, item selection.
+    * Fixed UI tooltip spasm when too large for the screen, now resizes and included side-by side placement for comparison tooltip.
+    * Enchanting table UI now has the correct text for initial level and unlock.
+    * Fixed Augment UI having infinity symbols when used with AzuCraftyBoxes mod.
+    * Block armor and parry armor no longer renamed to legacy values in the tooltip.
+    * "lucktest" terminal command reworked, provides examples.
+    * Enchanting Table should no longer drop extra materials when destroyed in some cases.
+    * Movement speed bonuses no longer cause stamina cost increases.
+    * Fixes misspelling of augmenting in the upgrade menu.
+* Optimizations to some Art assets (download size reduced by 50%).
+* Optimizations to how loot beams work (Up to a 20x improvement in performance).
+* 3 New magic effects with new translations available (see Github for these new translation keys):
+    * EitrWeave: parry blocks restore a little eitr
+    * BulkUp: Converts part (up to 100%) of your health regen into bonus health
+    * Spellsword: Adds an eitr cost to the weapon, increases damage
+* Bounty and treasure chest spawning overhauled:
+    * Spawn locations are now pre-selected and cached upon interacting with the merchant, decreasing wait times for accepting bounties and treasure maps.
+    * Deprecated use of IncreaseRadiusCount and RadiusInterval algorithm parameters for selecting suitable locations. (To be reviewed, may add back)
+    * Bounty spawning validation, bounties for creatures that don't exist in the world will not be generated.
+    * Bounties and treasure chests should no longer spawn inside of rocks, underground or deep underwater.
+    * Bounties and treasure for the Ashland and deep north should work more consistently.
+* Added CheatSword as a requirement to place the decorative pieces (piece_enchanter, piece_augmenter) to hide them by default.
+* Augment symbol changed to a filled in triangle rather than an empty diamond.
+* Bounties now ping when using the Andvaranaut until they take first damage.
+
 ## Version 0.10.7
 
 * Update for game version 0.220.3.

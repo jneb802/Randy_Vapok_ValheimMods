@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using EpicLoot.Config;
+using UnityEngine;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
@@ -8,9 +9,9 @@ namespace EpicLoot.Adventure.Feature
     {
         private readonly MerchantPanel _merchantPanel;
 
-        public AvailableBountiesListPanel(MerchantPanel merchantPanel, BountyListElement elementPrefab) 
+        public AvailableBountiesListPanel(MerchantPanel merchantPanel, BountyListElement elementPrefab)
             : base(
-                merchantPanel.transform.Find("Bounties/AvailableBountiesPanel/ItemList") as RectTransform, 
+                merchantPanel.transform.Find("Bounties/AvailableBountiesPanel/ItemList") as RectTransform,
                 elementPrefab,
                 merchantPanel.transform.Find("Bounties/AcceptBountyButton").GetComponent<Button>(),
                 merchantPanel.transform.Find("Bounties/TimeLeft").GetComponent<Text>())
@@ -29,14 +30,16 @@ namespace EpicLoot.Adventure.Feature
             
             var saveData = Player.m_localPlayer.GetAdventureSaveData();
             var bountyInProgressCount = saveData.GetInProgressBounties().Count;
-            bool allowedToBuy = !(EpicLoot.EnableLimitedBountiesInProgress.Value &&
-                                  bountyInProgressCount >= EpicLoot.MaxInProgressBounties.Value);
+            bool allowedToBuy = !(ELConfig.EnableLimitedBountiesInProgress.Value &&
+                bountyInProgressCount >= ELConfig.MaxInProgressBounties.Value);
 
             if (MerchantPanel.AcceptBountyText != null)
             {
-                MerchantPanel.AcceptBountyText.text = Localization.instance.Localize(!allowedToBuy ? string.Format("$mod_epicloot_merchant_max_bounties ({0})", EpicLoot.MaxInProgressBounties.Value): "$mod_epicloot_merchant_acceptbounty");
+                MerchantPanel.AcceptBountyText.text = Localization.instance.Localize(
+                    !allowedToBuy ? string.Format("$mod_epicloot_merchant_max_bounties ({0})",
+                    ELConfig.MaxInProgressBounties.Value): "$mod_epicloot_merchant_acceptbounty");
             }
-            
+
             MainButton.interactable = selectedItem != null && selectedItem.CanAccept && allowedToBuy;
         }
 
@@ -51,7 +54,9 @@ namespace EpicLoot.Adventure.Feature
             var bounty = GetSelectedItem();
             if (bounty != null && bounty.BountyInfo.State == BountyState.Available)
             {
-                player.StartCoroutine(AdventureDataManager.Bounties.AcceptBounty(player, bounty.BountyInfo, (success, position) =>
+                EpicLoot.Log("Trying to accept bounty...");
+                player.StartCoroutine(
+                    AdventureDataManager.Bounties.AcceptBounty(player, bounty.BountyInfo, (success, position) =>
                 {
                     if (success)
                     {

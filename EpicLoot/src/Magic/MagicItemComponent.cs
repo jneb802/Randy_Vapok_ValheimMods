@@ -14,12 +14,12 @@ using EpicLoot.LegendarySystem;
 using EpicLoot.MagicItemEffects;
 using HarmonyLib;
 using JetBrains.Annotations;
+using Jotunn.Managers;
 using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.UI;
 using CodeInstruction = HarmonyLib.CodeInstruction;
 using Object = UnityEngine.Object;
-// ReSharper disable RedundantAssignment
 
 namespace EpicLoot
 {
@@ -521,10 +521,8 @@ namespace EpicLoot
 
         public static string GetSetDisplayName(ItemDrop.ItemData item, bool isMundane)
         {
-            if (isMundane)
-            {
-                var textInfo = new CultureInfo("en-US", false).TextInfo;
-                return textInfo.ToTitleCase(item.m_shared.m_setName);
+            if (isMundane) {
+                return LocalizationManager.Instance.TryTranslate(item.m_shared.m_setStatusEffect.m_name);
             }
 
             var setInfo = item.GetLegendarySetInfo();
@@ -586,8 +584,8 @@ namespace EpicLoot
             EquippedValues.Remove(player);
         }
 
-        public static float? Get(Player player, string effect, Func<float?> calculate)
-        {
+        public static float? Get(Player player, string effect, Func<float?> calculate) {
+            if (effect == null) { return 0f; } // default fail out if the requested key is null
             var values = EquippedValues.GetOrCreateValue(player);
             if (values.TryGetValue(effect, out float? value))
             {
@@ -910,7 +908,6 @@ namespace EpicLoot
         }
     }
 
-    //void UpdateIcons(Player player)
     [HarmonyPatch(typeof(HotkeyBar), nameof(HotkeyBar.UpdateIcons), typeof(Player))]
     public static class HotkeyBar_UpdateIcons_Patch
     {

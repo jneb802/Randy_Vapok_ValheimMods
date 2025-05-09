@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace EpicLoot.Adventure
 {
@@ -76,10 +77,30 @@ namespace EpicLoot.Adventure
         public List<TreasureMapBiomeInfoConfig> BiomeInfo = new List<TreasureMapBiomeInfoConfig>();
         public float StartRadiusMin = 0;
         public float StartRadiusMax = 500;
+        [Obsolete] // TODO evaluate if should keep
         public int IncreaseRadiusCount = 3;
+        [Obsolete] // TODO evaluate if should keep
         public float RadiusInterval = 500;
         public float MinimapAreaRadius = 100;
         public List<SecretStashItemConfig> SaleItems = new List<SecretStashItemConfig>();
+        
+        [NonSerialized]
+        private static Heightmap.Biome[] _biomeList;
+
+        public Heightmap.Biome[] GetBiomeList()
+        {
+            if (_biomeList == null)
+            {
+                _biomeList = BiomeInfo.Select(item => item.Biome).ToArray();
+            }
+
+            return _biomeList;
+        }
+
+        public void UpdateBiomeList()
+        {
+            _biomeList = BiomeInfo.Select(item => item.Biome).ToArray();
+        }
     }
 
     [Serializable]
@@ -108,7 +129,7 @@ namespace EpicLoot.Adventure
         public int RewardCoins;
         public List<BountyTargetAddConfig> Adds = new List<BountyTargetAddConfig>();
     }
-    
+
     [Serializable]
     public class BountyBossConfig
     {
@@ -134,7 +155,7 @@ namespace EpicLoot.Adventure
         public List<BountyBossConfig> Bosses = new List<BountyBossConfig>();
         public BountyTargetNameConfig Names;
     }
-        
+
     [Serializable]
     public class AdventureDataConfig
     {

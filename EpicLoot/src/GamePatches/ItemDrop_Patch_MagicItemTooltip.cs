@@ -3,6 +3,7 @@ using System.Text;
 using EpicLoot.Crafting;
 using EpicLoot.Data;
 using EpicLoot.MagicItemEffects;
+using EpicLoot.src.GamePatches;
 using HarmonyLib;
 using JetBrains.Annotations;
 using UnityEngine;
@@ -23,11 +24,14 @@ namespace EpicLoot
                 Player.m_localPlayer.HasEquipmentOfType(item.m_shared.m_itemType) && ZInput.GetKey(KeyCode.LeftControl))
             {
                 var otherItem = Player.m_localPlayer.GetEquipmentOfType(item.m_shared.m_itemType);
-                tooltipText = item.GetTooltip() + $"<color=#AAA><i>$mod_epicloot_currentlyequipped:" +
-                    $"</i></color>\n<size=18>{otherItem.GetDecoratedName()}</size>\n" + otherItem.GetTooltip();
-            }
-            else
-            {
+                tooltipText = item.GetTooltip();
+                // Set the comparision tooltip to be shown side-by-side with our original tooltip
+                PatchOnHoverFix.comparision_title = $"<color=#AAA><i>$mod_epicloot_currentlyequipped:" +
+                    $"</i></color>" + otherItem.GetDecoratedName();
+                PatchOnHoverFix.comparision_tooltip = otherItem.GetTooltip();
+            } else {
+                PatchOnHoverFix.comparision_tooltip = "";
+                PatchOnHoverFix.comparision_added = false;
                 tooltipText = item.GetTooltip();
             }
             tooltip.Set(item.GetDecoratedName(), tooltipText);
@@ -176,9 +180,17 @@ namespace EpicLoot
                     var totalEitrUse = doubleMagicShot
                         ? eitrUsePercentage * (item.m_shared.m_attack.m_attackEitr * 2)
                         : eitrUsePercentage * item.m_shared.m_attack.m_attackEitr;
-                       
-                    if (item.m_shared.m_attack.m_attackEitr > 0.0)
-                        text.Append($"\n$item_eitruse: <color={magicAttackEitrColor}>{totalEitrUse:#.#}</color>");
+
+                    var hasSpellSword = magicItem.HasEffect(MagicEffectType.SpellSword);
+                    if (item.m_shared.m_attack.m_attackEitr > 0.0 || hasSpellSword)
+                    {
+                        float base_cost = item.m_shared.m_attack.m_attackStamina;
+                        if (base_cost == 0f) { base_cost = 4; }
+                        totalEitrUse = totalEitrUse + (base_cost / 2);
+                        var spellswordColor = hasSpellSword ? magicColor : "orange";
+                        text.Append($"\n$item_eitruse: <color={spellswordColor}>{totalEitrUse:#.#}</color>");
+                    }
+                        
                     
                     var hasBloodlust = magicItem.HasEffect(MagicEffectType.Bloodlust);
                     var bloodlustColor = hasBloodlust ? magicColor : "orange";
@@ -207,12 +219,12 @@ namespace EpicLoot
                     var totalattackDrawStamina = attackDrawStaminaPercentage * item.m_shared.m_attack.m_drawStaminaDrain;
                     if (item.m_shared.m_attack.m_drawStaminaDrain > 0.0)
                         text.Append($"\n$item_staminahold: " +
-                            $"<color={attackDrawStaminaColor}>{totalattackDrawStamina:#.#}/s");
+                            $"<color={attackDrawStaminaColor}>{totalattackDrawStamina:#.#}/s</color>");
 
                     var baseBlockPower1 = item.GetBaseBlockPower(qualityLevel);
                     var blockPowerTooltipValue = item.GetBlockPowerTooltip(qualityLevel);
                     var blockPowerPercentageString = blockPowerTooltipValue.ToString("0");
-                    text.Append($"\n$item_blockpower: <color={magicBlockColor1}>{baseBlockPower1}</color> " +
+                    text.Append($"\n$item_blockarmor: <color={magicBlockColor1}>{baseBlockPower1}</color> " +
                         $"<color={magicBlockColor2}>({blockPowerPercentageString})</color>");
                     if (item.m_shared.m_timedBlockBonus > 1.0)
                     {
@@ -256,11 +268,11 @@ namespace EpicLoot
                     var baseBlockPower2 = item.GetBaseBlockPower(qualityLevel);
                     blockPowerTooltipValue = item.GetBlockPowerTooltip(qualityLevel);
                     var str5 = blockPowerTooltipValue.ToString("0");
-                    text.Append($"\n$item_blockpower: <color={magicBlockColor1}>{baseBlockPower2}</color> " +
+                    text.Append($"\n$item_blockarmor: <color={magicBlockColor1}>{baseBlockPower2}</color> " +
                         $"<color={magicBlockColor2}>({str5})</color>");
                     if (item.m_shared.m_timedBlockBonus > 1.0)
                     {
-                        text.Append($"\n$item_deflection: " +
+                        text.Append($"\n$item_blockforce: " +
                             $"<color={magicParryColor}>{item.GetDeflectionForce(qualityLevel)}</color>");
 
                         var timedBlockBonus = item.m_shared.m_timedBlockBonus;
@@ -404,50 +416,52 @@ namespace EpicLoot
             var poisonMagic = item.HasEffect(MagicEffectType.AddPoisonDamage);
             var spiritMagic = item.HasEffect(MagicEffectType.AddSpiritDamage);
             var coinHoarderMagic = CoinHoarder.HasCoinHoarder(out float coinHoarderEffectValue);
+            var spellswordMagic = item.HasEffect(MagicEffectType.SpellSword);
             Player.m_localPlayer.GetSkills().GetRandomSkillRange(out var min, out var max, skillType);
             var str = "";
             if (instance.m_damage != 0.0)
             {
-                str = str + "\n$inventory_damage: " + DamageRange(instance.m_damage, min, max, allMagic, magicColor);
+                var magic = allMagic || spellswordMagic;
+               str = str + "\n$inventory_damage: " + DamageRange(instance.m_damage, min, max, magic, magicColor);
             }
             if (instance.m_blunt != 0.0)
             {
-                var magic = allMagic || physMagic || bluntMagic || coinHoarderMagic;
+                var magic = allMagic || physMagic || bluntMagic || coinHoarderMagic || spellswordMagic;
                 str = str + "\n$inventory_blunt: " + DamageRange(instance.m_blunt, min, max, magic, magicColor);
             }
             if (instance.m_slash != 0.0)
             {
-                var magic = allMagic || physMagic || slashMagic || coinHoarderMagic;
+                var magic = allMagic || physMagic || slashMagic || coinHoarderMagic || spellswordMagic;
                 str = str + "\n$inventory_slash: " + DamageRange(instance.m_slash, min, max, magic, magicColor);
             }
             if (instance.m_pierce != 0.0)
             {
-                var magic = allMagic || physMagic || pierceMagic || coinHoarderMagic;
+                var magic = allMagic || physMagic || pierceMagic || coinHoarderMagic || spellswordMagic;
                 str = str + "\n$inventory_pierce: " + DamageRange(instance.m_pierce, min, max, magic, magicColor);
             }
             if (instance.m_fire != 0.0)
             {
-                var magic = allMagic || elemMagic || fireMagic || coinHoarderMagic;
+                var magic = allMagic || elemMagic || fireMagic || coinHoarderMagic || spellswordMagic;
                 str = str + "\n$inventory_fire: " + DamageRange(instance.m_fire, min, max, magic, magicColor);
             }
             if (instance.m_frost != 0.0)
             {
-                var magic = allMagic || elemMagic || frostMagic || coinHoarderMagic;
+                var magic = allMagic || elemMagic || frostMagic || coinHoarderMagic || spellswordMagic;
                 str = str + "\n$inventory_frost: " + DamageRange(instance.m_frost, min, max, magic, magicColor);
             }
             if (instance.m_lightning != 0.0)
             {
-                var magic = allMagic || elemMagic || lightningMagic || coinHoarderMagic;
+                var magic = allMagic || elemMagic || lightningMagic || coinHoarderMagic || spellswordMagic;
                 str = str + "\n$inventory_lightning: " + DamageRange(instance.m_lightning, min, max, magic, magicColor);
             }
             if (instance.m_poison != 0.0)
             {
-                var magic = allMagic || elemMagic || poisonMagic || coinHoarderMagic;
+                var magic = allMagic || elemMagic || poisonMagic || coinHoarderMagic || spellswordMagic;
                 str = str + "\n$inventory_poison: " + DamageRange(instance.m_poison, min, max, magic, magicColor);
             }
             if (instance.m_spirit != 0.0)
             {
-                var magic = allMagic || elemMagic || spiritMagic || coinHoarderMagic;
+                var magic = allMagic || elemMagic || spiritMagic || coinHoarderMagic || spellswordMagic;
                 str = str + "\n$inventory_spirit: " + DamageRange(instance.m_spirit, min, max, magic, magicColor);
             }
             return str;
@@ -604,7 +618,7 @@ namespace EpicLoot
                         }
                         break;
 
-                    case "$item_blockpower":
+                    case "$item_blockarmor":
                         if (magicItem.HasEffect(MagicEffectType.ModifyBlockPower))
                         {
                             var baseBlockPower = item.GetBaseBlockPower(item.m_quality);

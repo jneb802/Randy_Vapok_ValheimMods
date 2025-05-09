@@ -188,6 +188,9 @@ namespace EpicLoot.Adventure
             IronBountyTokensCount = transform.Find("Currencies/BountyTokensIronCount").GetComponent<Text>();
             GoldBountyTokensCount = transform.Find("Currencies/BountyTokensGoldCount").GetComponent<Text>();
 
+            // Initialize the cache of of bounty positions, starting from the central part of the map.
+            StartCoroutine(BountyLocationEarlyCache.PopulateCacheFromStart());
+
             if (EpicLoot.HasAuga)
             {
                 EpicLootAuga.ReplaceBackground(gameObject, true);

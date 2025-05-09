@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using Common;
 using EpicLoot.Abilities;
@@ -10,6 +9,7 @@ using EpicLoot.Crafting;
 using EpicLoot.GatedItemType;
 using EpicLoot.LegendarySystem;
 using HarmonyLib;
+using Jotunn.Managers;
 using UnityEngine;
 using Random = System.Random;
 
@@ -183,12 +183,6 @@ namespace EpicLoot
                 var player = Player.m_localPlayer;
                 FixResistances(player);
             }));
-            new Terminal.ConsoleCommand("lucktest", "", (args =>
-            {
-                var lootTable = args.Length > 1 ? args[1] : "Greydwarf";
-                var luckFactor = args.Length > 2 ? float.Parse(args[2]) : 0;
-                LootRoller.PrintLuckTest(lootTable, luckFactor);
-            }));
             new Terminal.ConsoleCommand("lootres", "", (args =>
             {
                 var lootTable = args.Length > 1 ? args[1] : "Greydwarf";
@@ -252,6 +246,7 @@ namespace EpicLoot
             player.StartCoroutine(TestTreasureMapCoroutine(saveData, biome, player, count));
         }
 
+        // TODO: update these tests
         private static IEnumerator TestTreasureMapCoroutine(AdventureSaveData saveData, Heightmap.Biome biome, Player player, int count)
         {
             var biomes = new[] { Heightmap.Biome.Meadows, Heightmap.Biome.BlackForest, Heightmap.Biome.Swamp,
@@ -289,16 +284,17 @@ namespace EpicLoot
 
         private static void SpawnMagicCraftingMaterials()
         {
-            foreach (var itemPrefab in EpicLoot.RegisteredItemPrefabs)
+            foreach (string type in EpicLoot.MagicMaterials)
             {
-                var itemDrop = UnityEngine.Object.Instantiate(itemPrefab, Player.m_localPlayer.transform.position + Player.m_localPlayer.transform.forward * 2f + Vector3.up, Quaternion.identity).GetComponent<ItemDrop>();
-                if (itemDrop.m_itemData.IsMagicCraftingMaterial() || itemDrop.m_itemData.IsRunestone())
+                foreach (ItemRarity rarity in Enum.GetValues(typeof(ItemRarity)))
                 {
+                    var assetName = $"{type}{rarity}";
+                    var itemPrefab = PrefabManager.Instance.GetPrefab(assetName);
+                    var transform = Player.m_localPlayer.transform;
+                    var itemDrop = UnityEngine.Object.Instantiate(itemPrefab,
+                        transform.position + transform.forward * 2f + Vector3.up,
+                        Quaternion.identity).GetComponent<ItemDrop>();
                     itemDrop.m_itemData.m_stack = itemDrop.m_itemData.m_shared.m_maxStackSize / 2;
-                }
-                else
-                {
-                    ZNetScene.instance.Destroy(itemDrop.gameObject);
                 }
             }
         }
@@ -492,38 +488,8 @@ namespace EpicLoot
 
             if (string.IsNullOrEmpty(itemType))
             {
-                var dummyMagicItem = new MagicItem { Rarity = rarity };
-                var allowedItems = new List<ItemDrop>();
-                foreach (var itemName in GatedItemTypeHelper.ItemInfoByID.Keys)
-                {
-                    var itemPrefab = ObjectDB.instance.GetItemPrefab(itemName);
-                    if (itemPrefab == null)
-                    {
-                       continue;
-                    }
-
-                    var itemDrop = itemPrefab.GetComponent<ItemDrop>();
-                    if (itemDrop == null)
-                    {
-                        continue;
-                    }
-
-                    var itemData = itemDrop.m_itemData;
-                    itemData.m_dropPrefab = itemPrefab;
-                    var checkRequirements = itemInfo.Requirements.CheckRequirements(itemData, dummyMagicItem);
-
-                    if (checkRequirements)
-                    {
-                        allowedItems.Add(itemDrop);
-                    }
-                }
-                itemType = allowedItems.LastOrDefault()?.name;
-            }
-            
-            if (string.IsNullOrEmpty(itemType))
-            {
-                EpicLoot.LogWarning($"No Item Type Found for LegendaryID {legendaryID} - This would've made a Club.");
-                return;
+                int selected = UnityEngine.Random.Range(0, GatedItemTypeHelper.ItemsByTypeAndBoss.Keys.Count);
+                itemType = GatedItemTypeHelper.ItemsByTypeAndBoss.ElementAt(selected).Key;
             }
 
             LootTable loot = new LootTable
