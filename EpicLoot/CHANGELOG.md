@@ -1,3 +1,7 @@
+## Version 0.11.1
+
+* Hotpatch to re-add deprecated Items field in iteminfo.json file. This field does nothing, please remove from your patch files.
+
 ## Version 0.11.0
 
 * New external dependency for Jotunn. You must install this for the mod to function!

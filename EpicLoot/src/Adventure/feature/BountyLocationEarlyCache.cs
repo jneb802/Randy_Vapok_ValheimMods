@@ -24,9 +24,12 @@ namespace EpicLoot.Adventure.Feature
 
             for (int i = 0; i < biomeList.Length; i++)
             {
-                var biomeConfig = GetBiomeInfoConfig(biomeList[i]);
-                radiusRanges.Add(biomeList[i],
-                    new Tuple<float, float> (biomeConfig.MinRadius, biomeConfig.MaxRadius));
+                if (!radiusRanges.ContainsKey(biomeList[i]))
+                {
+                    var biomeConfig = GetBiomeInfoConfig(biomeList[i]);
+                    radiusRanges.Add(biomeList[i],
+                        new Tuple<float, float>(biomeConfig.MinRadius, biomeConfig.MaxRadius));
+                }
             }
 
             return radiusRanges;
