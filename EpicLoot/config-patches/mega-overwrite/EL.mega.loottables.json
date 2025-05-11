@@ -471,8 +471,11 @@
           { "Item": "Tier7Shields" }
         ]
       }
-    ],
-    "LootTables": [
+    ]},
+    {
+      "Path": "$.LootTables",
+      "Action": "Overwrite",
+      "Value": [
       {
         "Object": "Tier0Mob",
         "LeveledLoot": [
