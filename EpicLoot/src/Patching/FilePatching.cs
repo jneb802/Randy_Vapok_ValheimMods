@@ -103,6 +103,7 @@ namespace EpicLoot.Patching
                 Debug.LogWarning($"Attempted PatchesDirPath is [{PatchesDirPath}]");
                 Debug.LogWarning($"Attempted debugPath is [{debugPath}]");
             }
+
             ApplyAllPatches();
         }
 
@@ -122,6 +123,7 @@ namespace EpicLoot.Patching
                 }
             }
         }
+
         public static void RemoveFilePatches(string fileName, string patchFile)
         {
             PatchesPerFile.GetValues(fileName, true).RemoveAll(y => y.SourceFile.Equals(patchFile));
@@ -273,7 +275,7 @@ namespace EpicLoot.Patching
         // This is only called on startup, and will modify all base classes that have patches loaded locally
         public static void ApplyAllPatches()
         {
-            foreach(var entry in PatchesPerFile)
+            foreach (var entry in PatchesPerFile)
             {
                 LoadPatchedJSON(entry.Key);
             }
@@ -294,7 +296,6 @@ namespace EpicLoot.Patching
             files_with_patch_updates.Clear();
         }
 
-        
         internal static void LoadPatchedJSON(string patch_filename, bool network_updates = false)
         {
             var base_json_string = JObject.Parse(EpicLoot.ReadEmbeddedResourceFile("EpicLoot.config." + patch_filename));
@@ -582,7 +583,7 @@ namespace EpicLoot.Patching
             var baseObject = ((JObject)token);
             var partialObject = ((JObject)patch.Value);
 
-            MergeObject(baseObject, partialObject);            
+            MergeObject(baseObject, partialObject);
         }
 
         private static void MergeObject(JObject baseObject, JObject partialObject)

@@ -1,3 +1,10 @@
+## Version 0.11.2
+
+* Fixed issue with loot rolling higher tiers than should have been allowed for loottable config.
+* Small bug fixes for various null reference exception errors.
+* Fixed tooltip display bug with gamble menu.
+* Fixed recipes not being added for singleplayer (and hosts).
+
 ## Version 0.11.1
 
 * Hotpatch to re-add deprecated Items field in iteminfo.json file. This field does nothing, please remove from your patch files.

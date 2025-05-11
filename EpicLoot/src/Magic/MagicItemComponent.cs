@@ -445,57 +445,64 @@ namespace EpicLoot
 
         public static string GetSetTooltip(this ItemDrop.ItemData item)
         {
-            if (item == null)
+            if (item == null || Player.m_localPlayer == null)
+            {
                 return String.Empty;
+            }
 
             var text = new StringBuilder();
+
             try
             {
-                var setID = item.GetSetID(out var isMundane);
-                var setSize = item.GetSetSize();
+                string setID = item.GetSetID(out var isMundane);
+                int setSize = item.GetSetSize();
 
-                var setPieces = GetSetPieces(setID);
-                var currentSetEquipped = Player.m_localPlayer.GetEquippedSetPieces(setID);
+                List<string> setPieces = GetSetPieces(setID);
+                List<ItemDrop.ItemData> currentSetEquipped = Player.m_localPlayer.GetEquippedSetPieces(setID);
 
-                var setDisplayName = GetSetDisplayName(item, isMundane);
+                string setDisplayName = GetSetDisplayName(item, isMundane);
                 text.Append($"\n\n<color={EpicLoot.GetSetItemColor()}> $mod_epicloot_set: " +
                     $"{setDisplayName} ({currentSetEquipped.Count}/{setSize}):</color>");
 
-                foreach (var setItemName in setPieces)
+                foreach (string setItemName in setPieces)
                 {
-                    var isEquipped = IsSetItemEquipped(currentSetEquipped, setItemName, isMundane);
-                    var color = isEquipped ? "white" : "#808080ff";
-                    var displayName = GetSetItemDisplayName(setItemName, isMundane);
+                    bool isEquipped = IsSetItemEquipped(currentSetEquipped, setItemName, isMundane);
+                    string color = isEquipped ? "white" : "#808080ff";
+                    string displayName = GetSetItemDisplayName(setItemName, isMundane);
                     text.Append($"\n  <color={color}>{displayName}</color>");
                 }
 
                 if (isMundane)
                 {
-                    var setEffectColor = currentSetEquipped.Count == setSize ? EpicLoot.GetSetItemColor() : "#808080ff";
-                    var skillLevel = Player.m_localPlayer.GetSkillLevel(item.m_shared.m_skillType);
+                    string setEffectColor = currentSetEquipped.Count == setSize ? EpicLoot.GetSetItemColor() : "#808080ff";
+                    float skillLevel = Player.m_localPlayer.GetSkillLevel(item.m_shared.m_skillType);
                     text.Append($"\n<color={setEffectColor}>({setSize}) ‣ " +
                         $"{item.GetSetStatusEffectTooltip(item.m_quality, skillLevel).Replace("\n", " ")}</color>");
                 }
                 else
                 {
-                    var setInfo = item.GetLegendarySetInfo();
-                    foreach (var setBonusInfo in setInfo.SetBonuses.OrderBy(x => x.Count))
-                    {
-                        var hasEquipped = currentSetEquipped.Count >= setBonusInfo.Count;
-                        var effectDef = MagicItemEffectDefinitions.Get(setBonusInfo.Effect.Type);
-                        if (effectDef == null)
-                        {
-                            EpicLoot.LogError($"Set Tooltip: Could not find effect ({setBonusInfo.Effect.Type}) " +
-                                $"for set ({setInfo.ID}) bonus ({setBonusInfo.Count})!");
-                            continue;
-                        }
+                    LegendarySetInfo setInfo = item.GetLegendarySetInfo();
 
-                        var display = MagicItem.GetEffectText(effectDef, setBonusInfo.Effect.Values?.MinValue ?? 0);
-                        text.Append($"\n<color={(hasEquipped ? EpicLoot.GetSetItemColor() : "#808080ff")}>" +
-                            $"({setBonusInfo.Count}) ‣ {display}</color>");
+                    if (setInfo != null)
+                    {
+                        foreach (var setBonusInfo in setInfo.SetBonuses.OrderBy(x => x.Count))
+                        {
+                            bool hasEquipped = currentSetEquipped.Count >= setBonusInfo.Count;
+                            var effectDef = MagicItemEffectDefinitions.Get(setBonusInfo.Effect.Type);
+
+                            if (effectDef == null)
+                            {
+                                EpicLoot.LogError($"Set Tooltip: Could not find effect ({setBonusInfo.Effect.Type}) " +
+                                    $"for set ({setInfo.ID}) bonus ({setBonusInfo.Count})!");
+                                continue;
+                            }
+
+                            string display = MagicItem.GetEffectText(effectDef, setBonusInfo.Effect.Values?.MinValue ?? 0);
+                            text.Append($"\n<color={(hasEquipped ? EpicLoot.GetSetItemColor() : "#808080ff")}>" +
+                                $"({setBonusInfo.Count}) ‣ {display}</color>");
+                        }
                     }
                 }
-
             }
             catch (Exception e)
             {
@@ -521,19 +528,25 @@ namespace EpicLoot
 
         public static string GetSetDisplayName(ItemDrop.ItemData item, bool isMundane)
         {
-            if (isMundane) {
+            if (!isMundane)
+            {
+                var setInfo = item.GetLegendarySetInfo();
+                if (setInfo != null)
+                {
+                    return Localization.instance.Localize(setInfo.Name);
+                }
+                else
+                {
+                    return $"<unknown set: {item.GetSetID()}>";
+                }
+            }
+
+            if (item.m_shared.m_setStatusEffect?.m_name != null)
+            {
                 return LocalizationManager.Instance.TryTranslate(item.m_shared.m_setStatusEffect.m_name);
             }
 
-            var setInfo = item.GetLegendarySetInfo();
-            if (setInfo != null)
-            {
-                return Localization.instance.Localize(setInfo.Name);
-            }
-            else
-            {
-                return $"<unknown set:{item.GetSetID()}>";
-            }
+            return "<unknown set>";
         }
 
         public static bool IsSetItemEquipped(List<ItemDrop.ItemData> currentSetEquipped, string setItemName, bool isMundane)

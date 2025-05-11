@@ -66,7 +66,7 @@ namespace EpicLoot.MagicItemEffects
         [UsedImplicitly]
         private static void Prefix(Humanoid __instance, Character attacker)
         {
-            if (!attacker.IsStaggering())
+            if (attacker != null && !attacker.IsStaggering())
             {
                 var staggerValue = 1f;
                 if (__instance is Player player)

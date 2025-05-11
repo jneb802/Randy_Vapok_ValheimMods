@@ -334,6 +334,20 @@ namespace EpicLoot.Config
             SychronizeConfig<EnchantingUpgradesConfig>("enchantingupgrades.json", EnchantingTableUpgrades.InitializeConfig);
             SynchronizationManager.Instance.AddInitialSynchronization(EnchantingUpgradesRPC, EnchantingTableUpgradeSendConfigs);
             SetupPatchConfigFileWatch(FilePatching.PatchesDirPath);
+
+            ItemManager.OnItemsRegistered += InitializeRecipeOnReady;
+        }
+
+        /// <summary>
+        /// Recipes cannot be created until the game is launched.
+        /// Watch for issues, this can potentially trigger after client config synchronization and break.
+        /// </summary>
+        private static void InitializeRecipeOnReady()
+        {
+            var jsonFile = EpicLoot.ReadEmbeddedResourceFile("EpicLoot.config.recipes.json");
+            var result = JsonConvert.DeserializeObject<RecipesConfig>(jsonFile);
+            RecipesHelper.Initialize(result);
+            ItemManager.OnItemsRegistered -= InitializeRecipeOnReady;
         }
 
         public static string GetLocalizationDirectoryPath()
@@ -472,77 +486,66 @@ namespace EpicLoot.Config
 
         private static IEnumerator OnClientRecieveLootConfigs(long sender, ZPackage package)
         {
-            //EpicLoot.Log("Recieved Loot Configs.");
-            LootRoller.UpdateLootConfigs(ClientRecieveParseJsonConfig<LootConfig>(package.ReadString()));
+            LootRoller.Initialize(ClientRecieveParseJsonConfig<LootConfig>(package.ReadString()));
             yield return null;
         }
 
         private static IEnumerator OnClientRecieveMagicConfigs(long sender, ZPackage package)
         {
-            //EpicLoot.Log("Recieved Magic Effect Configs.");
             MagicItemEffectDefinitions.Initialize(ClientRecieveParseJsonConfig<MagicItemEffectsList>(package.ReadString()));
             yield return null;
         }
 
         private static IEnumerator OnClientRecieveItemInfoConfigs(long sender, ZPackage package)
         {
-            //EpicLoot.Log("Recieved Item Info Configs.");
             GatedItemTypeHelper.Initialize(ClientRecieveParseJsonConfig<ItemInfoConfig>(package.ReadString()));
             yield return null;
         }
 
         private static IEnumerator OnClientRecieveRecipesConfigs(long sender, ZPackage package)
         {
-            //EpicLoot.Log("Recieved Recipe Configs.");
             RecipesHelper.Initialize(ClientRecieveParseJsonConfig<RecipesConfig>(package.ReadString()));
             yield return null;
         }
 
         private static IEnumerator OnClientRecieveEnchantingCostsConfigs(long sender, ZPackage package)
         {
-            //EpicLoot.Log("Recieved Enchanting Cost Configs.");
             EnchantCostsHelper.Initialize(ClientRecieveParseJsonConfig<EnchantingCostsConfig>(package.ReadString()));
             yield return null;
         }
 
         private static IEnumerator OnClientRecieveItemNameConfigs(long sender, ZPackage package)
         {
-            //EpicLoot.Log("Recieved Item Name Configs.");
             MagicItemNames.Initialize(ClientRecieveParseJsonConfig<ItemNameConfig>(package.ReadString()));
             yield return null;
         }
 
         private static IEnumerator OnClientRecieveAdventureDataConfigs(long sender, ZPackage package)
         {
-            //EpicLoot.Log("Recieved Adventure Configs.");
             AdventureDataManager.UpdateAventureData(ClientRecieveParseJsonConfig<AdventureDataConfig>(package.ReadString()));
             yield return null;
         }
 
         private static IEnumerator OnClientRecieveLegendaryItemConfigs(long sender, ZPackage package)
         {
-            //EpicLoot.Log("Recieved Legendary Item Configs.");
             UniqueLegendaryHelper.Initialize(ClientRecieveParseJsonConfig<LegendaryItemConfig>(package.ReadString()));
             yield return null;
         }
 
         private static IEnumerator OnClientRecieveAbilityConfigs(long sender, ZPackage package)
         {
-            //EpicLoot.Log("Recieved Ability Configs.");
             AbilityDefinitions.Initialize(ClientRecieveParseJsonConfig<AbilityConfig>(package.ReadString()));
             yield return null;
         }
 
         private static IEnumerator OnClientRecieveMaterialConversionConfigs(long sender, ZPackage package)
         {
-            //EpicLoot.Log("Recieved Material Conversion Configs.");
             MaterialConversions.Initialize(ClientRecieveParseJsonConfig<MaterialConversionsConfig>(package.ReadString()));
             yield return null;
         }
 
         private static IEnumerator OnClientRecieveEnchantingUpgradesConfigs(long sender, ZPackage package)
         {
-            //EpicLoot.Log("Recieved Enchanting Upgrade Configs.");
             EnchantingTableUpgrades.InitializeConfig(ClientRecieveParseJsonConfig<EnchantingUpgradesConfig>(package.ReadString()));
             yield return null;
         }
@@ -559,7 +562,6 @@ namespace EpicLoot.Config
 
         public static ZPackage LootConfigSendConfigs()
         {
-            //EpicLoot.Log("Sending Loot configuration.");
             ZPackage package = new ZPackage();
             package.Write(JsonConvert.SerializeObject(LootRoller.Config));
             return package;
@@ -567,7 +569,6 @@ namespace EpicLoot.Config
 
         public static ZPackage MagicEffectsSendConfigs()
         {
-            //EpicLoot.Log("Sending MagicItem configuration.");
             ZPackage package = new ZPackage();
             package.Write(JsonConvert.SerializeObject(MagicItemEffectDefinitions.GetMagicItemEffectDefinitions()));
             return package;
@@ -575,7 +576,6 @@ namespace EpicLoot.Config
 
         public static ZPackage ItemInfoConfigSendConfigs()
         {
-            //EpicLoot.Log("Sending ItemInfo configuration.");
             ZPackage package = new ZPackage();
             package.Write(JsonConvert.SerializeObject(GatedItemTypeHelper.GatedConfig));
             return package;
@@ -583,7 +583,6 @@ namespace EpicLoot.Config
 
         public static ZPackage RecipesConfigSendConfigs()
         {
-            //EpicLoot.Log("Sending Recipe configuration.");
             ZPackage package = new ZPackage();
             package.Write(JsonConvert.SerializeObject(RecipesHelper.Config));
             return package;
@@ -591,7 +590,6 @@ namespace EpicLoot.Config
 
         public static ZPackage EnchantCostConfigSendConfigs()
         {
-            //EpicLoot.Log("Sending EnchantCost configuration.");
             ZPackage package = new ZPackage();
             package.Write(JsonConvert.SerializeObject(EnchantCostsHelper.Config));
             return package;
@@ -599,7 +597,6 @@ namespace EpicLoot.Config
 
         public static ZPackage MagicItemNamesSendConfigs()
         {
-            //EpicLoot.Log("Sending MagicItemNames configuration.");
             ZPackage package = new ZPackage();
             package.Write(JsonConvert.SerializeObject(MagicItemNames.Config));
             return package;
@@ -607,7 +604,6 @@ namespace EpicLoot.Config
 
         public static ZPackage AdventureDataSendConfigs()
         {
-            //EpicLoot.Log("Sending AdventureData configuration.");
             ZPackage package = new ZPackage();
             package.Write(JsonConvert.SerializeObject(AdventureDataManager.Config));
             return package;
@@ -615,7 +611,6 @@ namespace EpicLoot.Config
 
         public static ZPackage LegendarySendConfigs()
         {
-            //EpicLoot.Log("Sending Legendary configuration.");
             ZPackage package = new ZPackage();
             package.Write(JsonConvert.SerializeObject(UniqueLegendaryHelper.Config));
             return package;
@@ -623,7 +618,6 @@ namespace EpicLoot.Config
 
         public static ZPackage AbilitiesSendConfigs()
         {
-            //EpicLoot.Log("Sending Abilities configuration.");
             ZPackage package = new ZPackage();
             package.Write(JsonConvert.SerializeObject(AbilityDefinitions.Config));
             return package;
@@ -631,7 +625,6 @@ namespace EpicLoot.Config
 
         public static ZPackage MaterialConversionSendConfigs()
         {
-            //EpicLoot.Log("Sending MaterialConversion configuration.");
             ZPackage package = new ZPackage();
             package.Write(JsonConvert.SerializeObject(MaterialConversions.Config));
             return package;
@@ -639,7 +632,6 @@ namespace EpicLoot.Config
 
         public static ZPackage EnchantingTableUpgradeSendConfigs()
         {
-            //EpicLoot.Log("Sending EnchantingTableUpgrade configuration.");
             ZPackage package = new ZPackage();
             package.Write(JsonConvert.SerializeObject(EnchantingTableUpgrades.Config));
             return package;
@@ -647,24 +639,18 @@ namespace EpicLoot.Config
 
         public static IEnumerator OnServerRecieveConfigs(long sender, ZPackage package)
         {
-            EpicLoot.Log("Server recieved config from client, rejecting due to being the server.");
+            EpicLoot.Log("Server received config from client, rejecting due to being the server.");
             yield return null;
         }
 
         /// <summary>
         /// Helper to bind configs for <TYPE>
         /// </summary>
-        /// <param name="config_file"></param>
-        /// <param name="catagory"></param>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
-        /// <param name="description"></param>
-        /// <param name="advanced"></param>
         /// IsAdminOnly ensures this is a server authoratative value
         /// <returns></returns>
-        public static ConfigEntry<T> BindServerConfig<T>(string catagory, string key, T value, string description, AcceptableValueList<string> acceptableValues = null, bool advanced = false)
+        public static ConfigEntry<T> BindServerConfig<T>(string category, string key, T value, string description, AcceptableValueList<string> acceptableValues = null, bool advanced = false)
         {
-            return cfg.Bind(catagory, key, value,
+            return cfg.Bind(category, key, value,
                 new ConfigDescription(
                     description,
                     acceptableValues,

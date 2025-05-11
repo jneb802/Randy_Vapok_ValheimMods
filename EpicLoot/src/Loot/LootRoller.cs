@@ -42,7 +42,7 @@ namespace EpicLoot
         public static void Initialize(LootConfig lootConfig)
         {
             Config = lootConfig;
-            
+
             var random = new System.Random();
             _weightedDropCountTable = new WeightedRandomCollection<KeyValuePair<int, float>>(random);
             _weightedLootTable = new WeightedRandomCollection<LootDrop>(random);
@@ -58,16 +58,6 @@ namespace EpicLoot
             AddItemSets(lootConfig.ItemSets);
             AddLootTables(lootConfig.LootTables);
             EpicLoot.Log("Setup Lootroller");
-        }
-
-        // This is not a partial update, rather a wholesale replacement of existing data
-        public static void UpdateLootConfigs(LootConfig lootConfig)
-        {
-            Config = lootConfig;
-            ItemSets.Clear();
-            LootTables.Clear();
-            AddItemSets(lootConfig.ItemSets);
-            AddLootTables(lootConfig.LootTables);
         }
 
         private static void AddItemSets([NotNull] IEnumerable<LootItemSet> itemSets)
@@ -94,7 +84,6 @@ namespace EpicLoot
 
         public static void AddLootTables([NotNull] IEnumerable<LootTable> lootTables)
         {
-
             // Add loottables for mobs or objects that do not reference another template
             foreach (var lootTable in lootTables.Where(x => x.RefObject == null || x.RefObject == ""))
             {
@@ -129,7 +118,6 @@ namespace EpicLoot
             if (string.IsNullOrEmpty(refKey))
             {
                 LootTables[key].Add(lootTable);
-
             }
             else
             {
@@ -246,14 +234,14 @@ namespace EpicLoot
             _weightedDropCountTable.Setup(drops, dropPair => dropPair.Value);
             var dropCountRollResult = _weightedDropCountTable.Roll();
             var dropCount = dropCountRollResult.Key;
-            
+
             if (dropCount == 0)
             {
                 return results;
             }
-            
+
             var loot = GetLootForLevel(lootTable, level);
-            
+
             if (loot == null)
             {
                 loot = new LootDrop[] { };
@@ -267,7 +255,7 @@ namespace EpicLoot
                 var weight = lootDrop?.Weight ?? -1;
                 EpicLoot.Log($"Item: {itemName} - Rarity Count: {rarity} - Weight: {weight}");
             }
-            
+
             _weightedLootTable.Setup(loot, x => x.Weight);
             var selectedDrops = _weightedLootTable.Roll(dropCount);
 

@@ -31,7 +31,7 @@ namespace EpicLoot.Adventure.Feature
             foreach (var forestTokenGamble in forestTokenGambles)
             {
                 SecretStashItemInfo config = new SecretStashItemInfo(
-                    forestTokenGamble.ItemID, forestTokenGamble.Item, forestTokenGamble.Cost);
+                    forestTokenGamble.ItemID, forestTokenGamble.Item, forestTokenGamble.Cost, true);
                 config.Cost.Coins = (int)(forestTokenGamble.Cost.Coins *
                     AdventureDataManager.Config.Gamble.ForestTokenGambleCoinsCost);
                 config.Cost.ForestTokens = random.Next(
@@ -50,7 +50,7 @@ namespace EpicLoot.Adventure.Feature
             foreach (var ironBountyGamble in ironBountyGambles)
             {
                 SecretStashItemInfo config = new SecretStashItemInfo(
-                    ironBountyGamble.ItemID, ironBountyGamble.Item, ironBountyGamble.Cost);
+                    ironBountyGamble.ItemID, ironBountyGamble.Item, ironBountyGamble.Cost, true);
                 config.Cost.Coins = (int)(ironBountyGamble.Cost.Coins * AdventureDataManager.Config.Gamble.IronBountyGambleCoinsCost);
                 config.Cost.ForestTokens = 0;
                 config.Cost.IronBountyTokens = AdventureDataManager.Config.Gamble.IronBountyGambleCost;
@@ -66,7 +66,7 @@ namespace EpicLoot.Adventure.Feature
             foreach (var goldBountyGamble in goldBountyGambles)
             {
                 SecretStashItemInfo config = new SecretStashItemInfo(
-                    goldBountyGamble.ItemID, goldBountyGamble.Item, goldBountyGamble.Cost);
+                    goldBountyGamble.ItemID, goldBountyGamble.Item, goldBountyGamble.Cost, true);
                 config.Cost.Coins = (int)(goldBountyGamble.Cost.Coins *
                     AdventureDataManager.Config.Gamble.GoldBountyGambleCoinsCost);
                 config.Cost.ForestTokens = 0;
@@ -107,8 +107,10 @@ namespace EpicLoot.Adventure.Feature
                         continue;
                     }
 
+                    List<string> validBosses = GatedItemTypeHelper.DetermineValidBosses(gatingMode, false);
+
                     var itemId = GatedItemTypeHelper.GetGatedItemFromType(
-                        itemConfig, gatingMode, selectedItems, false, false, false);
+                        itemConfig, gatingMode, selectedItems, validBosses, false, false, false);
                     if (string.IsNullOrEmpty(itemId))
                     {
                         continue;

@@ -131,10 +131,9 @@ namespace EpicLoot.GatedItemType
         /// Attempts to get a valid item of the specified type.
         /// </summary>
         public static string GetGatedItemFromType(string itemType, GatedItemTypeMode mode,
-            HashSet<string> currentSelected, bool allowDuplicate = false,
+            HashSet<string> currentSelected, List<string> validBosses, bool allowDuplicate = false,
             bool allowTypeFallback = false, bool allowItemFallback = false)
         {
-            List<string> validBosses = DetermineValidBosses(mode, false);
             if (validBosses.Count == 0)
             {
                 // TODO: this should never trigger
@@ -225,6 +224,8 @@ namespace EpicLoot.GatedItemType
 
             string type = itemOrType;
 
+            List<string> validBosses = DetermineValidBosses(gatedMode, false);
+
             if (!ItemsByTypeAndBoss.ContainsKey(itemOrType))
             {
                 // Passed string is an item
@@ -244,16 +245,18 @@ namespace EpicLoot.GatedItemType
                 }
 
                 type = itemDetails.Type;
+                validBosses = itemDetails.RequiredBosses.Where(boss => validBosses.Contains(boss)).ToList();
+                // TODO: evaluate if previous boss keys also need to be added here for this to select better fallbacks
             }
 
-            return GetGatedItemFromType(type, gatedMode, new HashSet<string> { }, true, true, true);
+            return GetGatedItemFromType(type, gatedMode, new HashSet<string> { }, validBosses, true, true, true);
         }
 
         /// <summary>
         /// Returns a list of defeated bosses in the same order as defined in the configurations.
         /// If gating mode unlocks next biome it will also include the next tier of bosses.
         /// </summary>
-        private static List<string> DetermineValidBosses(GatedItemTypeMode mode, bool lowestFirst = true)
+        public static List<string> DetermineValidBosses(GatedItemTypeMode mode, bool lowestFirst = true)
         {
             var validBosses = new List<string>();
 

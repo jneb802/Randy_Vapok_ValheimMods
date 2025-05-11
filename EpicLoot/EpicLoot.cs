@@ -93,7 +93,7 @@ namespace EpicLoot
     {
         public const string PluginId = "randyknapp.mods.epicloot";
         public const string DisplayName = "Epic Loot";
-        public const string Version = "0.11.1";
+        public const string Version = "0.11.2";
 
         private static string ConfigFileName = PluginId + ".cfg";
         private static string ConfigFileFullPath = BepInEx.Paths.ConfigPath + Path.DirectorySeparatorChar + ConfigFileName;
@@ -456,8 +456,8 @@ namespace EpicLoot
             LoadItems();
             LoadBountySpawner();
 
-            PrefabManager.OnPrefabsRegistered += SetupAndvaranaut;
-            PrefabManager.OnPrefabsRegistered += SetupStatusEffects;
+            ItemManager.OnItemsRegistered += SetupAndvaranaut;
+            ItemManager.OnItemsRegistered += SetupStatusEffects;
         }
 
         public static T LoadAsset<T>(string assetName) where T : Object
@@ -639,7 +639,7 @@ namespace EpicLoot
             var customItem = new CustomItem(go, false);
             ItemManager.Instance.AddItem(customItem);
 
-            PrefabManager.OnPrefabsRegistered -= SetupAndvaranaut;
+            ItemManager.OnItemsRegistered -= SetupAndvaranaut;
         }
 
         private static void SetupStatusEffects()
@@ -651,7 +651,7 @@ namespace EpicLoot
             paralyzed.m_name = "mod_epicloot_se_paralyze";
 
             ObjectDB.instance.m_StatusEffects.Add(paralyzed);
-            PrefabManager.OnPrefabsRegistered -= SetupStatusEffects;
+            ItemManager.OnItemsRegistered -= SetupStatusEffects;
         }
 
         public static AssetBundle LoadAssetBundle(string filename)
