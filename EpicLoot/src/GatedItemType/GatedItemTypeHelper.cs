@@ -223,8 +223,9 @@ namespace EpicLoot.GatedItemType
             }
 
             string type = itemOrType;
+            List<string> validBosses;
 
-            List<string> validBosses = DetermineValidBosses(gatedMode, false);
+            List<string> bossList = null;
 
             if (!ItemsByTypeAndBoss.ContainsKey(itemOrType))
             {
@@ -245,9 +246,10 @@ namespace EpicLoot.GatedItemType
                 }
 
                 type = itemDetails.Type;
-                validBosses = itemDetails.RequiredBosses.Where(boss => validBosses.Contains(boss)).ToList();
-                // TODO: evaluate if previous boss keys also need to be added here for this to select better fallbacks
+                bossList = itemDetails.RequiredBosses;
             }
+
+            validBosses = DetermineValidBosses(gatedMode, false, bossList);
 
             return GetGatedItemFromType(type, gatedMode, new HashSet<string> { }, validBosses, true, true, true);
         }
@@ -256,7 +258,7 @@ namespace EpicLoot.GatedItemType
         /// Returns a list of defeated bosses in the same order as defined in the configurations.
         /// If gating mode unlocks next biome it will also include the next tier of bosses.
         /// </summary>
-        public static List<string> DetermineValidBosses(GatedItemTypeMode mode, bool lowestFirst = true)
+        public static List<string> DetermineValidBosses(GatedItemTypeMode mode, bool lowestFirst = true, List<string> requiredBosses = null)
         {
             var validBosses = new List<string>();
 
@@ -265,11 +267,33 @@ namespace EpicLoot.GatedItemType
                 return validBosses;
             }
 
+            // Find index of highest boss allowed
+            int highestIndex = 0;
+
+            if (requiredBosses != null && requiredBosses.Count > 0)
+            {
+                foreach (var boss in requiredBosses)
+                {
+                    if (!boss.IsNullOrWhiteSpace())
+                    {
+                        int index = BossKeysInOrder.IndexOf(boss);
+                        if (index > highestIndex)
+                        {
+                            highestIndex = index;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                highestIndex = BossKeysInOrder.Count - 1;
+            }
+
             if (mode == GatedItemTypeMode.Unlimited ||
                 mode == GatedItemTypeMode.PlayerMustKnowRecipe ||
                 mode == GatedItemTypeMode.PlayerMustHaveCraftedItem)
             {
-                validBosses = new List<string>(BossKeysInOrder);
+                validBosses.AddRange(BossKeysInOrder.GetRange(0, highestIndex + 1));
             }
             else
             {
@@ -278,7 +302,7 @@ namespace EpicLoot.GatedItemType
                 // NO_BOSS is the first entry, add and skip in loop
                 validBosses.Add(NO_BOSS);
 
-                for (int i = 1; i < BossKeysInOrder.Count; i++)
+                for (int i = 1; i <= highestIndex; i++)
                 {
                     var boss = BossKeysInOrder[i];
                     add = false;

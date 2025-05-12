@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
+using BepInEx;
 using Common;
 using EpicLoot.Abilities;
 using EpicLoot.Adventure;
 using EpicLoot.Adventure.Feature;
-using EpicLoot.Crafting;
 using EpicLoot.GatedItemType;
 using EpicLoot.LegendarySystem;
 using HarmonyLib;
@@ -399,7 +400,7 @@ namespace EpicLoot
             }
 
             var effectRequirements = magicItemEffectDef.Requirements;
-            var itemRarity = effectRequirements.AllowedRarities.Count == 0 ? ItemRarity.Magic : 
+            var itemRarity = effectRequirements.AllowedRarities.Count == 0 ? ItemRarity.Magic :
                 effectRequirements.AllowedRarities.First();
             var rarityTable = GetRarityTable(itemRarity.ToString());
             var loot = new LootTable
@@ -477,7 +478,7 @@ namespace EpicLoot
 
         private static void SpawnLegendaryItemHelper(string legendaryID, string itemType, Terminal context, ItemRarity rarity)
         {
-            if (!UniqueLegendaryHelper.TryGetLegendaryInfo(legendaryID, out var itemInfo))
+            if (!UniqueLegendaryHelper.TryGetLegendaryInfo(legendaryID, out LegendaryInfo itemInfo))
             {
                 if (context != null)
                 {
@@ -488,8 +489,45 @@ namespace EpicLoot
 
             if (string.IsNullOrEmpty(itemType))
             {
-                int selected = UnityEngine.Random.Range(0, GatedItemTypeHelper.ItemsByTypeAndBoss.Keys.Count);
-                itemType = GatedItemTypeHelper.ItemsByTypeAndBoss.ElementAt(selected).Key;
+                var dummyMagicItem = new MagicItem { Rarity = rarity };
+                var allowedItems = new List<ItemDrop>();
+                foreach (var itemName in GatedItemTypeHelper.AllItemsWithDetails.Keys)
+                {
+                    var itemPrefab = ObjectDB.instance.GetItemPrefab(itemName);
+                    if (itemPrefab == null)
+                    {
+                        continue;
+                    }
+
+                    var itemDrop = itemPrefab.GetComponent<ItemDrop>();
+                    if (itemDrop == null)
+                    {
+                        continue;
+                    }
+
+                    var itemData = itemDrop.m_itemData;
+                    itemData.m_dropPrefab = itemPrefab;
+                    var checkRequirements = itemInfo.Requirements.CheckRequirements(itemData, dummyMagicItem);
+
+                    if (checkRequirements)
+                    {
+                        allowedItems.Add(itemDrop);
+                    }
+                }
+
+                if (allowedItems.Count == 0)
+                {
+                    context.AddString($"> Could not find suitable items with parameter ({itemType}) for legendaryID: ({legendaryID})");
+                    return;
+                }
+
+                int selected = UnityEngine.Random.Range(0, allowedItems.Count);
+                itemType = allowedItems.ElementAt(selected).name;
+            }
+
+            if (itemType.IsNullOrWhiteSpace())
+            {
+                context.AddString($"> Could not find suitable item for legendaryID: ({legendaryID})");
             }
 
             LootTable loot = new LootTable

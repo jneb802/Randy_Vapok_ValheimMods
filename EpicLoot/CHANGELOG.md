@@ -1,3 +1,10 @@
+## Version 0.11.3
+
+* Fixed issue with loot rolling lowest tier when using fallbacks from iteminfo config.
+* Fixed commands like "magicitemset" not dropping the correct items.
+* Multijump reworked to make successive jumps feel like a normal jump from the ground.
+* Fixed Andvaranaut not appearing.
+
 ## Version 0.11.2
 
 * Fixed issue with loot rolling higher tiers than should have been allowed for loottable config.
