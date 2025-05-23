@@ -48,7 +48,7 @@ Contibutions from the following modders were invaluable and appreciated:
 
 ## Installation
 
-Copy the contents of "plugins" to a new folder called "EpicLoot" in your BepInEx/plugins directory (on both clients and dedicated servers). Currently all main mod json files must be contained in the same folder as the EpicLoot.dll file. When using a thunderstore mod manager these files should be placed in the correct directory for you.
+Copy the contents of "plugins" to a new folder called "EpicLoot" in your BepInEx/plugins directory (on both clients and dedicated servers). When using a thunderstore mod manager these files should be placed in the correct directory for you.
 
 ## Cheats
 
