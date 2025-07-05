@@ -1094,6 +1094,51 @@
       ]
     },
     {
+      "Type": "ModifyNoise",
+      "DisplayText": "$mod_epicloot_me_modifynoise_display",
+      "Description": "$mod_epicloot_me_modifynoise_desc",
+      "Requirements": {
+        "AllowedItemTypes": [
+          "Shoulder",
+          "Utility"
+        ]
+      },
+      "ValuesPerRarity": {
+        "Magic": {
+          "MinValue": 15,
+          "MaxValue": 20,
+          "Increment": 1
+        },
+        "Rare": {
+          "MinValue": 20,
+          "MaxValue": 25,
+          "Increment": 1
+        },
+        "Epic": {
+          "MinValue": 25,
+          "MaxValue": 40,
+          "Increment": 1
+        },
+        "Legendary": {
+          "MinValue": 40,
+          "MaxValue": 50,
+          "Increment": 1
+        },
+        "Mythic": {
+          "MinValue": 95,
+          "MaxValue": 100,
+          "Increment": 5
+        }
+      },
+      "SelectionWeight": 1,
+      "Prefixes": [
+        "$mod_epicloot_me_modifynoise_prefix1"
+      ],
+      "Suffixes": [
+        "$mod_epicloot_me_modifynoise_suffix1"
+      ]
+    },
+    {
       "Type": "ModifyEitrRegen",
       "DisplayText": "$mod_epicloot_me_modifyeitrregen_display",
       "Description": "$mod_epicloot_me_modifyeitrregen_desc",
