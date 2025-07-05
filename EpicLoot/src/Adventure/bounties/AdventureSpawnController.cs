@@ -1,10 +1,7 @@
-﻿using System;
-using EpicLoot.Data;
+﻿using EpicLoot.Data;
 using System.Collections;
 using System.Collections.Generic;
-using Jotunn.Managers;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace EpicLoot.Adventure
 {
