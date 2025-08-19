@@ -1634,6 +1634,31 @@
       ]
     },
     {
+      "Type": "StatusMirror",
+      "DisplayText": "$mod_epicloot_me_statusmirror_display",
+      "Description": "$mod_epicloot_me_statusmirror_desc",
+      "Requirements": {
+        "AllowedItemTypes": [
+          "Utility"
+        ],
+        "AllowedRarities": [
+          "Rare",
+          "Epic",
+          "Legendary",
+          "Mythic"
+        ]
+      },
+      "ValuesPerRarity": {
+        "SelectionWeight": 10,
+        "Prefixes": [
+          "$mod_epicloot_me_statusmirror_prefix1"
+        ],
+        "Suffixes": [
+          "$mod_epicloot_me_statusmirror_suffix1"
+        ]
+      }
+    },
+    {
       "Type": "AddSlashingDamage",
       "DisplayText": "$mod_epicloot_me_addslashingdamage_display",
       "Description": "$mod_epicloot_me_addslashingdamage_desc",

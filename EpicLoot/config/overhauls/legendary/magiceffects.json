@@ -1242,6 +1242,31 @@
       ]
     },
     {
+      "Type": "StatusMirror",
+      "DisplayText": "$mod_epicloot_me_statusmirror_display",
+      "Description": "$mod_epicloot_me_statusmirror_desc",
+      "Requirements": {
+        "AllowedItemTypes": [
+          "Utility"
+        ],
+        "AllowedRarities": [
+          "Rare",
+          "Epic",
+          "Legendary",
+          "Mythic"
+        ]
+      },
+      "ValuesPerRarity": {
+        "SelectionWeight": 10,
+        "Prefixes": [
+          "$mod_epicloot_me_statusmirror_prefix1"
+        ],
+        "Suffixes": [
+          "$mod_epicloot_me_statusmirror_suffix1"
+        ]
+      }
+    },
+    {
       "Type": "ModifyBuildDistance",
       "DisplayText": "$mod_epicloot_me_modifybuilddistance_display",
       "Description": "$mod_epicloot_me_modifybuilddistance_desc",

@@ -6,6 +6,7 @@ namespace EpicLoot
     public static partial class MagicEffectType
     {
         public static string DvergerCirclet = nameof(DvergerCirclet);
+        public static string StatusMirror = nameof(StatusMirror);
         public static string InstantMead = nameof(InstantMead);
         public static string AutoMead = nameof(AutoMead);
         public static string DecreaseMeadCooldown = nameof(DecreaseMeadCooldown);
