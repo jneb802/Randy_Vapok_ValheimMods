@@ -1,11 +1,9 @@
-﻿using System;
-using System.Text;
-using EpicLoot.Crafting;
+﻿using EpicLoot.Crafting;
 using EpicLoot.Data;
-using EpicLoot.MagicItemEffects;
-using EpicLoot.src.GamePatches;
 using HarmonyLib;
 using JetBrains.Annotations;
+using System;
+using System.Text;
 using UnityEngine;
 
 namespace EpicLoot
@@ -15,7 +13,7 @@ namespace EpicLoot
         typeof(ItemDrop.ItemData), typeof(UITooltip))]
     public static class InventoryGrid_CreateItemTooltip_MagicItemComponent_Patch
     {
-        [HarmonyAfter(new []{"kg.ValheimEnchantmentSystem"})]
+        [HarmonyAfter(new[] { "kg.ValheimEnchantmentSystem" })]
         public static bool Prefix(ItemDrop.ItemData item, UITooltip tooltip, out string __state)
         {
             __state = null;
@@ -26,12 +24,14 @@ namespace EpicLoot
                 ItemDrop.ItemData otherItem = Player.m_localPlayer.GetEquipmentOfType(item.m_shared.m_itemType);
                 tooltipText = item.GetTooltip();
                 // Set the comparision tooltip to be shown side-by-side with our original tooltip
-                PatchOnHoverFix.comparision_title = $"<color=#AAA><i>$mod_epicloot_currentlyequipped:" +
+                PatchOnHoverFix.ComparisonTitleString = $"<color=#AAA><i>$mod_epicloot_currentlyequipped:" +
                     $"</i></color>" + otherItem.GetDecoratedName();
-                PatchOnHoverFix.comparision_tooltip = otherItem.GetTooltip();
-            } else {
-                PatchOnHoverFix.comparision_tooltip = "";
-                PatchOnHoverFix.comparision_added = false;
+                PatchOnHoverFix.ComparisonTooltipString = otherItem.GetTooltip();
+            }
+            else
+            {
+                PatchOnHoverFix.ComparisonTooltipString = "";
+                PatchOnHoverFix.ComparisonAdded = false;
                 tooltipText = item.GetTooltip();
             }
             tooltip.Set(item.GetDecoratedName(), tooltipText);
@@ -48,15 +48,19 @@ namespace EpicLoot
         private static bool Prefix(ref string __result, ItemDrop.ItemData item, int qualityLevel)
         {
             if (item == null)
+            {
                 return true;
+            }
 
-            var localPlayer = Player.m_localPlayer;
-            var text = new StringBuilder(256);
+            Player localPlayer = Player.m_localPlayer;
+            StringBuilder text = new StringBuilder(256);
 
             MagicItem magicItem = item.GetMagicItem();
 
             if (magicItem == null)
+            {
                 return true;
+            }
 
             string magicColor = magicItem.GetColorString();
             string itemTypeName = magicItem.GetItemTypeName(item.Extended());
@@ -64,12 +68,18 @@ namespace EpicLoot
             float skillLevel = localPlayer.GetSkillLevel(item.m_shared.m_skillType);
 
             text.Append($"<color={magicColor}>{magicItem.GetRarityDisplay()} {itemTypeName}</color>\n");
-            if (item.IsLegendarySetItem())
-            {
-                text.Append($"<color={EpicLoot.GetSetItemColor()}>$mod_epicloot_legendarysetlabel</color>\n");
+            if (item.IsMagicSetItem()) {
+                if (item.GetRarity() == ItemRarity.Legendary)
+                {
+                    text.Append($"<color={EpicLoot.GetSetItemColor()}>$mod_epicloot_legendarysetlabel</color>\n");
+                }
+                if (item.GetRarity() == ItemRarity.Mythic)
+                {
+                    text.Append($"<color={EpicLoot.GetSetItemColor()}>$mod_epicloot_mythicsetlabel</color>\n");
+                }
             }
             text.Append(item.GetDescription());
-            
+
             text.Append("\n");
             if (item.m_shared.m_dlc.Length > 0)
             {
@@ -137,6 +147,7 @@ namespace EpicLoot
             bool magicParry = magicItem.HasEffect(MagicEffectType.ModifyParry);
             float totalParryBonusMod = magicItem.GetTotalEffectValue(MagicEffectType.ModifyParry, 0.01f);
             string magicParryColor = magicParry ? magicColor : "orange";
+
             switch (item.m_shared.m_itemType)
             {
                 case ItemDrop.ItemData.ItemType.Consumable:
@@ -155,6 +166,13 @@ namespace EpicLoot
                         text.Append(consumeStatusEffectTooltip);
                     }
 
+                    string chainTooltip = item.GetChainTooltip(qualityLevel, skillLevel);
+                    if (chainTooltip.Length > 0)
+                    {
+                        text.Append("\n\n");
+                        text.Append(chainTooltip);
+                    }
+
                     break;
 
                 case ItemDrop.ItemData.ItemType.OneHandedWeapon:
@@ -162,7 +180,7 @@ namespace EpicLoot
                 case ItemDrop.ItemData.ItemType.TwoHandedWeapon:
                 case ItemDrop.ItemData.ItemType.TwoHandedWeaponLeft:
                 case ItemDrop.ItemData.ItemType.Torch:
-                    text.Append(GetDamageTooltipString(magicItem, item.GetDamage(qualityLevel,Game.m_worldLevel),
+                    text.Append(GetDamageTooltipString(magicItem, item.GetDamage(qualityLevel, Game.m_worldLevel),
                         item.m_shared.m_skillType, magicColor));
 
                     bool magicAttackStamina = magicItem.HasEffect(MagicEffectType.ModifyAttackStaminaUse) ||
@@ -191,26 +209,31 @@ namespace EpicLoot
                         text.Append($"\n$item_eitruse: <color={spellswordColor}>{totalEitrUse:#.#}</color>");
                     }
 
+
                     bool hasBloodlust = magicItem.HasEffect(MagicEffectType.Bloodlust);
                     string bloodlustColor = hasBloodlust ? magicColor : "orange";
                     float bloodlustStaminaUse = item.m_shared.m_attack.m_attackStamina;
-                    if (hasBloodlust)
-                    {
-                        text.Append($"\n$item_healthuse: <color={bloodlustColor}>{bloodlustStaminaUse:#.#}</color>");
+                    float healthUsageReduction = 1 - magicItem.GetTotalEffectValue(MagicEffectType.ModifyAttackHealthUse, 0.01f);
+                    if (hasBloodlust) {
+                        float skillmodCost = bloodlustStaminaUse - bloodlustStaminaUse * 0.33f * Player.m_localPlayer.GetSkillFactor(item.m_shared.m_skillType);
+                        text.Append($"\n$item_healthuse: <color={bloodlustColor}>{(bloodlustStaminaUse * healthUsageReduction):#.#} ({skillmodCost})</color>");
                     }
                     else
                     {
-                        if (item.m_shared.m_attack.m_attackHealth > 0.0)
-                            text.Append($"\n$item_healthuse: " +
-                                $"<color=orange>{item.m_shared.m_attack.m_attackHealth}</color>");
+                        if (item.m_shared.m_attack.m_attackHealth > 0.0) {
+                            float skillmodCost = item.m_shared.m_attack.m_attackHealth - item.m_shared.m_attack.m_attackHealth * 0.33f * Player.m_localPlayer.GetSkillFactor(item.m_shared.m_skillType);
+                            text.Append($"\n$item_healthuse: <color=orange>{item.m_shared.m_attack.m_attackHealth * healthUsageReduction} ({skillmodCost})</color>");
+                        }
                     }
-                    
+
                     bool magicAttackHealth = magicItem.HasEffect(MagicEffectType.ModifyAttackHealthUse);
                     string magicAttackHealthColor = magicAttackHealth ? magicColor : "orange";
-                    float healthUsePercentage = 1 - magicItem.GetTotalEffectValue(MagicEffectType.ModifyAttackHealthUse, 0.01f);
-                    float totalHealthPercentageUse = healthUsePercentage * item.m_shared.m_attack.m_attackHealthPercentage;
-                    if (item.m_shared.m_attack.m_attackHealthPercentage > 0.0)
-                        text.Append($"\n$item_healthuse: <color={magicAttackHealthColor}>{(totalHealthPercentageUse / 100):##.#%}</color>");
+                    float totalHealthPercentageUse = healthUsageReduction * item.m_shared.m_attack.m_attackHealthPercentage;
+                    if (item.m_shared.m_attack.m_attackHealthPercentage > 0.0) {
+                        float healthCost = totalHealthPercentageUse / 100;
+                        float skillmodCost = healthCost - healthCost * 0.33f * Player.m_localPlayer.GetSkillFactor(item.m_shared.m_skillType);
+                        text.Append($"\n$item_healthuse: <color={magicAttackHealthColor}>{healthCost:##.#%} ({skillmodCost})</color>");
+                    }
                     
                     bool attackDrawStamina = magicItem.HasEffect(MagicEffectType.ModifyDrawStaminaUse);
                     string attackDrawStaminaColor = attackDrawStamina ? magicColor : "orange";
@@ -261,6 +284,13 @@ namespace EpicLoot
                         text.Append(statusEffectTooltip2);
                     }
 
+                    string chainTooltip2 = item.GetChainTooltip(qualityLevel, skillLevel);
+                    if (chainTooltip2.Length > 0)
+                    {
+                        text.Append("\n\n");
+                        text.Append(chainTooltip2);
+                    }
+
                     break;
 
                 case ItemDrop.ItemData.ItemType.Shield:
@@ -296,7 +326,7 @@ namespace EpicLoot
                 case ItemDrop.ItemData.ItemType.Shoulder:
                     string magicArmorColor = magicItem.HasEffect(MagicEffectType.ModifyArmor) ? magicColor : "orange";
                     text.Append($"\n$item_armor: " +
-                        $"<color={magicArmorColor}>{item.GetArmor(qualityLevel,Game.m_worldLevel):0.#}</color>");
+                        $"<color={magicArmorColor}>{item.GetArmor(qualityLevel, Game.m_worldLevel):0.#}</color>");
                     string modifiersTooltipString = SE_Stats.GetDamageModifiersTooltipString(item.m_shared.m_damageModifiers);
                     if (modifiersTooltipString.Length > 0)
                     {
@@ -310,10 +340,17 @@ namespace EpicLoot
                         text.Append(statusEffectTooltip3);
                     }
 
+                    string chainTooltip3 = item.GetChainTooltip(qualityLevel, skillLevel);
+                    if (chainTooltip3.Length > 0)
+                    {
+                        text.Append("\n\n");
+                        text.Append(chainTooltip3);
+                    }
+
                     break;
 
                 case ItemDrop.ItemData.ItemType.Ammo:
-                    text.Append(item.GetDamage(qualityLevel,Game.m_worldLevel).GetTooltipString(item.m_shared.m_skillType));
+                    text.Append(item.GetDamage(qualityLevel, Game.m_worldLevel).GetTooltipString(item.m_shared.m_skillType));
                     text.AppendFormat("\n$item_knockback: <color=orange>{0}</color>", item.m_shared.m_attackForce);
                     break;
             }
@@ -376,7 +413,7 @@ namespace EpicLoot
 
             if (!item.IsMagic())
             {
-                var text = new StringBuilder();
+                StringBuilder text = new StringBuilder();
 
                 // Set stuff
                 if (item.IsSetItem())
@@ -385,7 +422,7 @@ namespace EpicLoot
                     int index = __result.IndexOf("\n\n$item_seteffect", StringComparison.InvariantCulture);
                     if (index >= 0)
                     {
-                         __result = __result.Remove(index);
+                        __result = __result.Remove(index);
                     }
 
                     // Create new
@@ -394,7 +431,7 @@ namespace EpicLoot
 
                 __result += text.ToString();
             }
-            
+
             __result = __result.Replace("<color=orange>", "<color=#add8e6ff>");
             __result = __result.Replace("<color=yellow>", "<color=#add8e6ff>");
             __result = __result.Replace("\n\n\n", "\n\n");
@@ -419,14 +456,14 @@ namespace EpicLoot
             bool lightningMagic = item.HasEffect(MagicEffectType.AddLightningDamage);
             bool poisonMagic = item.HasEffect(MagicEffectType.AddPoisonDamage);
             bool spiritMagic = item.HasEffect(MagicEffectType.AddSpiritDamage);
-            bool coinHoarderMagic = CoinHoarder.HasCoinHoarder(out float coinHoarderEffectValue);
+            bool coinHoarderMagic = Player.m_localPlayer.HasActiveMagicEffect(MagicEffectType.CoinHoarder, out float _cv);
             bool spellswordMagic = item.HasEffect(MagicEffectType.SpellSword);
             Player.m_localPlayer.GetSkills().GetRandomSkillRange(out float min, out float max, skillType);
             string str = String.Empty;
             if (instance.m_damage != 0.0)
             {
                 bool magic = allMagic || spellswordMagic;
-               str = str + "\n$inventory_damage: " + DamageRange(instance.m_damage, min, max, magic, magicColor);
+                str = str + "\n$inventory_damage: " + DamageRange(instance.m_damage, min, max, magic, magicColor);
             }
             if (instance.m_blunt != 0.0)
             {
@@ -471,7 +508,7 @@ namespace EpicLoot
             return str;
         }
 
-        public static string DamageRange(float damage, float minFactor, float maxFactor, 
+        public static string DamageRange(float damage, float minFactor, float maxFactor,
             bool magic = false, string magicColor = "")
         {
             int num1 = Mathf.RoundToInt(damage * minFactor);
@@ -512,7 +549,7 @@ namespace EpicLoot
     {
         public static Tuple<string, string> PreprocessTooltipStat(ItemDrop.ItemData item, string label, string value)
         {
-            var localPlayer = Player.m_localPlayer;
+            Player localPlayer = Player.m_localPlayer;
 
             if (item.IsMagic(out MagicItem magicItem))
             {
@@ -667,7 +704,7 @@ namespace EpicLoot
                         value = EIDFLegacy.GetCrafterName(value);
                         break;
                 }
-                
+
                 if (label.StartsWith("$item_movement_modifier") &&
                     (magicItem.HasEffect(MagicEffectType.RemoveSpeedPenalty) ||
                     magicItem.HasEffect(MagicEffectType.ModifyMovementSpeed)))
@@ -675,7 +712,7 @@ namespace EpicLoot
                     int colorIndex = label.IndexOf("<color", StringComparison.Ordinal);
                     if (colorIndex >= 0)
                     {
-                        var sb = new StringBuilder(label);
+                        StringBuilder sb = new StringBuilder(label);
                         sb.Remove(colorIndex, "<color=#XXXXXX>".Length);
                         sb.Insert(colorIndex, $"<color={magicColor}>");
 
@@ -703,7 +740,7 @@ namespace EpicLoot
                 if (magicEitrRegen && magicItem != null)
                     itemEitrRegenModDisplay = $"<color={magicItem.GetColorString()}>{itemEitrRegenModDisplay}</color>";
                 label = $"$item_eitrregen_modifier: {itemEitrRegenModDisplay} " +
-                    $"($item_total: <color={Auga.API.Brown3}>{totalEitrRegenModifier:+0;-0}%</color>)";
+                    $"($item_total: <color={magicItem.GetColorString()}>{totalEitrRegenModifier:+0;-0}%</color>)";
             }
 
             switch (label)
