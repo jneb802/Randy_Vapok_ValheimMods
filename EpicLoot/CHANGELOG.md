@@ -1,3 +1,7 @@
+## Version 0.11.6
+
+* Removed the NoRoll from Modify Summon Damage and Modify Summon Health. Can now roll these effects.
+
 ## Version 0.11.5 - Call To Arms
 
 * Call To Arms content update!
