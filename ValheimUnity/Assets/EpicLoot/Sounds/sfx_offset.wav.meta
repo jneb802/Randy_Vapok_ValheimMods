@@ -2,7 +2,7 @@ fileFormatVersion: 2
 guid: 4e794588b18610349a11d820cd98803e
 AudioImporter:
   externalObjects: {}
-  serializedVersion: 7
+  serializedVersion: 8
   defaultSettings:
     serializedVersion: 2
     loadType: 0
@@ -19,5 +19,5 @@ AudioImporter:
   ambisonic: 0
   3D: 1
   userData: 
-  assetBundleName: 
+  assetBundleName: epicloot
   assetBundleVariant: 
