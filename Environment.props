@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+    <PropertyGroup Condition="$(OS) == 'Unix' OR $(OS) == 'OSX'">
+        <GamePath>$(HOME)/Library/Application Support/Steam/steamapps/common/Valheim</GamePath>
+        <VALHEIM_MANAGED>$(GamePath)/Valheim.app/Contents/Resources/Data/Managed</VALHEIM_MANAGED>
+        <BEPINEX_PATH>$(GamePath)/BepInEx</BEPINEX_PATH>
+        <PUBLICIZED_PATH>$(VALHEIM_MANAGED)/publicized_assemblies</PUBLICIZED_PATH>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="$(OS) == 'Windows_NT'">
+        <VALHEIM_MANAGED>$(GamePath)/valheim_Data/Managed</VALHEIM_MANAGED>
+        <BEPINEX_PATH>$(GamePath)/BepInEx</BEPINEX_PATH>
+        <PUBLICIZED_PATH>$(VALHEIM_MANAGED)/publicized_assemblies</PUBLICIZED_PATH>
+    </PropertyGroup>
+
+</Project>

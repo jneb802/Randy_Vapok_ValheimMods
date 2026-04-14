@@ -48,9 +48,19 @@
     <None Include="README.md" />
   </ItemGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition=" '$(OS)' == 'Windows_NT' ">
     <PackageReference Include="JotunnLib" Version="2.*" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(OS)' != 'Windows_NT' ">
+    <Reference Include="Jotunn">
+      <HintPath>$(BEPINEX_PATH)/core/Jotunn.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>
@@ -66,7 +76,7 @@
     </ProjectReference>
   </ItemGroup>
 
-  <Target Name="CopyToModManagers" AfterTargets="Build">
+  <Target Name="CopyToModManagers" AfterTargets="Build" Condition=" '$(OS)' == 'Windows_NT' ">
     <Message Text="Copying to mod managers" Importance="high" />
     <Copy SourceFiles="$(TargetDir)\$(TargetFileName)" DestinationFolder="$(AppData)\com.kesomannen.gale\valheim\profiles\Modtest\BepInEx\plugins\" />
     <Copy SourceFiles="$(TargetDir)\$(TargetFileName)" DestinationFolder="$(AppData)\r2modmanPlus-local\Valheim\profiles\Modtest\BepInEx\plugins\" />
