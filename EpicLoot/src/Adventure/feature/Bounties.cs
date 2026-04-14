@@ -1,15 +1,15 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using BepInEx;
+﻿using BepInEx;
 using Common;
 using EpicLoot.Config;
 using EpicLoot_UnityLib;
 using HarmonyLib;
 using Jotunn.Managers;
 using Newtonsoft.Json;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using UnityEngine;
 using Object = UnityEngine.Object;
 using Random = System.Random;
@@ -197,7 +197,7 @@ namespace EpicLoot.Adventure.Feature
         {
             var results = new List<BountyInfo>();
 
-            var saveData = Player.m_localPlayer?.GetAdventureSaveData();
+            var saveData = Player.m_localPlayer.GetAdventureSaveData();
             if (saveData == null)
             {
                 return results;
@@ -220,12 +220,8 @@ namespace EpicLoot.Adventure.Feature
                     // Spawn monster initializer
                     SpawnBountyInitilizer(bounty, spawnPoint, Vector3.zero);
                 }
-                else
-                {
-                    // Sleep for a tiny bit before trying again
-                    // we also want to consider if this has failed repeatedly we should give up or reset parameters of the scan to get a new location
-                    callback?.Invoke(false, Vector3.zero);
-                }
+
+                callback?.Invoke(success, spawnPoint);
             });
         }
 
@@ -338,7 +334,7 @@ namespace EpicLoot.Adventure.Feature
 
         public void AbandonBounty(BountyInfo bountyInfo)
         {
-            var saveData = Player.m_localPlayer?.GetAdventureSaveData();
+            var saveData = Player.m_localPlayer.GetAdventureSaveData();
             if (saveData != null && bountyInfo != null && saveData.BountyIsInProgress(bountyInfo.Interval, bountyInfo.ID))
             {
                 saveData.AbandonedBounty(bountyInfo.ID);

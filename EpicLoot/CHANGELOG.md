@@ -1,3 +1,231 @@
+## Version 0.12.11
+
+* NEW FEATURE: map pins from bounties and treasure maps can now be toggled in the minimap UI in the bottom left corner! Thanks Rusty!
+* Removed a debugging feature that accidentally made it to production. This would cause a new folder called "dumps" to be generated in your game directory. It is safe to delete that folder and its contents. Apologies for the mess!
+* Reduced visibility of patch warnings for adding and removing existing entries. These warnings will no longer be forced and should keep the log file cleaner by default. They will appear if your log settings are set to show Warning and Error.
+* Tweaked descriptions of some base configurations in the epicloot.cfg file to be more clear.
+* UI tooltip compatibility fix when using the VENI mod. Tooltips when generated on the right side of the screen should display to the left of the cursor now.
+* Bug fix for sacrificing unidentified items not using the correct configuration because the default value for "isMagic" and "IsUnidentified" was true if not explicitly set. Existing baseconfig "enchantcosts.json" file may still have the issue, you may need to regenerate it to see the update depending on your game patches and settings.
+* Fixed the StaggerOnDamageTaken magic effect not working.
+* Fixed identifying items would have twice the magic effect power of items enchanted by other means.
+* Fixed a null reference exception issue when generating treasure maps if configurations were missing for any biomes.
+* Fixed Multishot effects CostScale setting not applying to stamina and eitr costs correctly (this setting does not work for draw stamina).
+
+## Version 0.12.10
+
+* Fixed an issue with enchanting table identifying unknown magic items changing the stack size of the original item (coins and other costs).
+* Fixed formatting error with minimal configuration that would not load the mod properly when used.
+* Fixed formatting issue with the Turkish localization.
+* Fixed enchanting table rune extraction not always destroying the correct inventory item.
+* Minor spelling fixes for English localization.
+* Added missing localizations for ModifyFireRate magic effect for all other languages (existed for English).
+* Added missing localization for key mod_epicloot_me_modifydamage_desc.
+
+## Version 0.12.9
+
+* Fixed issue with empty IdentifyCosts throwing an error.
+* Added compatibility with Guilds mod that broke buying things in the custom trader menu.
+
+## Version 0.12.8
+
+* Many configuration tweaks. Delete and regenerate the json files specified to get the changes for each or grab the fixes manually if you have made changes:
+* adventuredata.json, enchantcosts.json: Added default configurations for "None" and "Misc" item types. This will fix support for some modded items like "Bows Before Hoes" quivers.
+  * If you see other items with no costs in the enchanting table it is related to this issue. Please report issues only after refreshing your base configurations.
+* enchantcosts.json:
+  * New field IsUnidentified for DisenchantProducts to better distinguish the configuration for these items with the previous change.
+  * Changed identify CostByRarity blackforest cost to Bronze to match other items.
+* loottables.json: Fixed a bug with the auto sorter misclassifying items if their first crafting material was lower tier than the rest.
+* itemsorter.json:
+  * Added Ooze to Swamp BiomeMaterials.
+  * Fixed Plains having the bonemass boss key rather than defeated_goblinking.
+* Removed throwable bombs showing up as a possible unidentifiable item roll.
+* Added mod compatibility for Steady Regeneration (broke in 0.12.6).
+
+## Version 0.12.7
+
+* Reworked magic effects OffSet Attack and DodgeBuff to fix bugs including missing assets (sound and visuals).
+* Normalized OffSet Attack values in magiceffects.json, this value represents the percentage of damage reduction (15-40%).
+* Bug fix for enchanting table identify costs not applying for more than one cost item.
+* Compatibility improvement for other inventory mods, should recognize magic items in additional slots when equipped.
+* Bug fix for spam accepting bounties at the merchant and fixed errors when closing the store UI before completed.
+* More edge case safeguards for misconfigured files and unexpected game items.
+
+## Version 0.12.6
+
+* Fixed AddHealthRegen not applying after the 12.5 update.
+* Fixed typo for defeated_eikthyr key in new itemsorter.json file.
+* More edge case detection for the automatic item sorting logic.
+* Added some null reference exceptions safeguards in different places in code.
+
+## Version 0.12.5
+
+* NEW itemsorter.json configuration file to configure the auto-add behaviors!
+* Tooltips now display on hover in the enchanting table menus.
+* Some minor API updates.
+* Refactored how the tooltip is built, tried to add any missing information.
+* Refactored many magic effects to fix issues including Mead effects, damage effects, block and parry, base player stats and regen, explosive arrows. Some calculations will work slightly different than before.
+* Removed the all powerful throwable butcher knife. If you have one of these already rolled it should be blocked from throwing now.
+* Reworked bulk up enchant to remove X% of health regen and add X% of max health. If you have 50% enchant on an item, 6 regen ticks, and 80 health you should get 3 regen ticks and 120 max health.
+* Band-aid fixed a rare error with offset attack audio clip not existing.
+* Did a QOL pass to clean up the magic effects for each available configuration. There were so many changes that listing them here would be too long. If you need to see the specific changes check the release commit comparison on Github.
+  * Normalized some Increments to make more sense. Tried to make the minimum 0.5 when possible.
+  * Fixed some item type checks for all configs, majorly for the balanced config.
+  * Added missing Trinket type in many places for the minimal config.
+  * Added missing rarity values on some effects.
+  * Made it so only one form of modify damage can roll on an item for balanced and minimal, and only one of physical and one of elemental on legendary config.
+  * Fixes for excluded effects, they must be excluded on both effects to work correctly.
+* Note: If you used version 0.12.0+ please delete your old BepInEx\config\EpicLoot\baseconfig and let them regenerate! Or, if you have made changes, grab the changes from github to manually update your files.
+* Note: If you are NOT making edits to the baseconfig files we highly recommend setting "Debug - Always Refresh Core Configs" to true in your randyknapp.mods.epicloot.cfg file. Then you will not need to manually delete to refresh them.
+
+## Version 0.12.4
+
+* Fixed another an issue with MultiShot not resetting weapon attack values properly due to the percent chance to trigger config.
+
+## Version 0.12.3
+
+* Changed how patches are applied - they will no longer override your baseconfig files on startup! You should be able to generate your baseconfig files once then make changes without them being reverted. See the [wiki for more information](https://thunderstore.io/c/valheim/p/RandyKnapp/EpicLoot/wiki/358-6-config-patching/). We apologize for the confusion around this new feature.
+* Fixed an issue with MultiShot breaking enemy projectile damage (someday we will get this effect right on the first try).
+* Fixed enchanting materials not stacking with "broken" items in containers. (if this is still happening after the update please report the issue)
+* Changed the ..removespeedpenalty_display localization from "Weightless" to "Unhindered". This was a small issue with the 0.12.0 update. Previously this effect was called "No Movement Speed Penalty".
+* Added missing configurations for ModifyMagicFireRate and ModifyFireRate in the magiceffects.json files.
+* Reenabled Weightless rolls for the balanced config.
+
+## Version 0.12.2
+
+* Fixed some display issues with the in game compendium.
+* Added some localizations for the compendium menus.
+* Updated Russian translations.
+* Fixed an issue with Identify items not selecting a valid fallback, resulting in failure to identify items (mainly swamp items).
+  * If you used version 0.12.0+ please delete your old BepInEx\config\EpicLoot\baseconfig and let them regenerate!
+* Fixed some edge cases with magic materials not stacking with each other in the player inventory.
+* Fixed Auto Mead not applying correctly.
+* Fixed error handling for Multishot magic effects.
+* Fixed modify low health threshold magic effect checking the wrong effect value.
+* Reduced riches value for balanced and minimal configuration options.
+* Fixed an issue with loot rolling creating too many items.
+* Fixed items that cannot be runified showing up in the rune UI menus.
+* Fixed an issue with magic items not initializing correctly after the 11.7 update (attempt to fix another bug made more, fun times).
+* Fixed particle effects on dropped Andvaranaut.
+
+## Version 0.12.1
+
+* Tweaked the Rune costs config values. 
+  * If you used version 0.12.0 please delete your old BepInEx\config\EpicLoot\baseconfig and let them regenerate!
+* Fixed Rune UI not enabling correctly on existing enchanting tables.
+* Fixed an issue when adding multiple bosses to the same biome with the patch system.
+* Fixed magic items not stacking when using the features from the Recycle & Reclaim mod.
+* Fixed an issue with Rune configurations not syncing properly on a server.
+
+## Version 0.12.0
+
+* NEW Unidentified items:
+    * Unidentified items are a new item type that can be dropped as normal loot.
+    * Unidentified items must be identified at the Enchanting Table before they can be used.
+    * Unidentified items can be sacrificed for their tier materials.
+    * New configuration "Balance - Items Unidentified Drop Ratio".
+* NEW Runestone Extraction and Etching features to the Enchanting Table:
+    * Extraction allows you to store a singular enchantment from an item into the Runestone.
+    * Runestone Etching allows you to apply the enchantment from the Runestone onto an item, overwriting an existing enchantment.
+    * New configuration "Balance - Rune Extract Destroys Item"
+* Added ability to edit the core configuration files without patch files.
+  * Files are generated under BepInEx\config\EpicLoot\baseconfig with the current default configurations from the release.
+  * **Note: You will have to delete these configurations to get any new updated values in future mod updates!!!!**
+      * **New configuration "Debug - Always Refresh Core Configs" when set to true will allow overriding these files. Server owners you will probably want this on if you only use patches!**
+* Added the overhaul configuration system which provides access to directly editable configuration. Three configuration defaults are available as base templates:
+    * `Balanced` - The new default for Epic Loot. Enchantments are powerful, but not overpowered.
+    * `Legendary` - Similar the old default of epicloot, enchantments are very powerful.
+    * `Vanilla` - A configuration that is closer to the vanilla experience. Enchantments give you an edge, but are not as powerful.
+    * This is set under the Balance - Balance Template in the configuration file.
+* NEW enchantments added:
+    * `DartingThoughts` - Converts a portion of max eitr into eitr regen (sal)
+    * `AddCrafterskills` - Increases crafting and cooking skills (midnight)
+    * `Headhunter` - Increases chance to drop trophies from creatures (midnight)
+    * `ModifyBlockForce` - Increases knockback on shields (warp)
+    * `ModifyNoise` - Reduces character noise (makes you more stealthy) (warp)
+    * `ModifyBuildDistance` - Increases the range you can build at (warp)
+    * `ModifyPickupRange` - Increases the range you can autopickup items (warp)
+    * `ModifyFireRate` - Increases fire rate of ranged weapons (warp)
+    * `ModifyProjectileSpeed` - Increases the speed of fired projectiles (warp)
+    * `AdrenalineRush` - Dodging an attack provides a short burst of increased damage (Leslie)
+    * `Apportation` - Teleports you to your thrown weapons location (Leslie)
+    * `Chain Lightning` - Chance to cause chain lighting on hit (Leslie)
+    * `OffsetAttack` - Third attack in a combo provides stagger immunity and a damage reduction for you, when timed (Leslie)
+    * `Automead` - Automatically consumes mead when health critical (warp)
+    * `InstantMead` - Meads consume instantly when health critical (warp)
+    * `MeadCooldown` - Reduces mead cooldown (warp)
+* NEW automatic drop system assignment for weapons, armor and other items. This removes the requirement to add patches for other modded items for them to appear in drop tables.
+  * New configurations under General:
+    * "Auto Add Equipment"
+    * "Auto Remove Equipment Not Found"
+    * "Only Add Equipment With Recipes"
+    * "Auto Add Remove Equipment From Vendor"
+    * "Auto Add Remove Equipment From Lootlists"
+* NEW search functionality for Epicloot Compendium pages (Thanks Rusty!)
+* NEW EpicLoot API is now available! (Thanks Rusty!)
+    * Easily retrieve enchantments that are active on the player
+    * Magic Effects can be added by API
+    * Abilities can be added by API
+    * Sets can be added by API
+    * Material conversions
+    * Recipes
+    * Sacrifices
+    * Treasure Maps
+    * Bounties
+    * Secret stash items
+* Enchanting Table fixes:
+    * Augment UI now has a scroll bar and can display all item enchantments.
+    * Augmenting can no longer roll duplicates in one reroll.
+    * Sacrifice items now allows multiple items to be selected at once.
+* Magic Effect tweaks:
+    * Riches drops can now be configured and only drops one item from this new loot table at a time.
+    * Double and Triple Shot can now be configured and have been rebalanced.
+    * Elemental and Physical Resistances now have a configurable capped amount.
+    * Eitr Weave buffed significantly.
+* New configuration AudioVolumeAdjustment to control audio volume of this mod.
+* Scrolling UI sensitivity tweaks.
+* Improved randomization of item drops by type and tier.
+* Added extended magic effect descriptions to compendium.
+* Reduced Augment Upgrade costs of Thunderstone and YmirRemains from 10 to 5. We felt it was still too high.
+* Other bugs fixes we forgot to write down (sorry! enjoy!)
+
+## Version 0.11.7
+
+* Updates for the Russian translation file.
+* Removed extended item data framework support (this has been deprecated for over two years now).
+* Bug fix for item stands not working correctly with magic items.
+* Added missing trinket information in tooltips.
+
+## Version 0.11.6
+
+* Removed the NoRoll from Modify Summon Damage and Modify Summon Health. Can now roll these effects.
+
+## Version 0.11.5 - Call To Arms
+
+* Call To Arms content update!
+  * (if you are using the mega overhaul patches you will NOT get these changes!)
+  * (This is why we encourage using and making small patches, the mod is not finished)
+  * Reclassified Ghost as a Tier 2 mob.
+  * Added Bear (Bjorn) as a Tier 3 mob.
+  * Added Vile (Unbjorn) as a Tier 6 mob.
+  * Added new weapons, armor, and trinkets to appropriate drop tables.
+  * Added Demister to loot tables.
+* Built in Localization for 35 languages! (If you have suggestions for improvements in your language please reach out).
+* New configuration AudioVolumeAdjustment to control audio volume of this mod. (NOT finished! More fixes coming soon).
+* Removed "Crafting Tab Style" configuration since it did nothing.
+* Scrolling UI sensitivity tweaks (NOT finished! More fixes coming soon).
+* Comparison Tooltip jitter fix.
+* Updated links in the welcome popup message.
+* Magic effect fixes:
+  * Fixed the checks for elemental damage on weapons to include all types.
+  * Fixed the check for items that use health on attack (now includes bloodlust enchanted weapons).
+  * Bulk Up algorithm reworked to remove HP bonus cap and smoothed effect value curve.
+  * Quick Draw should now work on crossbows.
+  * Explosive Arrows reworked to improve compatibility with other mods.
+  * Modify Summon Damage and Modify Summon Health now supported.
+  * Coin Hoarder algorithm reworked to require more coins for larger bonuses.
+  * Modify Attack Health bug fix for restoring correct value state after performing an attack.
+  * Stagger no longer applies to players with PVP disabled.
+
 ## Version 0.11.4
 
 * Fixed some patches not applying properly on servers (could use more user verification).

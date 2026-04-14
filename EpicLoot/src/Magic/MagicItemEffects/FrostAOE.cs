@@ -1,8 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
+﻿using EpicLoot.General;
 using HarmonyLib;
 using JetBrains.Annotations;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -95,7 +96,7 @@ namespace EpicLoot.MagicItemEffects
         {
             _player = player;
             var aoeDamagePercent = player.GetTotalActiveMagicEffectValue(MagicEffectType.FrostDamageAOE, 0.01f);
-            _frostDamage = damage.GetTotalDamage() * aoeDamagePercent;
+            _frostDamage = damage.EpicLootGetTotalDamage() * aoeDamagePercent;
         }
 
         public void Start()

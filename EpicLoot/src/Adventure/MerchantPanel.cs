@@ -1,8 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using EpicLoot.Adventure.Feature;
+﻿using EpicLoot.Adventure.Feature;
 using EpicLoot.Crafting;
 using EpicLoot_UnityLib;
+using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -73,13 +73,13 @@ namespace EpicLoot.Adventure
             {
                 if (EpicLoot.HasAuga)
                 {
-                    var resultsPanel = Auga.API.Workbench_CreateNewResultsPanel();
-                    resultsPanel.SetActive(false);
-                    resultsPanel.transform.SetParent(transform);
-                    GambleSuccessDialog = resultsPanel.gameObject.AddComponent<CraftSuccessDialog>();
-                    GambleSuccessDialog.NameText = GambleSuccessDialog.transform.Find("Topic").GetComponent<TMP_Text>();
-                    GambleSuccessDialog.Frame = (RectTransform)GambleSuccessDialog.transform;
-                    GambleSuccessDialog.Frame.anchoredPosition = new Vector2(0, 0);
+                    //var resultsPanel = Auga.API.Workbench_CreateNewResultsPanel();
+                    //resultsPanel.SetActive(false);
+                    //resultsPanel.transform.SetParent(transform);
+                    //GambleSuccessDialog = resultsPanel.gameObject.AddComponent<CraftSuccessDialog>();
+                    //GambleSuccessDialog.NameText = GambleSuccessDialog.transform.Find("Topic").GetComponent<TMP_Text>();
+                    //GambleSuccessDialog.Frame = (RectTransform)GambleSuccessDialog.transform;
+                    //GambleSuccessDialog.Frame.anchoredPosition = new Vector2(0, 0);
                 }
                 else
                 {
@@ -139,14 +139,14 @@ namespace EpicLoot.Adventure
             var bountiesRefreshTooltip = GetRefreshTimeTooltip(AdventureDataManager.Bounties.RefreshInterval);
 
             var sundialTooltip = transform.Find("Sundial").GetComponent<UITooltip>();
-            if (EpicLoot.HasAuga)
-            {
-                Auga.API.Tooltip_MakeSimpleTooltip(sundialTooltip.gameObject);
-                var rt = (RectTransform)sundialTooltip.transform;
-                rt.anchoredPosition = new Vector2(20, -20);
-                rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 40);
-                rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 40);
-            }
+            //if (EpicLoot.HasAuga)
+            //{
+            //    Auga.API.Tooltip_MakeSimpleTooltip(sundialTooltip.gameObject);
+            //    var rt = (RectTransform)sundialTooltip.transform;
+            //    rt.anchoredPosition = new Vector2(20, -20);
+            //    rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 40);
+            //    rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 40);
+            //}
 
             sundialTooltip.m_text =
                 $"$mod_epicloot_merchant_secretstash: {secretStashRefreshTooltip}\n" +
@@ -303,14 +303,14 @@ namespace EpicLoot.Adventure
                 InventoryManagement.Instance.RemoveItem(GetGoldBountyTokenName(), listItem.ItemInfo.Cost.GoldBountyTokens);
             }
 
-            StoreGui.instance.m_trader.OnBought(null);
+            StoreGui.instance.m_trader.OnBought(new Trader.TradeItem { m_price = 0 });
             StoreGui.instance.m_buyEffects.Create(player.transform.position, Quaternion.identity);
         }
 
         private static string GetRefreshTimeTooltip(int refreshInterval)
         {
             var message = refreshInterval > 1 ?
-                Localization.instance.Localize("$mod_epicloot_merchant_refreshdays", refreshInterval.ToString()) : 
+                Localization.instance.Localize("$mod_epicloot_merchant_refreshdays", refreshInterval.ToString()) :
                 "$mod_epicloot_merchant_refreshday";
             return $"<color=#add8e6ff>{message}</color>";
         }
@@ -428,7 +428,7 @@ namespace EpicLoot.Adventure
             RefreshAll();
             if (_audioSource != null)
             {
-                _audioSource.PlayOneShot(EpicLoot.Assets.AbandonBountySFX);
+                _audioSource.PlayOneShot(EpicAssets.AbandonBountySFX, _audioSource.volume);
             }
         }
     }

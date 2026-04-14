@@ -19,19 +19,23 @@ namespace EpicLoot.LootBeams
 
         private void Start()
         {
-            _magicItem = _itemDrop.m_itemData.GetMagicItem();
-            _isMagic = _itemDrop.m_itemData.IsMagic();
+            if (_itemDrop != null)
+            {
+                _magicItem = _itemDrop.m_itemData.GetMagicItem();
+                _isMagic = _itemDrop.m_itemData.IsMagic();
+            }
         }
 
         private void Update()
         {
             if (ShouldShowBeam())
             {
-
                 if (_magicItem == null)
+                {
                     return;
+                }
 
-                _beam = Instantiate(EpicLoot.Assets.MagicItemLootBeamPrefabs[(int) _magicItem.Rarity], transform);
+                _beam = Instantiate(EpicAssets.MagicItemLootBeamPrefabs[(int) _magicItem.Rarity], transform);
                 _beam.transform.localPosition = Vector3.up * HeightOffset;
                 var beamColorSetter = _beam.AddComponent<BeamColorSetter>();
                 beamColorSetter.SetColor(_magicItem.GetColor());

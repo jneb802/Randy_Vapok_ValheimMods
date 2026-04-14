@@ -1,6 +1,6 @@
-﻿using System;
+﻿using JetBrains.Annotations;
+using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,6 +15,9 @@ namespace EpicLoot.Crafting
         public Image MagicBG;
         public List<Button> EffectChoiceButtons = new List<Button>();
 
+        public delegate float AudioVolumeLevelDelegate();
+        public static AudioVolumeLevelDelegate AudioVolumeLevel;
+
         private AudioSource _audioSource;
         private int _choiceIndex = 0;
 
@@ -27,6 +30,11 @@ namespace EpicLoot.Crafting
                 _audioSource = transform.parent.gameObject.AddComponent<AudioSource>();
                 _audioSource.playOnAwake = false;
             }
+
+            var uiSFX = GameObject.Find("sfx_gui_button");
+            if (uiSFX && _audioSource != null)
+                _audioSource.outputAudioMixerGroup = uiSFX.GetComponent<AudioSource>().outputAudioMixerGroup;
+            _audioSource.volume = AudioVolumeLevel();
         }
 
         [UsedImplicitly]
@@ -93,7 +101,7 @@ namespace EpicLoot.Crafting
             gameObject.SetActive(true);
 
             _audioSource.loop = true;
-            _audioSource.clip = EpicLoot.Assets.ItemLoopSFX;
+            _audioSource.clip = EpicAssets.ItemLoopSFX;
             _audioSource.volume = 0.5f;
             _audioSource.Play();
 
@@ -104,10 +112,10 @@ namespace EpicLoot.Crafting
             MagicBG.enabled = fromItem.IsMagic();
             MagicBG.color = rarityColor;
 
-            if (EpicLoot.HasAuga)
-            {
-                Auga.API.ComplexTooltip_SetItem(gameObject, fromItem);
-            }
+            //if (EpicLoot.HasAuga)
+            //{
+            //    Auga.API.ComplexTooltip_SetItem(gameObject, fromItem);
+            //}
 
             if (NameText != null)
             {
@@ -140,17 +148,18 @@ namespace EpicLoot.Crafting
                 text.text = Localization.instance.Localize((index == 0 ? "<color=white>($mod_epicloot_augment_keep)</color> " : "") + MagicItem.GetEffectText(effect, rarity, true));
                 text.color = rarityColor;
 
-                if (EpicLoot.HasAuga)
+                //if (EpicLoot.HasAuga)
+                //{
+                //    Auga.API.Button_SetTextColors(button, Color.white, Color.white, Color.white, Color.white, Color.white, rarityColor);
+                //}
+                //else
+                //{
+
+                //}
+                var buttonColor = button.GetComponent<ButtonTextColor>();
+                if (buttonColor != null)
                 {
-                    Auga.API.Button_SetTextColors(button, Color.white, Color.white, Color.white, Color.white, Color.white, rarityColor);
-                }
-                else
-                {
-                    var buttonColor = button.GetComponent<ButtonTextColor>();
-                    if (buttonColor != null)
-                    {
-                        buttonColor.m_defaultColor = rarityColor;
-                    }
+                    buttonColor.m_defaultColor = rarityColor;
                 }
 
                 button.onClick.RemoveAllListeners();
@@ -173,7 +182,7 @@ namespace EpicLoot.Crafting
         {
             _audioSource.loop = false;
             _audioSource.Stop();
-            _audioSource.PlayOneShot(EpicLoot.Assets.AugmentItemSFX);
+            _audioSource.PlayOneShot(EpicAssets.AugmentItemSFX, _audioSource.volume);
             gameObject.SetActive(false);
         }
     }

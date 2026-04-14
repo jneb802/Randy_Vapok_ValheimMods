@@ -1,20 +1,17 @@
-﻿using System;
+﻿using EpicLoot.Crafting;
+using EpicLoot.GatedItemType;
+using EpicLoot.General;
+using JetBrains.Annotations;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using EpicLoot.Crafting;
-using EpicLoot.GatedItemType;
-using JetBrains.Annotations;
 
 namespace EpicLoot
 {
     [Serializable]
     public class MagicItemEffectRequirements
     {
-        private static StringBuilder _sb = new StringBuilder();
-        private static List<string> _flags = new List<string>();
-
-        public bool NoRoll;
+        public bool NoRoll = false; // If true, this effect cant be modified with a rune
         public bool ExclusiveSelf = true;
         public List<string> ExclusiveEffectTypes = new List<string>();
         public List<string> MustHaveEffectTypes = new List<string>();
@@ -42,91 +39,6 @@ namespace EpicLoot
         public bool? ItemUsesDrawStaminaOnAttack;
 
         public List<string> CustomFlags;
-
-        public override string ToString()
-        {
-            _sb.Clear();
-            _flags.Clear();
-
-            if (NoRoll) _flags.Add(nameof(NoRoll));
-            if (ExclusiveSelf) _flags.Add(nameof(ExclusiveSelf));
-            if (ItemHasPhysicalDamage != null) _flags.Add(nameof(ItemHasPhysicalDamage));
-            if (ItemHasElementalDamage != null) _flags.Add(nameof(ItemHasElementalDamage));
-            if (ItemHasChopDamage != null) _flags.Add(nameof(ItemHasChopDamage));
-            if (ItemUsesDurability != null) _flags.Add(nameof(ItemUsesDurability));
-            if (ItemHasNegativeMovementSpeedModifier != null) _flags.Add(nameof(ItemHasNegativeMovementSpeedModifier));
-            if (ItemHasBlockPower != null) _flags.Add(nameof(ItemHasBlockPower));
-            if (ItemHasParryPower != null) _flags.Add(nameof(ItemHasParryPower));
-            if (ItemHasNoParryPower != null) _flags.Add(nameof(ItemHasNoParryPower));
-            if (ItemHasArmor != null) _flags.Add(nameof(ItemHasArmor));
-            if (ItemHasBackstabBonus != null) _flags.Add(nameof(ItemHasBackstabBonus));
-            if (ItemUsesStaminaOnAttack != null) _flags.Add(nameof(ItemUsesStaminaOnAttack));
-            if (ItemUsesEitrOnAttack != null) _flags.Add(nameof(ItemUsesEitrOnAttack));
-            if (ItemUsesHealthOnAttack != null) _flags.Add(nameof(ItemUsesHealthOnAttack));
-            if (ItemUsesDrawStaminaOnAttack != null) _flags.Add(nameof(ItemUsesDrawStaminaOnAttack));
-
-            if (_flags.Count > 0)
-            {
-                _sb.AppendLine($"> > **Flags:** `{string.Join(", ", _flags)}`");
-            }
-
-            if (ExclusiveEffectTypes != null && ExclusiveEffectTypes.Count > 0)
-            {
-                _sb.AppendLine($"> > **ExclusiveEffectTypes:** `{string.Join(", ", ExclusiveEffectTypes)}`");
-            }
-
-            if (MustHaveEffectTypes != null && MustHaveEffectTypes.Count > 0)
-            {
-                _sb.AppendLine($"> > **MustHaveEffectTypes:** `{string.Join(", ", MustHaveEffectTypes)}`");
-            }
-
-            if (AllowedItemTypes != null && AllowedItemTypes.Count > 0)
-            {
-                _sb.AppendLine($"> > **AllowedItemTypes:** `{string.Join(", ", AllowedItemTypes)}`");
-            }
-
-            if (ExcludedItemTypes != null && ExcludedItemTypes.Count > 0)
-            {
-                _sb.AppendLine($"> > **ExcludedItemTypes:** `{string.Join(", ", ExcludedItemTypes)}`");
-            }
-
-            if (AllowedRarities != null && AllowedRarities.Count > 0)
-            {
-                _sb.AppendLine($"> > **AllowedRarities:** `{string.Join(", ", AllowedRarities)}`");
-            }
-
-            if (ExcludedRarities != null && ExcludedRarities.Count > 0)
-            {
-                _sb.AppendLine($"> > **ExcludedRarities:** `{string.Join(", ", ExcludedRarities)}`");
-            }
-
-            if (AllowedSkillTypes != null && AllowedSkillTypes.Count > 0)
-            {
-                _sb.AppendLine($"> > **AllowedSkillTypes:** `{string.Join(", ", AllowedSkillTypes)}`");
-            }
-
-            if (ExcludedSkillTypes != null && ExcludedSkillTypes.Count > 0)
-            {
-                _sb.AppendLine($"> > **ExcludedSkillTypes:** `{string.Join(", ", ExcludedSkillTypes)}`");
-            }
-
-            if (AllowedItemNames != null && AllowedItemNames.Count > 0)
-            {
-                _sb.AppendLine($"> > **AllowedItemNames:** `{string.Join(", ", AllowedItemNames)}`");
-            }
-
-            if (ExcludedItemNames != null && ExcludedItemNames.Count > 0)
-            {
-                _sb.AppendLine($"> > **ExcludedItemNames:** `{string.Join(", ", ExcludedItemNames)}`");
-            }
-
-            if (CustomFlags != null && CustomFlags.Count > 0)
-            {
-                _sb.AppendLine($"> > **CustomFlags:** `{string.Join(", ", CustomFlags)}`");
-            }
-
-            return _sb.ToString();
-        }
 
         public bool AllowByItemType([NotNull] ItemDrop.ItemData itemData)
         {
@@ -191,10 +103,9 @@ namespace EpicLoot
             return !string.IsNullOrEmpty(typeName) && ExcludedItemTypes.Contains(typeName);
         }
 
-        public bool CheckRequirements([NotNull] ItemDrop.ItemData itemData, [NotNull] MagicItem magicItem, string magicEffectType = null)
+        public bool CheckRequirements([NotNull] ItemDrop.ItemData itemData, [NotNull] MagicItem magicItem, string magicEffectType = null, bool checklootroll = true, bool checkaugmentroll = false, bool checkruneroll = false)
         {
-            if (NoRoll)
-            {
+            if (checklootroll && NoRoll) {
                 return false;
             }
 
@@ -276,8 +187,8 @@ namespace EpicLoot
                 return false;
             }
 
-            if (ItemHasElementalDamage != null &&
-                (ItemHasElementalDamage == itemData.m_shared.m_damages.GetTotalElementalDamage() <= 0))
+            if (ItemHasElementalDamage != null && 
+                (ItemHasElementalDamage == itemData.EpicLootHasElementalDamage()))
             {
                 return false;
             }
@@ -353,7 +264,10 @@ namespace EpicLoot
             if (ItemUsesHealthOnAttack != null)
             {
                 bool usesHealth = itemData.m_shared.m_attack.m_attackHealth > 0 ||
-                    itemData.m_shared.m_secondaryAttack.m_attackHealth > 0;
+                    itemData.m_shared.m_secondaryAttack.m_attackHealth > 0 ||
+                    itemData.m_shared.m_attack.m_attackHealthPercentage > 0 ||
+                    itemData.m_shared.m_secondaryAttack.m_attackHealthPercentage > 0 ||
+                    itemData.HasMagicEffect(MagicEffectType.Bloodlust);
 
                 if (ItemUsesHealthOnAttack.Value != usesHealth)
                 {
@@ -395,6 +309,26 @@ namespace EpicLoot
             public ValueDef Epic;
             public ValueDef Legendary;
             public ValueDef Mythic;
+
+            public ValueDef GetValueDefForRarity(ItemRarity rarity)
+            {
+                switch (rarity)
+                {
+                    case ItemRarity.Magic:
+                        return Magic;
+                    case ItemRarity.Rare:
+                        return Rare;
+                    case ItemRarity.Epic:
+                        return Epic;
+                    case ItemRarity.Legendary:
+                        return Legendary;
+                    case ItemRarity.Mythic:
+                        return Mythic;
+                    default:
+                        EpicLoot.LogWarning($"Unknown rarity: {rarity}, returning Magic values");
+                        return Magic;
+                }
+            }
         }
 
         public string Type { get; set; }
@@ -406,26 +340,38 @@ namespace EpicLoot
         public float SelectionWeight = 1;
         public bool CanBeAugmented = true;
         public bool CanBeDisenchanted = true;
+        public bool CanBeRunified = true;
         public string Comment;
         public List<string> Prefixes = new List<string>();
         public List<string> Suffixes = new List<string>();
         public string EquipFx;
         public FxAttachMode EquipFxMode = FxAttachMode.Player;
         public string Ability;
+        public Dictionary<string, float> Config = new Dictionary<string, float>();
+
+        public string GetDescriptionTextWithConfig() {
+            string description = Description;
+            if (Config != null && Config.Count > 0) {
+                foreach(var kvp in Config) {
+                    description += $" {kvp.Key}: {kvp.Value}";
+                }
+            }
+            return description;
+        }
 
         public List<string> GetAllowedItemTypes()
         {
             return Requirements?.AllowedItemTypes ?? new List<string>();
         }
 
-        public bool CheckRequirements(ItemDrop.ItemData itemData, MagicItem magicItem)
+        public bool CheckRequirements(ItemDrop.ItemData itemData, MagicItem magicItem, bool lootroll = true, bool augmentroll = false, bool runeroll = false)
         {
             if (Requirements == null)
             {
                 return true;
             }
 
-            return Requirements.CheckRequirements(itemData, magicItem, Type);
+            return Requirements.CheckRequirements(itemData, magicItem, Type, lootroll, augmentroll, runeroll);
         }
 
         public bool HasRarityValues()
@@ -451,6 +397,11 @@ namespace EpicLoot
                 default:
                     throw new ArgumentOutOfRangeException(nameof(itemRarity), itemRarity, null);
             }
+        }
+
+        public override string ToString()
+        {
+            return $"MagicItemEffectDefinition|{Type}";
         }
     }
 
@@ -487,8 +438,6 @@ namespace EpicLoot
                 EpicLoot.LogWarning($"Removed previously existing magic effect type: {effectDef.Type}");
                 AllDefinitions.Remove(effectDef.Type);
             }
-
-            EpicLoot.Log($"Added MagicItemEffect: {effectDef.Type}");
             AllDefinitions.Add(effectDef.Type, effectDef);
         }
 
@@ -512,8 +461,15 @@ namespace EpicLoot
             return effectDef;
         }
 
+        public static Dictionary<string, float> GetEffectConfig(string type)
+        {
+            AllDefinitions.TryGetValue(type, out var effectDef);
+            if (effectDef != null && effectDef.Config != null) { return effectDef.Config; }
+            return null;
+        }
+
         public static List<MagicItemEffectDefinition> GetAvailableEffects(
-            ItemDrop.ItemData itemData, MagicItem magicItem, int ignoreEffectIndex = -1)
+            ItemDrop.ItemData itemData, MagicItem magicItem, int ignoreEffectIndex = -1, bool checklootroll = true, bool checkaugment = false, bool checkruneroll = false)
         {
             MagicItemEffect effect = null;
             if (ignoreEffectIndex >= 0 && ignoreEffectIndex < magicItem.Effects.Count)
@@ -522,7 +478,7 @@ namespace EpicLoot
                 magicItem.Effects.RemoveAt(ignoreEffectIndex);
             }
 
-            var results = AllDefinitions.Values.Where(x => x.CheckRequirements(itemData, magicItem) &&
+            var results = AllDefinitions.Values.Where(x => x.CheckRequirements(itemData, magicItem, checklootroll, checkaugment, checkruneroll) &&
                 !EnchantCostsHelper.EffectIsDeprecated(x)).ToList();
 
             if (effect != null)

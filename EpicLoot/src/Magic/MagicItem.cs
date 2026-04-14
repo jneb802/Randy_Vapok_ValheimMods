@@ -1,8 +1,9 @@
-﻿using System;
+﻿using EpicLoot.LegendarySystem;
+using EpicLoot.MagicItemEffects;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using EpicLoot.LegendarySystem;
 using UnityEngine;
 
 namespace EpicLoot
@@ -25,10 +26,6 @@ namespace EpicLoot
         public string EffectType { get; set; }
         public float EffectValue;
 
-        public MagicItemEffect()
-        {
-        }
-
         public MagicItemEffect(string type, float value = DefaultValue)
         {
             EffectType = type;
@@ -48,6 +45,7 @@ namespace EpicLoot
         public string DisplayName;
         public string LegendaryID;
         public string SetID;
+        public bool IsUnidentified = false;
 
         public string GetItemTypeName(ItemDrop.ItemData baseItem)
         {
@@ -77,8 +75,21 @@ namespace EpicLoot
 
             tooltip.Append($"</color>");
             
-            tooltip.AppendLine($"$mod_epicloot_itemtooltip_rarity: {GetRarityDisplay()}<pos=75%>$mod_epicloot_itemtooltip_effects: <color={color}>{Effects.Count}</color>");
-            
+            tooltip.AppendLine($"$mod_epicloot_itemtooltip_rarity: {GetRarityDisplay()}<pos=75%>" +
+                $"$mod_epicloot_itemtooltip_effects: <color={color}>{Effects.Count}</color>");
+
+            return tooltip.ToString();
+        }
+
+        public string GetCompactTooltip() {
+            var color = GetColorString();
+            var tooltip = new StringBuilder();
+            tooltip.Append($"<color={color}>");
+            for (var index = 0; index < Effects.Count; index++) {
+                tooltip.AppendLine($"{GetEffectText(Effects[index], Rarity, true)}");
+            }
+            tooltip.Append($"</color>");
+
             return tooltip.ToString();
         }
 
@@ -106,9 +117,10 @@ namespace EpicLoot
             return GetEffects(effectType).Sum(x => x.EffectValue) * scale;
         }
 
-        public bool HasEffect(string effectType)
+        public bool HasEffect(string effectType, bool checkHealthCritical = false)
         {
-            return Effects.Exists(x => x.EffectType == effectType);
+            return Effects.Exists(x => x.EffectType == effectType) ||
+                (checkHealthCritical && Effects.Exists(x => x.EffectType == (ModifyWithLowHealth.EffectNameWithLowHealth(effectType))));
         }
 
         public bool HasAnyEffect(IEnumerable<string> effectTypes)

@@ -1,4 +1,5 @@
-﻿using EpicLoot.LootBeams;
+﻿using EpicLoot.Crafting;
+using EpicLoot.LootBeams;
 using HarmonyLib;
 
 namespace EpicLoot
@@ -8,13 +9,16 @@ namespace EpicLoot
     {
         public static void Postfix(ItemDrop __instance)
         {
-            __instance.gameObject.AddComponent<LootBeam>();
-
-            var prefabData = __instance.m_itemData.InitializeCustomData();
-            if (prefabData != null)
+            if (__instance.m_itemData == null)
             {
-                __instance.m_itemData.m_dropPrefab = prefabData;
-                __instance.Save();
+                return;
+            }
+
+            __instance.m_itemData.InitializeCustomData();
+
+            if (__instance.gameObject.GetComponent<LootBeam>() == null)
+            {
+                __instance.gameObject.AddComponent<LootBeam>();
             }
         }
     }
@@ -24,11 +28,31 @@ namespace EpicLoot
     {
         public static void Postfix(Inventory __instance)
         {
-            foreach (var itemData in __instance.m_inventory)
+            foreach (ItemDrop.ItemData itemData in __instance.m_inventory)
             {
-                var prefabData = itemData.InitializeCustomData();
-                if (prefabData != null)
-                    itemData.m_dropPrefab = prefabData;
+                if (itemData.IsMagicCraftingMaterial())
+                {
+                    itemData.CreateMagicItem();
+                }
+
+                itemData.InitializeCustomData();
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(Container), nameof(Container.Load))]
+    public static class Container_Load_Patch
+    {
+        public static void Postfix(Container __instance)
+        {
+            foreach (ItemDrop.ItemData itemData in __instance.m_inventory.m_inventory)
+            {
+                if (itemData.IsMagicCraftingMaterial())
+                {
+                    itemData.CreateMagicItem();
+                }
+
+                itemData.InitializeCustomData();
             }
         }
     }

@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using UnityEngine;
 
 namespace AdvancedPortals
 {
@@ -6,6 +7,42 @@ namespace AdvancedPortals
     public static class Teleport_Patch
     {
         public static AdvancedPortal CurrentAdvancedPortal;
+
+        public static void TargetPortal_HandlePortalClick_Prefix()
+        {
+            Vector3 playerPos = Player.m_localPlayer.transform.position;
+            const float searchRadius = 2.0f;
+            Collider[] colliders = Physics.OverlapSphere(playerPos, searchRadius);
+            TeleportWorld closestTeleport = null;
+            float minDistSquared = searchRadius * searchRadius + 1;
+            foreach (Collider collider in colliders)
+            {
+                TeleportWorldTrigger twt = collider.gameObject.GetComponent<TeleportWorldTrigger>();
+                if (twt == null)
+                {
+                    continue;
+                }
+
+                TeleportWorld tw = twt.GetComponentInParent<TeleportWorld>();
+                if (tw == null)
+                {
+                    continue;
+                }
+
+                Vector3 d = collider.transform.position - playerPos;
+                float distSquared = d.x * d.x + d.y * d.y + d.z * d.z;
+                if (distSquared < minDistSquared)
+                {
+                    closestTeleport = tw;
+                    minDistSquared = distSquared;
+                }
+            }
+
+            if (closestTeleport != null)
+            {
+                Generic_Prefix(closestTeleport);
+            }
+        }
 
         public static void Generic_Prefix(TeleportWorld __instance)
         {
@@ -24,14 +61,6 @@ namespace AdvancedPortals
             CurrentAdvancedPortal = __instance.GetComponent<AdvancedPortal>();
         }
 
-        [HarmonyPatch(typeof(TeleportWorld), nameof(TeleportWorld.SetText))]
-        [HarmonyPostfix]
-        public static void TeleportWorld_SetText_Postfix()
-        {
-            Game.instance.ConnectPortals();
-        }
-
-        
         [HarmonyPatch(typeof(TeleportWorld), nameof(TeleportWorld.UpdatePortal))]
         [HarmonyPostfix]
         public static void TeleportWorld_UpdatePortal_Postfix()
@@ -53,30 +82,39 @@ namespace AdvancedPortals
             CurrentAdvancedPortal = null;
         }
 
+        // High priority to run before other mods
         [HarmonyPatch(typeof(Inventory), nameof(Inventory.IsTeleportable))]
-        [HarmonyPrefix]
-        public static bool Inventory_IsTeleportable_Pretfix(Inventory __instance, ref bool __result)
+        [HarmonyPostfix]
+        [HarmonyPriority(Priority.High)]
+        public static void Inventory_IsTeleportable_Pretfix(Inventory __instance, ref bool __result)
         {
-            if (CurrentAdvancedPortal == null)
-                return true;
+            if (CurrentAdvancedPortal == null || __result == true)
+            {
+                // Do not change result for non-advanced portals, or if it already allowed to teleport
+                return;
+            }
 
             if (CurrentAdvancedPortal.AllowEverything)
             {
                 __result = true;
-                return false;
+                return;
             }
 
-            foreach (var itemData in __instance.GetAllItems())
+            foreach (ItemDrop.ItemData itemData in __instance.GetAllItems())
             {
-                if (!itemData.m_shared.m_teleportable && itemData.m_dropPrefab != null && !CurrentAdvancedPortal.AllowedItems.Contains(itemData.m_dropPrefab.name))
+                if (itemData.m_dropPrefab == null)
                 {
-                    __result = false;
-                    return false;
+                    continue;
+                }
+
+                if (!itemData.m_shared.m_teleportable &&
+                    !CurrentAdvancedPortal.AllowedItems.Contains(itemData.m_dropPrefab.name))
+                {
+                    return;
                 }
             }
 
             __result = true;
-            return false;
         }
     }
 }

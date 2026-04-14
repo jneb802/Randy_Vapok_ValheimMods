@@ -1,7 +1,7 @@
-﻿using System;
+﻿using EpicLoot.Adventure.Feature;
+using System;
 using System.Linq;
 using System.Text;
-using EpicLoot.Adventure.Feature;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -105,7 +105,7 @@ namespace EpicLoot.Adventure
 
                 if (EpicLoot.HasAuga)
                 {
-                    Auga.API.Tooltip_MakeSimpleTooltip(gameObject);
+                    //Auga.API.Tooltip_MakeSimpleTooltip(gameObject);
                 }
 
                 Tooltip.m_topic = NameText.text;
@@ -115,7 +115,7 @@ namespace EpicLoot.Adventure
             {
                 if (EpicLoot.HasAuga)
                 {
-                    Auga.API.Tooltip_MakeItemTooltip(gameObject, ItemInfo.Item);
+                    //Auga.API.Tooltip_MakeItemTooltip(gameObject, ItemInfo.Item);
                 }
                 else
                 {

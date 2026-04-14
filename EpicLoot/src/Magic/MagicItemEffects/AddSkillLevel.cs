@@ -1,7 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using HarmonyLib;
+﻿using HarmonyLib;
 using JetBrains.Annotations;
+using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -47,6 +47,7 @@ namespace EpicLoot.MagicItemEffects
             check(MagicEffectType.AddElementalMagicSkill, SkillType.ElementalMagic);
             check(MagicEffectType.AddBloodMagicSkill, SkillType.BloodMagic);
             check(MagicEffectType.AddMovementSkills, SkillType.Run, SkillType.Jump, SkillType.Swim, SkillType.Sneak);
+            check(MagicEffectType.AddCrafterSkills, SkillType.Crafting, SkillType.Cooking);
 
             return increase;
         }

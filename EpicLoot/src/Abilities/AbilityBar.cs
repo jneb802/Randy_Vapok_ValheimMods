@@ -1,8 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using Common;
+﻿using Common;
 using EpicLoot.Config;
 using HarmonyLib;
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
@@ -146,7 +146,7 @@ namespace EpicLoot.Abilities
     {
         public static void Postfix(Hud __instance)
         {
-            var abilityBar = Object.Instantiate(EpicLoot.Assets.AbilityBar, __instance.m_rootObject.transform, false);
+            var abilityBar = Object.Instantiate(EpicAssets.AbilityBar, __instance.m_rootObject.transform, false);
             abilityBar.AddComponent<AbilityBar>();
         }
     }

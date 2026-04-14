@@ -1,146 +1,98 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Reflection.Emit;
+﻿using EpicLoot.General;
 using HarmonyLib;
-using JetBrains.Annotations;
+using Jotunn.Managers;
+using System.Collections.Generic;
+using System.Reflection.Emit;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace EpicLoot.MagicItemEffects
 {
-    [HarmonyPatch(typeof(Projectile), nameof(Projectile.Awake))]
-    public class RPC_ExplodingArrow_Projectile_Awake_Patch
+    [HarmonyPatch(typeof(Attack))]
+    public static class ExplodingArrow_Patch
     {
-        [UsedImplicitly]
-        private static void Postfix(Projectile __instance)
+        [HarmonyTranspiler]
+        [HarmonyPatch(nameof(Attack.FireProjectileBurst))]
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            __instance.m_nview.Register<Vector3, float>("el-aw", RPC_ExplodingArrow);
+            CodeMatcher codeMatcher = new CodeMatcher(instructions);
+            codeMatcher.MatchStartForward(
+                new CodeMatch(OpCodes.Ldfld, AccessTools.Field(typeof(Attack), nameof(Attack.m_weapon))),
+                new CodeMatch(OpCodes.Ldloc_S),
+                new CodeMatch(OpCodes.Stfld, AccessTools.Field(typeof(ItemDrop.ItemData), nameof(ItemDrop.ItemData.m_lastProjectile))))
+                .ThrowIfNotMatch("Unable to patch FireProjectileBurst for Exploding Arrows.")
+                .Advance(3).InsertAndAdvance(
+                new CodeInstruction(OpCodes.Ldloc_S, (byte)20),
+                new CodeInstruction(OpCodes.Ldarg_0),
+                Transpilers.EmitDelegate(UpdateProjectileHit));
+            return codeMatcher.Instructions();
         }
-            
-        private static void RPC_ExplodingArrow(long sender, Vector3 position, float explodingArrowStrength)
+
+        private static void UpdateProjectileHit(GameObject shot, Attack instance)
         {
-            var poisonPrefab = ZNetScene.instance.GetPrefab("vfx_blob_attack");
-            var poisonCloud = Object.Instantiate(poisonPrefab, position, Quaternion.identity);
-            var particles = poisonCloud.transform.Find("particles");
-            var cloudParticles = particles.Find("ooz (1)").GetComponent<ParticleSystem>();
-            var main = cloudParticles.main;
-            main.startColor = new Color(0.9f, 0.3f, 0, 0.5f);
-            main.simulationSpeed = 7;
-            var splashParticles = particles.Find("wetsplsh").GetComponent<ParticleSystem>();
-            main = splashParticles.main;
-            main.startColor = new Color(1, 0.14f, 0.1f, 1);
-            main.simulationSpeed = 3;
-
-            var characters = new List<Character>();
-            Character.GetCharactersInRange(poisonCloud.transform.localPosition, 4f, characters);
-            foreach (var c in characters)
+            if (Player.m_localPlayer != null && instance.m_character == Player.m_localPlayer &&
+                Player.m_localPlayer.HasActiveMagicEffect(MagicEffectType.ExplosiveArrows, out float effectValue, 0.01f))
             {
-                if (!c.IsOwner() || (c.IsPlayer() && !c.IsPVPEnabled()))
+                Projectile projectile = shot.GetComponent<Projectile>();
+                if (projectile != null && projectile.m_nview != null && projectile.m_nview.IsValid())
                 {
-                    continue;
+                    projectile.m_nview.GetZDO().Set("el-aw", effectValue);
                 }
-
-                var fireHit = new HitData {m_damage = {m_fire = explodingArrowStrength}};
-                c.Damage(fireHit);
             }
         }
     }
 
     [HarmonyPatch(typeof(Projectile), nameof(Projectile.OnHit))]
-    public class ExplodingArrowHit_Projectile_OnHit_Patch
+    public static class ExplodingArrowHit_Projectile_OnHit_Patch
     {
-        [UsedImplicitly]
-        private static void Prefix(out bool __state, Projectile __instance)
+        [HarmonyTranspiler]
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            __state = __instance.m_stayAfterHitStatic;
-            __instance.m_stayAfterHitStatic = true;
-        }
-        
-        [UsedImplicitly]
-        private static void Postfix(bool __state, Vector3 hitPoint, Projectile __instance)
-        {
-            if (__instance == null || __instance.m_nview == null || __instance.m_nview.GetZDO() == null)
-                return;
-
-            if (__instance.m_didHit)
-            {
-                var explodingArrow = __instance.m_nview.GetZDO().GetFloat("el-aw", float.NaN);
-                if (!float.IsNaN(explodingArrow))
-                {
-                    var explodingArrowStrength = explodingArrow * __instance.m_damage.GetTotalDamage();
-                    __instance.m_nview.InvokeRPC(ZRoutedRpc.Everybody, "el-aw", hitPoint, explodingArrowStrength);
-                }
-
-                if (!__state)
-                {
-                    ZNetScene.instance.Destroy(__instance.gameObject);
-                }
-            }
-
-            __instance.m_stayAfterHitStatic = __state;
-        }
-    }
-
-    [HarmonyPatch(typeof(Attack), nameof(Attack.FireProjectileBurst))]
-    public class ExplodingArrowInstantiation_Attack_FireProjectileBurst_Patch
-    {
-        private static GameObject ChooseAttackProjectile(GameObject defaultAttackProjectile, Attack attack)
-        {
-            if (attack.m_character == Player.m_localPlayer &&
-                Player.m_localPlayer.HasActiveMagicEffect(MagicEffectType.ExplosiveArrows, out float effectValue))
-            {
-                return ObjectDB.instance.GetItemPrefab("ArrowFire").GetComponent<ItemDrop>().m_itemData.m_shared.m_attack.m_attackProjectile;
-            }
-
-            return defaultAttackProjectile;
+            CodeMatcher codeMatcher = new CodeMatcher(instructions);
+            codeMatcher.MatchStartForward(
+                    new CodeMatch(OpCodes.Ldarg_0), // Projectile instance
+                    new CodeMatch(OpCodes.Ldc_I4_1),
+                    new CodeMatch(OpCodes.Stfld, AccessTools.Field(typeof(Projectile), nameof(Projectile.m_didHit))))
+                .ThrowIfNotMatch("Unable to patch OnHit for Exploding Arrows.")
+                .Advance(3)
+                .InsertAndAdvance(
+                    new CodeInstruction(OpCodes.Ldarg_2), // Vector3 hitPoint
+                    new CodeInstruction(OpCodes.Ldarg_0), // Projectile instance
+                    Transpilers.EmitDelegate(SpawnExplosiveArrowOnHit));
+            return codeMatcher.Instructions();
         }
 
-        private static GameObject MarkAttackProjectile(GameObject attackProjectile, Attack attack)
+        private static void SpawnExplosiveArrowOnHit(Vector3 hitPoint, Projectile instance)
         {
-            if (attack.m_character == Player.m_localPlayer &&
-                Player.m_localPlayer.HasActiveMagicEffect(MagicEffectType.ExplosiveArrows, out float explosiveStrength, 0.01f))
+            if (instance.m_didHit)
             {
-                attackProjectile.GetComponent<ZNetView>().GetZDO().Set("el-aw", explosiveStrength);
-            }
+                float explodingArrowValue = instance.m_nview.GetZDO().GetFloat("el-aw", float.NaN);
 
-            return attackProjectile;
-        }
-
-        private static readonly MethodInfo AttackProjectileMarker = AccessTools.DeclaredMethod(
-            typeof(ExplodingArrowInstantiation_Attack_FireProjectileBurst_Patch), nameof(MarkAttackProjectile));
-        private static readonly MethodInfo AttackProjectileChooser = AccessTools.DeclaredMethod(
-            typeof(ExplodingArrowInstantiation_Attack_FireProjectileBurst_Patch), nameof(ChooseAttackProjectile));
-        private static readonly MethodInfo Instantiator = AccessTools.GetDeclaredMethods(typeof(Object))
-            .Where(m => m.Name == "Instantiate" && m.GetGenericArguments().Length == 1)
-            .Select(m => m.MakeGenericMethod(typeof(GameObject)))
-            .First(m => m.GetParameters().Length == 3 && m.GetParameters()[1].ParameterType == typeof(Vector3));
-
-        [UsedImplicitly]
-        private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
-        {
-            var result = new List<CodeInstruction>();
-            var searchLdLoc = -1;
-            OpCode[] ldLocOps = {OpCodes.Ldloc_0, OpCodes.Ldloc_1, OpCodes.Ldloc_2, OpCodes.Ldloc_3, OpCodes.Ldloc_S};
-            foreach (var instruction in instructions.Reverse())
-            {
-                if (instruction.opcode == OpCodes.Call && instruction.OperandIs(Instantiator))
+                if (float.IsNaN(explodingArrowValue))
                 {
-                    result.Add(new CodeInstruction(OpCodes.Call, AttackProjectileMarker));
-                    result.Add(new CodeInstruction(OpCodes.Ldarg_0)); // this
-                    searchLdLoc = 3;
+                    return;
                 }
 
-                if (ldLocOps.Contains(instruction.opcode) && --searchLdLoc == 0)
+                GameObject prefab = PrefabManager.Instance.GetPrefab(EpicAssets.ExplosiveArrow);
+
+                if (prefab == null)
                 {
-                    result.Add(new CodeInstruction(OpCodes.Call, AttackProjectileChooser));
-                    result.Add(new CodeInstruction(OpCodes.Ldarg_0)); // this
+                    EpicLoot.LogError("Cannot find Explosive Arrow prefab! Magic Effect will not work as expected.");
+                    return;
                 }
 
-                result.Add(instruction);
-            }
+                GameObject spawnedObject = GameObject.Instantiate(prefab, hitPoint, Quaternion.identity);
 
-            return ((IEnumerable<CodeInstruction>) result).Reverse();
+                Aoe aoe = spawnedObject.GetComponent<Aoe>();
+
+                if (aoe == null)
+                {
+                    EpicLoot.LogError("Cannot find Explosive Arrow Aoe! Magic Effect will not work as expected.");
+                    return;
+                }
+
+                float explodingArrowStrength = explodingArrowValue * instance.m_damage.EpicLootGetTotalDamage();
+                aoe.m_damage.m_fire = explodingArrowStrength;
+            }
         }
     }
 }

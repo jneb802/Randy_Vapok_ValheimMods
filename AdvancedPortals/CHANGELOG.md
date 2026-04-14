@@ -1,3 +1,16 @@
+## 1.1.3
+* Fixed an issue with the AllowEverything config option no longer being used in the teleport check.
+
+## 1.1.2
+* Changed portals metal check patch to better respect other mods including World Advancement & Progression.
+
+## 1.1.1
+* Fixed a small typo issue that only manifested when TargetPortal was installed.
+
+## 1.1.0
+* Overhauled portal appearances to better match vanilla styles!
+* Now requires Jotunn to run, please install this new dependency!
+
 ## 1.0.11
 * Update for Valheim version 0.219.13 Bog Witch.
 
