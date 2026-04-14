@@ -39,6 +39,7 @@ namespace Common
         // TODO: Fix or remove
         /*public static Sprite LoadSpriteFromFile(string spritePath)
         {
+#if !UNIX_BUILD
             spritePath = Path.Combine(Paths.PluginPath, spritePath);
             if (File.Exists(spritePath))
             {
@@ -49,7 +50,7 @@ namespace Common
                     return Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(), 100);
                 }
             }
-
+#endif
             return null;
         }*/
 

@@ -6,7 +6,9 @@
         <VALHEIM_MANAGED>$(GamePath)/Valheim.app/Contents/Resources/Data/Managed</VALHEIM_MANAGED>
         <BEPINEX_PATH>$(GamePath)/BepInEx</BEPINEX_PATH>
         <PUBLICIZED_PATH>$(VALHEIM_MANAGED)/publicized_assemblies</PUBLICIZED_PATH>
+        <DefineConstants>$(DefineConstants);UNIX_BUILD</DefineConstants>
     </PropertyGroup>
+
 
     <PropertyGroup Condition="$(OS) == 'Windows_NT'">
         <VALHEIM_MANAGED>$(GamePath)/valheim_Data/Managed</VALHEIM_MANAGED>
