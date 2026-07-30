@@ -12,6 +12,6 @@
 
   <!-- Windows-only post-build targets -->
   <Target Name="CopyAssembly" AfterTargets="Build" Condition=" '$(OS)' == 'Windows_NT' ">
-    <Copy SourceFiles="$(TargetDir)$(TargetFileName)" DestinationFolder="$(SolutionDir)ValheimUnity\Assets\ExternalLibraries" />
+    <Copy SourceFiles="$(TargetDir)$(TargetFileName)" DestinationFolder="$(SolutionUnity)Assets/ExternalLibraries" />
   </Target>
 </Project>

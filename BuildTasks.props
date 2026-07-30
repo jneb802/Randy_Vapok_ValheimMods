@@ -7,7 +7,8 @@
     <Copy SourceFiles="$(BepinexPath)core\Mono.Cecil.dll" DestinationFolder="$(SolutionUnity)Assets\ExternalLibraries" />
     <Copy SourceFiles="$(BepinexPath)core\MonoMod.Utils.dll" DestinationFolder="$(SolutionUnity)Assets\ExternalLibraries" />
     <Copy SourceFiles="$(BepinexPath)core\MonoMod.RuntimeDetour.dll" DestinationFolder="$(SolutionUnity)Assets\ExternalLibraries" />
-    <Copy SourceFiles="$(TargetDir)Jotunn.dll" DestinationFolder="$(SolutionUnity)Assets\ExternalLibraries" />
+    <Copy SourceFiles="$(TargetDir)Jotunn.dll" DestinationFolder="$(SolutionUnity)Assets\ExternalLibraries" Condition="Exists('$(TargetDir)Jotunn.dll')" />
+    <Copy SourceFiles="$(SolutionDir)Libs\Jotunn.dll" DestinationFolder="$(SolutionUnity)Assets\ExternalLibraries" Condition="!Exists('$(TargetDir)Jotunn.dll') And Exists('$(SolutionDir)Libs\Jotunn.dll')" />
     <Copy SourceFiles="$(GamePathManaged)\Assembly-CSharp.dll" DestinationFolder="$(SolutionUnity)Assets\ExternalLibraries\valheim" />
     <Copy SourceFiles="$(GamePathManaged)\assembly_valheim.dll" DestinationFolder="$(SolutionUnity)Assets\ExternalLibraries\valheim" />
     <Copy SourceFiles="$(GamePathManaged)\assembly_utils.dll" DestinationFolder="$(SolutionUnity)Assets\ExternalLibraries\valheim" />
