@@ -1,0 +1,41 @@
+{
+  "TargetFile": "shardstoneconversions.json",
+  "Author": "EpicLoot",
+  "Priority": 2000,
+  "RequireAll": true,
+  "Patches": [
+    {
+      "Path": "$.MaterialConversions[?(@.Name == 'ShardStoneUpgrade_Red_Magic_to_Rare')].Resources",
+      "Action": "Overwrite",
+      "Value": [
+        { "Item": "Red_Magic_ShardStone", "Amount": 1 },
+        { "Item": "ShardMagic",           "Amount": 3 },
+        { "Item": "Coins",                "Amount": 10 }
+      ]
+    },
+    {
+      "Path": "$.MaterialConversions[?(@.Name == 'ShardStoneUpgrade_Yagluth_Legendary_to_Mythic')].Resources",
+      "Action": "Append",
+      "Value": { "Item": "YagluthDrop", "Amount": 2 }
+    },
+    {
+      "Path": "$.MaterialConversions[?(@.Name == 'ShardStoneUpgrade_Red_Epic_to_Legendary')].Amount",
+      "Action": "Overwrite",
+      "Value": 2
+    },
+    {
+      "Path": "$.MaterialConversions",
+      "Action": "Append",
+      "Value": {
+        "Name": "ShardStoneUpgrade_Fader_Mythic_to_Mythic",
+        "Product": "Fader_Mythic_ShardStone",
+        "Amount": 1,
+        "Type": "ShardUpgrade",
+        "Resources": [
+          { "Item": "Fader_Mythic_ShardStone", "Amount": 2 },
+          { "Item": "ShardMythic", "Amount": 8 }
+        ]
+      }
+    }
+  ]
+}

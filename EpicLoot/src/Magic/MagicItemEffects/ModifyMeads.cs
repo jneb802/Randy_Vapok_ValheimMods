@@ -20,14 +20,15 @@ namespace EpicLoot.Magic.MagicItemEffects
             codeMatcher.MatchStartForward(
                     new CodeMatch(OpCodes.Ldfld, AccessTools.Field(typeof(ItemDrop.ItemData.SharedData),
                         nameof(ItemDrop.ItemData.m_shared.m_consumeStatusEffect))),
+                    // resetTime / itemLevel / skillLevel of the SEMan.AddStatusEffect call below.
+                    // Player.ConsumeItem loads m_consumeStatusEffect three times; only this one is
+                    // followed by these literals, so they identify the site on their own. Matching
+                    // the callvirt's exact overload as well is what broke when the Sept 2026 update
+                    // appended a `short variant` parameter, so it is deliberately not matched here.
                     new CodeMatch(OpCodes.Ldc_I4_1),
                     new CodeMatch(OpCodes.Ldc_I4_0),
-                    new CodeMatch(OpCodes.Ldc_R4),
-                    new CodeMatch(OpCodes.Callvirt, AccessTools.Method(typeof(SEMan), nameof(SEMan.AddStatusEffect), new System.Type[]
-                    {
-                        typeof(StatusEffect), typeof(bool), typeof(int), typeof(float)
-                    })))
-                .ThrowIfNotMatch("Unable to patch Player.ConsumeItem for Instant Meads.")
+                    new CodeMatch(OpCodes.Ldc_R4))
+                .ThrowIfNotMatch("Unable to patch Player.ConsumeItem for Mead Effects.")
                 .Advance(1)
                 .InsertAndAdvance(Transpilers.EmitDelegate(ModifyMead));
             return codeMatcher.Instructions();
@@ -79,6 +80,11 @@ namespace EpicLoot.Magic.MagicItemEffects
 
         private static SE_Stats TryCreateDecreasedCooldownMead(SE_Stats effect, float value)
         {
+            if (!HasOverTimeValues(effect))
+            {
+                return effect;
+            }
+
             SE_Stats newStatusEffect = (SE_Stats)effect.Clone();
             newStatusEffect.m_ttl *= Mathf.Clamp01(1f - value);
 

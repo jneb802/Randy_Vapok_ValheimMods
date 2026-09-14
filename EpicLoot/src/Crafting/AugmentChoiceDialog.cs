@@ -1,6 +1,7 @@
 ﻿using JetBrains.Annotations;
 using System;
 using System.Collections.Generic;
+using EpicLoot.CraftingV2;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,9 +16,6 @@ namespace EpicLoot.Crafting
         public Image MagicBG;
         public List<Button> EffectChoiceButtons = new List<Button>();
 
-        public delegate float AudioVolumeLevelDelegate();
-        public static AudioVolumeLevelDelegate AudioVolumeLevel;
-
         private AudioSource _audioSource;
         private int _choiceIndex = 0;
 
@@ -31,10 +29,7 @@ namespace EpicLoot.Crafting
                 _audioSource.playOnAwake = false;
             }
 
-            var uiSFX = GameObject.Find("sfx_gui_button");
-            if (uiSFX && _audioSource != null)
-                _audioSource.outputAudioMixerGroup = uiSFX.GetComponent<AudioSource>().outputAudioMixerGroup;
-            _audioSource.volume = AudioVolumeLevel();
+            EnchantingUIController.SetupUIAudioSource(_audioSource);
         }
 
         [UsedImplicitly]
@@ -102,7 +97,6 @@ namespace EpicLoot.Crafting
 
             _audioSource.loop = true;
             _audioSource.clip = EpicAssets.ItemLoopSFX;
-            _audioSource.volume = 0.5f;
             _audioSource.Play();
 
             var rarity = fromItem.GetRarity();
@@ -182,7 +176,7 @@ namespace EpicLoot.Crafting
         {
             _audioSource.loop = false;
             _audioSource.Stop();
-            _audioSource.PlayOneShot(EpicAssets.AugmentItemSFX, _audioSource.volume);
+            _audioSource.PlayOneShot(EpicAssets.AugmentItemSFX);
             gameObject.SetActive(false);
         }
     }

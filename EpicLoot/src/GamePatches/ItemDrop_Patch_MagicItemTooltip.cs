@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Text;
+using EpicLoot.Compatibility;
+using EpicLoot.Config;
 using EpicLoot.Crafting;
 using HarmonyLib;
 using JetBrains.Annotations;
@@ -11,6 +13,54 @@ public static class MagicTooltipPatches
 {
     public static bool TooltipDisable = false;
 
+    // Tells the player how to open an item's shard slots. Appended here, on the inventory grid's own
+    // tooltip, rather than inside MagicItem.GetTooltip: the enchanting panels, tempering panel, craft
+    // dialogs and trader lists all call GetTooltip() directly, and the hint means nothing there.
+    private static string GetSocketOpenHint(ItemDrop.ItemData item)
+    {
+        if (item == null)
+        {
+            return "";
+        }
+
+        // Brokkr's Gift is used by dragging it, which is not discoverable on its own -- say so here.
+        // Checked first: the gift carries a cosmetic MagicItem, so the socket branch below would
+        // otherwise have to know to skip it.
+        if (item.IsShardSlotChisel())
+        {
+            return "\n<color=yellow><b>$mod_epicloot_slotchisel_hint</b></color>";
+        }
+
+        if (!item.IsMagic(out MagicItem magicItem) || !magicItem.HasSockets())
+        {
+            return "";
+        }
+
+        // The $KEY_ tokens must sit in this source string, never inside a translation value:
+        // Localization.Localize is single-pass and never re-scans what Translate() emitted, so a nested
+        // $KEY_Use would reach the screen literally. $KEY_RTrigger / $KEY_ButtonX only resolve to pad
+        // glyphs while a gamepad is active (Localization looks up "Joy" + the binding name), which is
+        // exactly when this branch is taken.
+        // An item another mod turned into a container answers plain Use by opening that container, so
+        // the socket overlay sits behind a modifier there and the hint has to say so. That modifier has
+        // no $KEY_ binding of its own, so its name goes in raw ("LeftAlt + E").
+        string keys;
+        if (ZInput.IsGamepadActive())
+        {
+            keys = "$KEY_RTrigger + $KEY_ButtonX";
+        }
+        else if (ForeignItemContainers.HasContainer(item))
+        {
+            keys = $"{ELConfig.SocketOverlayModifier.Value} + $KEY_Use";
+        }
+        else
+        {
+            keys = "$KEY_Use";
+        }
+
+        return $"\n[<color=yellow><b>{keys}</b></color>] $mod_epicloot_press_socket";
+    }
+
     // Set the topic of the tooltip with the decorated name
     [HarmonyPatch(typeof(InventoryGrid), nameof(InventoryGrid.CreateItemTooltip),
         typeof(ItemDrop.ItemData), typeof(UITooltip))]
@@ -21,8 +71,12 @@ public static class MagicTooltipPatches
         {
             __state = null;
             string tooltipText;
+            // ZInput.GetKey before HasEquipmentOfType: this prefix runs every frame the cursor rests on a
+            // slot, and HasEquipmentOfType walks the player's equipment through GetMagicEquipment, which
+            // allocates two lists and runs the registered equipment providers. Only the comparison
+            // tooltip needs that answer, and only while Ctrl is actually held.
             if (item.IsEquipable() && !item.m_equipped && Player.m_localPlayer != null &&
-                Player.m_localPlayer.HasEquipmentOfType(item.m_shared.m_itemType) && ZInput.GetKey(KeyCode.LeftControl))
+                ZInput.GetKey(KeyCode.LeftControl) && Player.m_localPlayer.HasEquipmentOfType(item.m_shared.m_itemType))
             {
                 ItemDrop.ItemData otherItem = Player.m_localPlayer.GetEquipmentOfType(item.m_shared.m_itemType);
                 tooltipText = item.GetTooltip();
@@ -37,14 +91,14 @@ public static class MagicTooltipPatches
                 PatchOnHoverFix.ComparisonAdded = false;
                 tooltipText = item.GetTooltip();
             }
-            tooltip.Set(item.GetDecoratedName(), tooltipText);
+            tooltip.Set(item.GetDecoratedName(), tooltipText + GetSocketOpenHint(item));
             return false;
         }
     }
 
     // Set the content of the tooltip
     [HarmonyPatch(typeof(ItemDrop.ItemData), nameof(ItemDrop.ItemData.GetTooltip),
-        typeof(ItemDrop.ItemData), typeof(int), typeof(bool), typeof(float), typeof(int))]
+        typeof(ItemDrop.ItemData), typeof(int), typeof(bool), typeof(float), typeof(int), typeof(bool))]
     public static class MagicItemTooltip_ItemDrop_Patch
     {
         [UsedImplicitly]

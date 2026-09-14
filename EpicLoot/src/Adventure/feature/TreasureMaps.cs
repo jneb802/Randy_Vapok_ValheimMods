@@ -1,4 +1,5 @@
-﻿using Jotunn.Managers;
+﻿using EpicLoot.Biomes;
+using Jotunn.Managers;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -32,9 +33,16 @@ namespace EpicLoot.Adventure.Feature
             int currentInterval = GetCurrentInterval();
 
             AdventureSaveData saveData = Player.m_localPlayer.GetAdventureSaveData();
-            foreach (Heightmap.Biome biome in Player.m_localPlayer.m_knownBiome)
+            // m_knownBiome holds vanilla localization tokens now, so walk the registry - the only
+            // thing that maps back to a Heightmap.Biome - and keep the ones the player has discovered.
+            foreach (Heightmap.Biome biome in BiomeDataManager.BiomesInOrder.Select(d => d.Biome))
             {
-                string lootTableName = $"TreasureMapChest_{biome}";
+                if (!BiomeDataManager.IsDiscoveredBy(Player.m_localPlayer, biome))
+                {
+                    continue;
+                }
+
+                string lootTableName = $"TreasureMapChest_{BiomeDataManager.GetName(biome)}";
                 bool lootTableExists = LootRoller.GetLootTable(lootTableName).Count > 0;
 
                 if (!lootTableExists)
@@ -43,7 +51,7 @@ namespace EpicLoot.Adventure.Feature
                 }
 
                 bool purchased = saveData.HasPurchasedTreasureMap(currentInterval, biome);
-                TreasureMapBiomeInfoConfig cost = AdventureDataManager.Config.TreasureMap.BiomeInfo.Find(x => x.Biome == biome);
+                TreasureMapBiomeInfoConfig cost = AdventureDataManager.Config.TreasureMap.BiomeInfo.Find(x => x.GetBiome() == biome);
                 if (cost != null && cost.Cost > 0)
                 {
                     results.Add(new TreasureMapItemInfo()
@@ -65,9 +73,10 @@ namespace EpicLoot.Adventure.Feature
             AdventureSaveData saveData = player.GetAdventureSaveData();
             yield return BountyLocationEarlyCache.TryGetBiomePoint(biome, saveData, (success, spawnPoint) =>
             {
-                if (success)
+                // Only report success once the spawner actually exists. Reporting it unconditionally
+                // charged the player for a map that CreateTreasureSpawner had refused to create.
+                if (success && CreateTreasureSpawner(biome, spawnPoint, saveData))
                 {
-                    CreateTreasureSpawner(biome, spawnPoint, saveData);
                     callback?.Invoke(price, true, spawnPoint);
                 }
                 else
@@ -77,12 +86,12 @@ namespace EpicLoot.Adventure.Feature
             });
         }
 
-        private void CreateTreasureSpawner(Heightmap.Biome biome,  Vector3 spawnPoint, AdventureSaveData saveData)
+        /// <summary>
+        /// Records the purchase and spawns the chest's spawner. Returns false when nothing was
+        /// created, so the caller can leave the player's coins alone.
+        /// </summary>
+        private bool CreateTreasureSpawner(Heightmap.Biome biome,  Vector3 spawnPoint, AdventureSaveData saveData)
         {
-            Quaternion rotation = Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f);
-            GameObject gameObject = PrefabManager.Instance.GetPrefab("EL_SpawnController");
-            GameObject created_go = Object.Instantiate(gameObject, spawnPoint, rotation);
-            AdventureSpawnController asc = created_go.GetComponent<AdventureSpawnController>();
             TreasureMapChestInfo treasure_details = new TreasureMapChestInfo()
             {
                 Biome = biome,
@@ -90,14 +99,27 @@ namespace EpicLoot.Adventure.Feature
                 Position = spawnPoint,
                 PlayerID = Player.m_localPlayer.GetPlayerID()
             };
+
+            // Record the purchase FIRST and honor its refusal (duplicate interval/biome):
+            // spawning regardless used to leave orphan treasure chests with no save record.
+            if (!saveData.PurchasedTreasureMap(treasure_details))
+            {
+                EpicLoot.LogWarningForce($"Treasure map purchase for {biome} was refused by the save data; no chest spawned.");
+                return false;
+            }
+
+            Quaternion rotation = Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f);
+            GameObject gameObject = PrefabManager.Instance.GetPrefab("EL_SpawnController");
+            GameObject created_go = Object.Instantiate(gameObject, spawnPoint, rotation);
+            AdventureSpawnController asc = created_go.GetComponent<AdventureSpawnController>();
             asc.SetTreasure(treasure_details);
 
-            Vector2 offset2 = UnityEngine.Random.insideUnitCircle * 
+            Vector2 offset2 = UnityEngine.Random.insideUnitCircle *
                 (AdventureDataManager.Config.TreasureMap.MinimapAreaRadius * 0.8f);
             Vector3 offset = new Vector3(offset2.x, 0, offset2.y);
-            saveData.PurchasedTreasureMap(treasure_details);
 
             Minimap.instance.ShowPointOnMap(spawnPoint + offset);
+            return true;
         }
     }
 }

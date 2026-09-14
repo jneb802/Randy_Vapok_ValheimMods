@@ -1,7 +1,8 @@
-﻿using EpicLoot.Crafting;
+﻿using BepInEx;
+using EpicLoot.Crafting;
 using EpicLoot.Data;
 using EpicLoot.LegendarySystem;
-using Jotunn.Managers;
+using EpicLoot.ShardStones;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +18,12 @@ public static class ItemDataExtensions
     {
         MagicItemComponent magicData = itemData.Data().Get<MagicItemComponent>();
         return magicData != null && magicData.MagicItem != null;
+    }
+
+    public static bool IsShardStone(this ItemDrop.ItemData itemData) {
+        // A shard is identified by its shared data, not its magic data, so this answers correctly even
+        // for an instance whose MagicItem has not been rebuilt yet.
+        return Shards.IsShard(itemData);
     }
 
     public static bool IsUnidentified(this ItemDrop.ItemData itemData)
@@ -64,6 +71,10 @@ public static class ItemDataExtensions
         throw new ArgumentException("itemData is not magic item, magic crafting material, or runestone");
     }
 
+    // Keyed by the color string itself, so a config reload that changes a rarity's color simply
+    // misses the cache — no invalidation needed. Callers run per item per UI refresh.
+    private static readonly Dictionary<string, Color> ParsedColorCache = new Dictionary<string, Color>();
+
     public static Color GetRarityColor(this ItemDrop.ItemData itemData)
     {
         string colorString = "white";
@@ -80,12 +91,21 @@ public static class ItemDataExtensions
             colorString = itemData.GetRunestoneRarityColor();
         }
 
-        return ColorUtility.TryParseHtmlString(colorString, out Color color) ? color : Color.white;
+        if (ParsedColorCache.TryGetValue(colorString, out Color cached))
+        {
+            return cached;
+        }
+
+        Color parsed = ColorUtility.TryParseHtmlString(colorString, out Color color) ? color : Color.white;
+        ParsedColorCache[colorString] = parsed;
+        return parsed;
     }
 
-    public static bool HasMagicEffect(this ItemDrop.ItemData itemData, string effectType)
+    // includeSocketed defaults to true: this extension is used by effect-application patches to gate
+    // behavior, so socketed effects should count. The only crafting caller (CheckRequirements) passes false.
+    public static bool HasMagicEffect(this ItemDrop.ItemData itemData, string effectType, bool includeSocketed = true)
     {
-        return itemData.GetMagicItem()?.HasEffect(effectType) ?? false;
+        return itemData.GetMagicItem()?.HasEffect(effectType, includeSocketed: includeSocketed) ?? false;
     }
 
     public static void CreateMagicItem(this ItemDrop.ItemData itemData)
@@ -176,7 +196,8 @@ public static class ItemDataExtensions
 
     public static bool IsPartOfSet(this ItemDrop.ItemData itemData, string setName)
     {
-        return itemData.GetSetID() == setName;
+        return itemData.m_shared.m_setName == setName ||
+            (itemData.IsMagic(out MagicItem magicItem) && magicItem.SetID == setName);
     }
 
     public static bool CanBeAugmented(this ItemDrop.ItemData itemData)
@@ -199,6 +220,21 @@ public static class ItemDataExtensions
 
         return itemData.GetMagicItem().Effects.Select(effect => MagicItemEffectDefinitions.Get(effect.EffectType))
             .Any(effectDef => effectDef.CanBeRunified);
+    }
+
+    // Shardstones and Brokkr's Gifts carry a cosmetic MagicItem -- a rarity and nothing else -- purely
+    // so they render with a magic name and background. That makes IsMagic() true for them, and
+    // MagicItem.CanBeDisenchanted() vacuously true as well, since it only vetoes on effects and they
+    // have none. Disenchanting one would charge the player, hand back nothing and strip the metadata,
+    // leaving a plain grey consumable. They are not enchanted gear; keep them out of the flow.
+    public static bool CanBeDisenchanted(this ItemDrop.ItemData itemData)
+    {
+        if (itemData == null || itemData.IsShardStone() || itemData.IsShardSlotChisel())
+        {
+            return false;
+        }
+
+        return itemData.IsMagic(out MagicItem magicItem) && magicItem.CanBeDisenchanted();
     }
 
     public static string GetSetID(this ItemDrop.ItemData itemData, out bool isMundane)
@@ -244,9 +280,13 @@ public static class ItemDataExtensions
         return !string.IsNullOrEmpty(itemData.m_shared.m_setName);
     }
 
-    public static int GetSetSize(this ItemDrop.ItemData itemData)
+    public static int GetSetSize(this ItemDrop.ItemData itemData, string setID = null, bool isMundane = false)
     {
-        string setID = itemData.GetSetID(out bool isMundane);
+        if (setID == null)
+        {
+            setID = itemData.GetSetID(out isMundane);
+        }
+
         if (!string.IsNullOrEmpty(setID))
         {
             if (isMundane)
@@ -262,20 +302,21 @@ public static class ItemDataExtensions
         return 0;
     }
 
-    public static List<string> GetSetPieces(string setName)
+    public static List<string> GetSetPieces(string setName, bool isMundane)
     {
-        if (UniqueLegendaryHelper.TryGetLegendarySetInfo(setName, out LegendarySetInfo setInfo, out ItemRarity rarity))
+        if (!isMundane && UniqueLegendaryHelper.TryGetLegendarySetInfo(setName, out LegendarySetInfo setInfo, out ItemRarity rarity))
         {
             return setInfo.LegendaryIDs;
         }
 
-        return GetMundaneSetPieces(ObjectDB.instance, setName);
+        return GetMundaneSetPieces(setName);
     }
 
-    public static List<string> GetMundaneSetPieces(ObjectDB objectDB, string setName)
+    public static List<string> GetMundaneSetPieces(string setName)
     {
+        // TODO: improve performace of this call
         List<string> results = new List<string>();
-        foreach (GameObject itemPrefab in objectDB.m_items)
+        foreach (GameObject itemPrefab in ObjectDB.instance.m_items)
         {
             if (itemPrefab == null)
             {
@@ -304,6 +345,11 @@ public static class ItemDataExtensions
     /// </summary>
     public static void InitializeCustomData(this ItemDrop.ItemData itemData)
     {
+        // Shards rebuild their own magic data from m_shared.m_ammoType, so they need neither the prefab
+        // reference nor its baked custom data. Done ahead of the m_dropPrefab check so a shard is healed
+        // even when the prefab is unresolved. Cheap no-op for everything else.
+        Shards.EnsureShardMetadata(itemData);
+
         GameObject prefab = itemData.m_dropPrefab;
         if (prefab == null)
         {
@@ -368,7 +414,7 @@ public static class ItemDataExtensions
             return String.Empty;
         }
 
-        int setSize = item.GetSetSize();
+        int setSize = item.GetSetSize(setID, isMundane);
 
         return GetSetTooltip(item, setID, setSize, false);
     }
@@ -376,7 +422,7 @@ public static class ItemDataExtensions
     private static string GetSetTooltip(ItemDrop.ItemData item, string setID, int setSize, bool isMundane)
     {
         StringBuilder text = new StringBuilder();
-        List<string> setPieces = GetSetPieces(setID);
+        List<string> setPieces = GetSetPieces(setID, isMundane);
         List<ItemDrop.ItemData> currentSetEquipped = Player.m_localPlayer.GetEquippedSetPieces(setID);
 
         string setDisplayName = GetSetDisplayName(item, isMundane);
@@ -447,17 +493,22 @@ public static class ItemDataExtensions
             LegendarySetInfo setInfo = item.GetLegendarySetInfo();
             if (setInfo != null)
             {
-                return Localization.instance.Localize(setInfo.Name);
+                return setInfo.Name;
             }
             else
             {
-                return $"<unknown set: {item.GetSetID()}>";
+                return $"{item.GetSetID()}";
             }
         }
 
-        if (item.m_shared.m_setStatusEffect?.m_name != null)
+        if (item.m_shared.m_setStatusEffect != null && !item.m_shared.m_setStatusEffect.m_name.IsNullOrWhiteSpace())
         {
-            return LocalizationManager.Instance.TryTranslate(item.m_shared.m_setStatusEffect.m_name);
+            return item.m_shared.m_setStatusEffect.m_name;
+        }
+
+        if (!item.m_shared.m_setName.IsNullOrWhiteSpace())
+        {
+            return item.m_shared.m_setName;
         }
 
         return "<unknown set>";

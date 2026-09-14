@@ -3,8 +3,10 @@
 
     <PropertyGroup Condition="$(OS) == 'Unix' OR $(OS) == 'OSX'">
         <GamePath>$(HOME)/Library/Application Support/Steam/steamapps/common/Valheim</GamePath>
-        <VALHEIM_MANAGED>$(GamePath)/Valheim.app/Contents/Resources/Data/Managed</VALHEIM_MANAGED>
-        <BEPINEX_PATH>$(GamePath)/BepInEx</BEPINEX_PATH>
+        <GamePathManaged>$(GamePath)/Valheim.app/Contents/Resources/Data/Managed/</GamePathManaged>
+        <BepinexPath>$(GamePath)/BepInEx/</BepinexPath>
+        <VALHEIM_MANAGED>$(GamePathManaged.TrimEnd('/'))</VALHEIM_MANAGED>
+        <BEPINEX_PATH>$(BepinexPath.TrimEnd('/'))</BEPINEX_PATH>
         <PUBLICIZED_PATH>$(VALHEIM_MANAGED)/publicized_assemblies</PUBLICIZED_PATH>
         <DefineConstants>$(DefineConstants);UNIX_BUILD</DefineConstants>
     </PropertyGroup>

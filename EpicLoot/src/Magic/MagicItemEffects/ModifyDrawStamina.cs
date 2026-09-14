@@ -10,14 +10,16 @@ namespace EpicLoot.MagicItemEffects
             __state = __instance.m_shared.m_attack.m_drawStaminaDrain;
 
             if (__instance.IsMagic(out var magicItem) &&
-                magicItem.HasEffect(MagicEffectType.ModifyDrawStaminaUse))
+                magicItem.HasEffect(MagicEffectType.ModifyDrawStaminaUse, includeSocketed: true))
             {
                 float modifier = magicItem.GetTotalEffectValue(MagicEffectType.ModifyDrawStaminaUse, 0.01f);
                 __instance.m_shared.m_attack.m_drawStaminaDrain *= 1.0f - modifier;
             }
         }
 
-        public static void Postfix(ItemDrop.ItemData __instance, ref float __state)
+        // Finalizer, not postfix: the restore must run even when the original (or another mod's
+        // patch) throws -- m_shared is the descriptor shared by every copy of the item.
+        public static void Finalizer(ItemDrop.ItemData __instance, float __state)
         {
             __instance.m_shared.m_attack.m_drawStaminaDrain = __state;
         }

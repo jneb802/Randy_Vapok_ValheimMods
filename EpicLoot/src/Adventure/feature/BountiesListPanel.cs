@@ -9,8 +9,6 @@ namespace EpicLoot.Adventure.Feature
     {
         private readonly MerchantPanel _merchantPanel;
 
-        private static bool _generatingBounty = false; // Flag to prevent spam accepting multiple bounties
-
         public AvailableBountiesListPanel(MerchantPanel merchantPanel, BountyListElement elementPrefab)
             : base(
                 merchantPanel.transform.Find("Bounties/AvailableBountiesPanel/ItemList") as RectTransform,
@@ -21,7 +19,7 @@ namespace EpicLoot.Adventure.Feature
             _merchantPanel = merchantPanel;
         }
 
-        public override bool NeedsRefresh(bool currenciesChanged)
+        public override bool NeedsRefresh()
         {
             return _currentInterval != AdventureDataManager.Bounties.GetCurrentInterval();
         }
@@ -54,29 +52,40 @@ namespace EpicLoot.Adventure.Feature
             }
 
             var bounty = GetSelectedItem();
-            if (!_generatingBounty && bounty != null && bounty.BountyInfo.State == BountyState.Available)
+            if (bounty == null || bounty.BountyInfo.State != BountyState.Available || !TryBeginAction())
             {
-                _generatingBounty = true;
-                EpicLoot.Log("Trying to accept bounty...");
-                player.StartCoroutine(AdventureDataManager.Bounties.AcceptBounty(
-                    player, bounty.BountyInfo, (success, position) =>
+                return;
+            }
+
+            EpicLoot.Log("Trying to accept bounty...");
+
+            // Hosted on the adventure driver rather than the Player: a coroutine on the player dies
+            // with that object on death, logout or world change, and its completion callback -- the
+            // one that clears the latch and refreshes the list -- would never run.
+            AdventureCacheDriver.Run(AdventureDataManager.Bounties.AcceptBounty(
+                player, bounty.BountyInfo, (success, position) =>
+            {
+                if (success && StoreGui.instance != null && _merchantPanel != null)
                 {
-                    if (success && StoreGui.instance != null && _merchantPanel != null)
+                    RefreshItems(_merchantPanel.GetPlayerCurrencies());
+
+                    if (StoreGui.instance.m_trader != null)
                     {
-                        RefreshItems(_merchantPanel.GetPlayerCurrencies());
-
-                        if (StoreGui.instance.m_trader != null)
-                        {
-                            StoreGui.instance.m_trader.OnBought(new Trader.TradeItem { m_price = 0 });
-                        }
-
-                        StoreGui.instance.m_buyEffects?.Create(player.transform.position, Quaternion.identity);
+                        StoreGui.instance.m_trader.OnBought(new Trader.TradeItem { m_price = 0 });
                     }
 
-                    _generatingBounty = false;
-                    EpicLoot.Log($"Done trying to accept bounty. Success: {success}");
-                }));
-            }
+                    // The player can be gone by the time this lands, since the coroutine now
+                    // outlives them.
+                    var localPlayer = Player.m_localPlayer;
+                    if (localPlayer != null)
+                    {
+                        StoreGui.instance.m_buyEffects?.Create(localPlayer.transform.position, Quaternion.identity);
+                    }
+                }
+
+                EndAction();
+                EpicLoot.Log($"Done trying to accept bounty. Success: {success}");
+            }));
         }
 
         public override void RefreshItems(Currencies currencies)
@@ -125,7 +134,7 @@ namespace EpicLoot.Adventure.Feature
             AbandonButtonIcon = AbandonButton.transform.Find("Icon").GetComponent<Image>();
         }
 
-        public override bool NeedsRefresh(bool currenciesChanged)
+        public override bool NeedsRefresh()
         {
             return _currentInterval != AdventureDataManager.Bounties.GetCurrentInterval();
         }

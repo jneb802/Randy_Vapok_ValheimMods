@@ -1,10 +1,13 @@
 ﻿using EpicLoot.Adventure.Feature;
+using EpicLoot.Config;
 using EpicLoot.Crafting;
+using EpicLoot.CraftingV2;
 using EpicLoot_UnityLib;
 using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace EpicLoot.Adventure
@@ -37,7 +40,7 @@ namespace EpicLoot.Adventure
         }
     }
 
-    public class MerchantPanel : MonoBehaviour
+    public class MerchantPanel : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
     {
         public readonly List<IMerchantListPanel> Panels = new List<IMerchantListPanel>();
 
@@ -57,6 +60,9 @@ namespace EpicLoot.Adventure
         private static MerchantPanel _instance;
         private AudioSource _audioSource;
 
+        private RectTransform _rt;
+        private Vector2 _dragOffset;
+
         public void Awake()
         {
             _instance = this;
@@ -67,7 +73,10 @@ namespace EpicLoot.Adventure
             if (_audioSource == null)
             {
                 _audioSource = gameObject.AddComponent<AudioSource>();
+                _audioSource.playOnAwake = false;
             }
+
+            EnchantingUIController.SetupUIAudioSource(_audioSource);
 
             if (GambleSuccessDialog == null)
             {
@@ -188,8 +197,13 @@ namespace EpicLoot.Adventure
             IronBountyTokensCount = transform.Find("Currencies/BountyTokensIronCount").GetComponent<Text>();
             GoldBountyTokensCount = transform.Find("Currencies/BountyTokensGoldCount").GetComponent<Text>();
 
-            // Initialize the cache of of bounty positions, starting from the central part of the map.
-            StartCoroutine(BountyLocationEarlyCache.PopulateCacheFromStart());
+            // Top up the cache of bounty positions. Runs on the cache's own driver rather than this
+            // panel: StoreGui deactivates the panel on close, which would abandon the fill partway.
+            // It is a no-op once every biome is stocked, so reopening the merchant costs nothing.
+            // Warm the world biome index while the player browses, so accepting a bounty resolves
+            // instantly instead of waiting on a first build. Cheap to call repeatedly: it returns at
+            // once when the index is current, and rebuilds only if the world or its size changed.
+            WorldBiomeIndex.EnsureBuilt();
 
             if (EpicLoot.HasAuga)
             {
@@ -219,6 +233,18 @@ namespace EpicLoot.Adventure
                     EpicLootAuga.FixupScrollbar(scrollbar);
                 }
             }
+
+            // Capture the prefab baseline position, make the panel draggable, and apply the
+            // configured horizontal position. Done at the end of Awake so the root Graphic
+            // (which may be swapped by the Auga background replacement above) is final.
+            _rt = (RectTransform)transform;
+            var backgroundImage = GetComponent<Image>();
+            if (backgroundImage != null)
+            {
+                backgroundImage.raycastTarget = true;
+            }
+
+            ApplyConfiguredPosition();
         }
 
         public void OnEnable()
@@ -253,12 +279,53 @@ namespace EpicLoot.Adventure
             _instance = null;
         }
 
+        public void ApplyConfiguredPosition()
+        {
+            if (_rt == null)
+            {
+                return;
+            }
+
+            _rt.anchoredPosition = new Vector2(ELConfig.TraderPanelPositionX.Value, ELConfig.TraderPanelPositionY.Value);
+        }
+
+        public void OnBeginDrag(PointerEventData eventData)
+        {
+            var parent = (RectTransform)_rt.parent;
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    parent, eventData.position, eventData.pressEventCamera, out var localPoint))
+            {
+                _dragOffset = _rt.anchoredPosition - localPoint;
+            }
+        }
+
+        public void OnDrag(PointerEventData eventData)
+        {
+            var parent = (RectTransform)_rt.parent;
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    parent, eventData.position, eventData.pressEventCamera, out var localPoint))
+            {
+                _rt.anchoredPosition = localPoint + _dragOffset;
+            }
+        }
+
+        public void OnEndDrag(PointerEventData eventData)
+        {
+            // Persists automatically because cfg.SaveOnConfigSet is true.
+            ELConfig.TraderPanelPositionX.Value = _rt.anchoredPosition.x;
+            ELConfig.TraderPanelPositionY.Value = _rt.anchoredPosition.y;
+        }
+
         public Currencies GetPlayerCurrencies()
         {
             return _currencies;
         }
 
-        public void BuyItem(Player player, BuyListElement listItem)
+        /// <summary>
+        /// Returns whether the item actually reached the player's inventory -- the gamble panel needs
+        /// to know, since it only strikes an offer off the list once it has been paid for.
+        /// </summary>
+        public bool BuyItem(Player player, BuyListElement listItem)
         {
             ItemDrop.ItemData item;
             if (listItem.ItemInfo.IsGamble)
@@ -275,7 +342,7 @@ namespace EpicLoot.Adventure
             if (item == null || !InventoryManagement.Instance.GiveItem(item))
             {
                 EpicLoot.LogWarning($"Could not buy item {listItem.ItemInfo.Item.m_shared.m_name}");
-                return;
+                return false;
             }
 
             if (listItem.ItemInfo.IsGamble)
@@ -305,6 +372,7 @@ namespace EpicLoot.Adventure
 
             StoreGui.instance.m_trader.OnBought(new Trader.TradeItem { m_price = 0 });
             StoreGui.instance.m_buyEffects.Create(player.transform.position, Quaternion.identity);
+            return true;
         }
 
         private static string GetRefreshTimeTooltip(int refreshInterval)
@@ -322,9 +390,17 @@ namespace EpicLoot.Adventure
 
             foreach (var panel in Panels)
             {
-                if (panel.NeedsRefresh(currenciesChanged))
+                // A currency change only changes what the player can afford, never what is on offer:
+                // rebuilding the rows for it wiped the selection, snapped the scroll and (with the
+                // gamble pool drawing from the global RNG) rerolled the stock. `else if` because a
+                // rebuild has already applied the new currencies through SetItem.
+                if (panel.NeedsRefresh())
                 {
                     panel.RefreshItems(_currencies);
+                }
+                else if (currenciesChanged)
+                {
+                    panel.UpdateAffordability(_currencies);
                 }
             }
 
@@ -428,7 +504,7 @@ namespace EpicLoot.Adventure
             RefreshAll();
             if (_audioSource != null)
             {
-                _audioSource.PlayOneShot(EpicAssets.AbandonBountySFX, _audioSource.volume);
+                _audioSource.PlayOneShot(EpicAssets.AbandonBountySFX);
             }
         }
     }

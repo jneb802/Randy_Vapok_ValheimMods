@@ -1,6 +1,6 @@
 ﻿using BepInEx;
-using EpicLoot.Adventure;
 using EpicLoot.Adventure.Feature;
+using EpicLoot.Biomes;
 using EpicLoot.General;
 using Jotunn.Managers;
 using System.Collections.Generic;
@@ -51,6 +51,12 @@ namespace EpicLoot.GatedItemType
 
         public static void Initialize(ItemInfoConfig config)
         {
+            if (config == null)
+            {
+                EpicLoot.LogWarning("GatedItemTypeHelper.Initialize called with a null config; keeping the currently loaded item info.");
+                return;
+            }
+
             GatedConfig = config;
             ItemsByTypeAndBoss.Clear();
             AllItemsWithDetails.Clear();
@@ -112,32 +118,43 @@ namespace EpicLoot.GatedItemType
                 }
             }
 
+            RebuildBiomeOrder();
+
+            EpicLoot.Log($"Gated items configured, total registered: {AllItemsWithDetails.Keys.Count}");
+        }
+
+        /// <summary>
+        /// Biome progression order and the boss keys per biome come from biomedata.json, with None in
+        /// front as the "ungated" tier. Rebuilt whenever iteminfo or biomedata reloads; the item tables
+        /// above are untouched by a biome reload.
+        /// </summary>
+        public static void RebuildBiomeOrder()
+        {
+            BiomesInOrder.Clear();
+            BiomesToBossKeys.Clear();
+
             // Items can be ungated, add a dummy entry to account for this
             BiomesInOrder.Add(Heightmap.Biome.None);
             BiomesToBossKeys.Add(Heightmap.Biome.None, new List<string> { });
 
-            foreach (BountyBossConfig boss in AdventureDataManager.Config.Bounties.Bosses)
+            foreach (BiomeDefinition definition in BiomeDataManager.BiomesInOrder)
             {
-                if (!BiomesToBossKeys.ContainsKey(boss.Biome))
+                if (BiomesToBossKeys.ContainsKey(definition.Biome))
                 {
-                    BiomesToBossKeys.Add(boss.Biome, new List<string> { boss.BossDefeatedKey });
-                }
-                else
-                {
-                    if (!BiomesToBossKeys[boss.Biome].Contains(boss.BossDefeatedKey))
-                    {
-                        BiomesToBossKeys[boss.Biome].Add(boss.BossDefeatedKey);
-                    }
+                    continue;
                 }
 
-                // TODO: make a new user defined data structure to control biome order
-                if (!BiomesInOrder.Contains(boss.Biome))
-                {
-                    BiomesInOrder.Add(boss.Biome);
-                }
+                BiomesInOrder.Add(definition.Biome);
+                BiomesToBossKeys.Add(definition.Biome, new List<string>(definition.BossDefeatedKeys));
             }
+        }
 
-            EpicLoot.Log($"Gated items configured, total registered: {AllItemsWithDetails.Keys.Count}");
+        public static void OnBiomeDataChanged()
+        {
+            if (GatedConfig != null)
+            {
+                RebuildBiomeOrder();
+            }
         }
 
         public static ItemInfoConfig GetCFG()
@@ -146,16 +163,36 @@ namespace EpicLoot.GatedItemType
         }
 
         /// <summary>
-        /// Attempts to get a valid item of the specified type.
+        /// Attempts to get a valid item of the specified type, picking from the global unseeded RNG.
         /// </summary>
         public static string GetGatedItemFromType(string itemType, GatedItemTypeMode mode,
             HashSet<string> currentSelected, List<string> validBosses, bool allowDuplicate = false,
             bool allowTypeFallback = false, bool allowItemFallback = false)
         {
+            return GetGatedItemFromType(itemType, mode, currentSelected, validBosses,
+                allowDuplicate, allowTypeFallback, allowItemFallback, null);
+        }
+
+        /// <summary>
+        /// Attempts to get a valid item of the specified type.
+        ///
+        /// A non-null <paramref name="random"/> makes the pick reproducible for a caller that owns a
+        /// seeded stream -- the merchant's gamble stock, which must stay fixed for its whole refresh
+        /// interval. Null keeps the global unseeded RNG, which is what every loot path wants.
+        ///
+        /// Every parameter is required here on purpose: giving the three bools defaults on both
+        /// overloads would make the existing shorter calls ambiguous (CS0121).
+        /// </summary>
+        public static string GetGatedItemFromType(string itemType, GatedItemTypeMode mode,
+            HashSet<string> currentSelected, List<string> validBosses, bool allowDuplicate,
+            bool allowTypeFallback, bool allowItemFallback, System.Random random)
+        {
+            // No bosses defeated yet is the NORMAL early-game state under
+            // BossKillUnlocksCurrentBiomeItems -- fall back to the type's configured fallback item,
+            // tolerating types iteminfo.json doesn't know (API-registered or patched-out types).
             if (validBosses.Count == 0)
             {
-                // TODO: this should never trigger
-                return FallbackByType[itemType].Item;
+                return FallbackByType.TryGetValue(itemType, out var earlyFallback) ? earlyFallback.Item : null;
             }
 
             if (!ItemsByTypeAndBoss.ContainsKey(itemType))
@@ -167,7 +204,7 @@ namespace EpicLoot.GatedItemType
             foreach (string boss in validBosses)
             {
                 item = GetGatedItemFromBossTier(itemType, boss, currentSelected,
-                    mode, new HashSet<string>(), allowTypeFallback, allowDuplicate);
+                    mode, new HashSet<string>(), random, allowTypeFallback, allowDuplicate);
 
                 if (item != null)
                 {
@@ -177,7 +214,7 @@ namespace EpicLoot.GatedItemType
 
             if (allowItemFallback)
             {
-                return FallbackByType[itemType].Item;
+                return FallbackByType.TryGetValue(itemType, out var fallback) ? fallback.Item : null;
             }
 
             return null;
@@ -191,6 +228,7 @@ namespace EpicLoot.GatedItemType
             HashSet<string> currentSelected,
             GatedItemTypeMode mode,
             HashSet<string> typesSearched,
+            System.Random random,
             bool allowFallback = true,
             bool allowDuplicate = false)
         {
@@ -199,7 +237,10 @@ namespace EpicLoot.GatedItemType
                 List<string> items = ItemsByTypeAndBoss[itemType][boss];
                 bool gated = true;
 
-                foreach (string item in items.shuffleList())
+                // Seeded when the caller supplied a stream -- the merchant's gamble stock depends on
+                // this shuffle being reproducible for the whole refresh interval. Do NOT drop back to
+                // the parameterless overload here.
+                foreach (string item in items.shuffleList(random))
                 {
                     gated = CheckIfItemNeedsGate(mode, item);
                     if (gated)
@@ -225,7 +266,7 @@ namespace EpicLoot.GatedItemType
                     !typesSearched.Contains(fallback.Type))
                 {
                     return GetGatedItemFromBossTier(fallback.Type,
-                        boss, currentSelected, mode, typesSearched, false, true);
+                        boss, currentSelected, mode, typesSearched, random, false, true);
                 }
             }
 
@@ -244,7 +285,6 @@ namespace EpicLoot.GatedItemType
             List<string> bossList = null;
 
             // Check if this is a loot table category
-            
             if (LootRoller.LootSetContainsEntry(itemOrType))
             {
                 List<LootTable> ltcategory = LootRoller.GetFullyResolvedLootTable(itemOrType);
@@ -259,7 +299,9 @@ namespace EpicLoot.GatedItemType
                     return null;
                 }
                 
-                string item = potentialItems[UnityEngine.Random.Range(0, potentialItems.Count - 1)];
+                // Random.Range(int, int) is max-exclusive; Count-1 made the last entry unreachable
+                // (and a 2-entry category always picked the first).
+                string item = potentialItems[UnityEngine.Random.Range(0, potentialItems.Count)];
                 
                 if (!CheckIfItemNeedsGate(gatedMode, item, out GatedItemDetails itemDetails))
                 {
@@ -534,11 +576,11 @@ namespace EpicLoot.GatedItemType
 
             if (mode == GatedItemTypeMode.BossKillUnlocksNextBiomeItems)
             {
-                int index = BiomesInOrder.IndexOf(resultBiome) + 1;
-                if (index < BiomesInOrder.Count)
-                {
-                    resultBiome = BiomesInOrder[index];
-                }
+                // One step past the highest defeated biome, but never past the biome the item was
+                // dropped for: that tier already had the next-biome benefit applied when the item
+                // rolled, so advancing again here would upgrade the item past its own name.
+                int index = System.Math.Min(BiomesInOrder.IndexOf(resultBiome) + 1, BiomesInOrder.IndexOf(biome));
+                resultBiome = BiomesInOrder[index];
             }
 
             return resultBiome;

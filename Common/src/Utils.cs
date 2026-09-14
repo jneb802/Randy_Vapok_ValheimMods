@@ -39,7 +39,6 @@ namespace Common
         // TODO: Fix or remove
         /*public static Sprite LoadSpriteFromFile(string spritePath)
         {
-#if !UNIX_BUILD
             spritePath = Path.Combine(Paths.PluginPath, spritePath);
             if (File.Exists(spritePath))
             {
@@ -50,7 +49,7 @@ namespace Common
                     return Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(), 100);
                 }
             }
-#endif
+
             return null;
         }*/
 
@@ -94,7 +93,10 @@ namespace Common
 
         public static bool IsServer()
         {
-            return ZNet.instance.IsServer() || ZNet.instance.IsDedicated() || SystemInfo.graphicsDeviceType == GraphicsDeviceType.Null;
+            // Callable before a world is loaded: ZNet.instance is null during plugin Awake and at the
+            // main menu, and the headless (dedicated) check must still work there.
+            return (ZNet.instance != null && (ZNet.instance.IsServer() || ZNet.instance.IsDedicated())) ||
+                SystemInfo.graphicsDeviceType == GraphicsDeviceType.Null;
         }
     }
 

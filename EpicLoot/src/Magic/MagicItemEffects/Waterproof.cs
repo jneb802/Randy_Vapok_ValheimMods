@@ -21,12 +21,14 @@ namespace EpicLoot.MagicItemEffects
             }
         }
 
-        [HarmonyPatch(typeof(SEMan), nameof(SEMan.AddStatusEffect), typeof(int), typeof(bool), typeof(int), typeof(float))]
+        [HarmonyPatch(typeof(SEMan), nameof(SEMan.AddStatusEffect), typeof(int), typeof(bool), typeof(int), typeof(float), typeof(short))]
         public static class Waterproof_SEMan_AddStatusEffect_Patch
         {
             public static bool Prefix(SEMan __instance, int nameHash)
             {
-                if (AddingStatusFromEnv > 0 && __instance.m_character.IsPlayer() && nameHash == "Wet".GetHashCode())
+                // Vanilla passes SEMan.s_statusEffectWet (GetStableHashCode); string.GetHashCode
+                // never matched, so Waterproof never blocked the Wet effect.
+                if (AddingStatusFromEnv > 0 && __instance.m_character.IsPlayer() && nameHash == SEMan.s_statusEffectWet)
                 {
                     var player = (Player) __instance.m_character;
                     var hasWaterproofEquipment = player.HasActiveMagicEffect(MagicEffectType.Waterproof, out float effectValue);

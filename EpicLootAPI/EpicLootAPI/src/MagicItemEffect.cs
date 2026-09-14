@@ -22,7 +22,8 @@ public enum ItemRarity
     Rare,
     Epic,
     Legendary,
-    Mythic
+    Mythic,
+    Ancient
 }
 
 [Serializable]
@@ -76,6 +77,7 @@ public class ValuesPerRarityDef
     public ValueDef Epic = new();
     public ValueDef Legendary = new();
     public ValueDef Mythic = new();
+    public ValueDef Ancient = new();
 }
 
 [Serializable]
@@ -213,8 +215,11 @@ public class MagicItemEffectRequirements
     public bool? ItemUsesEitrOnAttack;
     public bool? ItemUsesHealthOnAttack;
     public bool? ItemUsesDrawStaminaOnAttack;
+    public bool? ItemGivesAdrenaline;
+    public bool? ItemHasAdrenaline;
 
     public List<string> CustomFlags = new();
+    public List<string> ExternalRequirements = new();
 
     public void AddAllowedItemTypes(params ItemDrop.ItemData.ItemType[] types)
     {

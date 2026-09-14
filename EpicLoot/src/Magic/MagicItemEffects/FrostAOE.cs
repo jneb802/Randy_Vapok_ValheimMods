@@ -12,14 +12,32 @@ namespace EpicLoot.MagicItemEffects
     [HarmonyPatch]
     public static class FrostAOE
     {
+        // Routes the IceSpikes VFX's ripped SFX (sfx_frostcone) through the game's audio mixer so the
+        // player's volume sliders apply. When a vanilla SFX prefab is ripped into a mod bundle its
+        // AudioSource.outputAudioMixerGroup deserializes to null (the mixer asset isn't in the bundle),
+        // making it play at full volume. Subscribed to PrefabManager.OnPrefabsRegistered, which fires
+        // during ZNetScene setup while AudioMan.instance exists. Idempotent; safe to re-run per world.
+        public static void HookUpIceSpikesAudio()
+        {
+            if (AudioMan.instance == null || EpicAssets.IceSpikesVFX == null)
+            {
+                return;
+            }
+
+            foreach (var audioSource in EpicAssets.IceSpikesVFX.GetComponentsInChildren<AudioSource>(true))
+            {
+                audioSource.outputAudioMixerGroup = AudioMan.instance.m_ambientMixer;
+            }
+        }
+
         [HarmonyPatch(typeof(Attack), nameof(Attack.DoMeleeAttack))]
         public class Attack_DoMeleeAttack_Transpiler
         {
             public const string FxPrefabName = "IceSpikes";
-            public static bool Modified;
 
-            public static bool Prefix(Attack __instance)
+            public static bool Prefix(Attack __instance, ref bool __state)
             {
+                __state = false;
                 if (__instance.m_character.IsPlayer() && __instance.m_weapon != null)
                 {
                     var player = (Player) __instance.m_character;
@@ -27,7 +45,7 @@ namespace EpicLoot.MagicItemEffects
                     if (player.HasActiveMagicEffect(MagicEffectType.FrostDamageAOE, out float magicEffect)
                         && weaponDamage.HasValue && weaponDamage.Value.m_frost > 0)
                     {
-                        Modified = true;
+                        __state = true;
 
                         __instance.m_triggerEffect.m_effectPrefabs = __instance.m_triggerEffect.m_effectPrefabs.AddItem(new EffectList.EffectData {
                             m_prefab = EpicLoot.LoadAsset<GameObject>(FxPrefabName),
@@ -55,12 +73,13 @@ namespace EpicLoot.MagicItemEffects
                 return true;
             }
 
-            public static void Postfix(Attack __instance)
+            // Finalizer, not postfix: m_triggerEffect is shared with the weapon's attack template,
+            // so the added FX entry must be filtered back out even when the original throws.
+            public static void Finalizer(Attack __instance, bool __state)
             {
-                if (Modified)
+                if (__state)
                 {
                     __instance.m_triggerEffect.m_effectPrefabs = __instance.m_triggerEffect.m_effectPrefabs.Where(x => x.m_prefab.name != FxPrefabName).ToArray();
-                    Modified = false;
                 }
             }
         }

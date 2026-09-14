@@ -2,7 +2,6 @@
 using EpicLoot.Config;
 using EpicLoot.Crafting;
 using EpicLoot.GatedItemType;
-using Jotunn.Managers;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -47,11 +46,23 @@ namespace EpicLoot.Magic
         public static AutoSorterConfiguration Config;
         public static readonly string NONE = "none";
 
+        // The subscription must be a stored delegate: unsubscribing a freshly written lambda is a
+        // no-op (two lambda sites compile to two different methods), which used to re-run this whole
+        // scan -- and rewrite iteminfo/loottables/adventuredata on disk -- on every world join.
+        public static readonly Action OnMapDataLoadedHandler = () => CheckAndAddAllEnchantableItems();
+
+        /// <summary>
+        /// The baseconfig files this pass writes back out. A caller that needs the live config to
+        /// match disk without waiting on the file watchers reloads exactly these.
+        /// </summary>
+        public static readonly string[] RewrittenConfigFiles =
+            ["adventuredata.json", "iteminfo.json", "loottables.json"];
+
         public static void CheckAndAddAllEnchantableItems(bool deregister = true)
         {
             if (deregister)
             {
-                MinimapManager.OnVanillaMapDataLoaded -= () => AutoAddEnchantableItems.CheckAndAddAllEnchantableItems();
+                Jotunn.Managers.MinimapManager.OnVanillaMapDataLoaded -= OnMapDataLoadedHandler;
             }
 
             if (ELConfig.AutoAddEquipment.Value == false && ELConfig.AutoRemoveEquipmentNotFound.Value == false)
@@ -136,7 +147,11 @@ namespace EpicLoot.Magic
             {
                 string contents = JsonConvert.SerializeObject(new ItemInfoConfig() { ItemInfo = newConfig }, Formatting.Indented);
                 string overhaulFileLocation = Path.Combine(ELConfig.GetOverhaulDirectoryPath(), "iteminfo.json");
+                string previousContents = File.Exists(overhaulFileLocation) ? File.ReadAllText(overhaulFileLocation) : null;
                 File.WriteAllText(overhaulFileLocation, contents);
+                // Claim this as the mod's own output ONLY when the baseline it merged over was also
+                // ours -- a player-edited baseline must stay flagged as the player's.
+                ConfigVersionManager.RecordWrittenContent("iteminfo", contents, previousContents);
             }
             catch (Exception e)
             {
@@ -179,8 +194,9 @@ namespace EpicLoot.Magic
                 EpicLoot.Log($"Checking LootSet entry: {lis.Name}");
                 foreach (LootDrop loot in lis.Loot)
                 {
-                    if (validItems.Contains(loot.Item) || metaItemSetNames.Contains(loot.Item) || magicMats.Contains(loot.Item))
+                    if (IsValidLootEntryName(loot.Item, metaItemSetNames, null, validItems, magicMats))
                     {
+                        PruneRarityItems(loot, lis.Name, metaItemSetNames, null, validItems, magicMats);
                         entries.Add(loot);
                         addedItems.Add(loot.Item);
                         continue;
@@ -222,10 +238,19 @@ namespace EpicLoot.Magic
                     }
                 }
 
-                if (entries.Count > 0)
+                // Keep the set even when validation emptied it. Dropping it here used to turn one bad
+                // entry check into a chain of dead references: metaItemSetNames is snapshotted above,
+                // before any pruning, so every reference to the set survives while the set itself
+                // vanishes -- and a reference that resolves to nothing is reported as a missing item
+                // prefab, miles from the real cause. An empty set is a config problem worth saying out
+                // loud; ResolveLootDrop reports it again if anything actually rolls on it.
+                if (entries.Count == 0)
                 {
-                    updatedItemSets.Add(new LootItemSet { Name = lis.Name, Loot = entries.ToArray() });
+                    EpicLoot.LogWarning($"LootSet {lis.Name} has no valid entries left after validation. " +
+                        $"Keeping it so references to it stay resolvable, but it will drop nothing.");
                 }
+
+                updatedItemSets.Add(new LootItemSet { Name = lis.Name, Loot = entries.ToArray() });
             }
 
             EpicLoot.Log($"Checking loot tables for invalid entries.");
@@ -234,31 +259,14 @@ namespace EpicLoot.Magic
             foreach (LootTable lt in LootRoller.Config.LootTables)
             {
                 List<LootDrop> updatedLootDrop = new List<LootDrop>();
-                List<LeveledLootDef> levelListDef = new List<LeveledLootDef>();
 
-                // Valid existing entries
+                // Valid existing entries. Only lt.Loot is validated -- LeveledLoot is deliberately left
+                // untouched. Boss drops live there (Eikthyr_{Rarity}_ShardStone and friends), and a
+                // level-gated entry has no independent existence to check that ValidateLootList would
+                // not already cover, so validating it only adds ways to delete working loot.
                 if (lt.Loot != null)
                 {
-                    updatedLootDrop.AddRange(ValidateLootList(lt, metaLootTables, metaItemSetNames, validItems));
-                }
-
-                // Validate existing entries in the leveled loot drops
-                if (lt.LeveledLoot != null)
-                {
-                    foreach (LeveledLootDef lloot in lt.LeveledLoot)
-                    {
-                        List<LootDrop> updatedLootTableLL = new List<LootDrop>();
-                        foreach (LootDrop ld in lloot.Loot)
-                        {
-                            if (validItems.Contains(ld.Item) || metaItemSetNames.Contains(ld.Item))
-                            {
-                                updatedLootTableLL.Add(ld);
-                            }
-                        }
-                        LeveledLootDef lld = new LeveledLootDef();
-                        lld.Loot = updatedLootTableLL.ToArray();
-                        levelListDef.Add(lld);
-                    }
+                    updatedLootDrop.AddRange(ValidateLootList(lt, metaLootTables, metaItemSetNames, validItems, magicMats));
                 }
 
                 LootTable ltc = lt;
@@ -276,11 +284,16 @@ namespace EpicLoot.Magic
                     ItemSets = updatedItemSets.ToArray(),
                     LootTables = updatedLootTables.ToArray(),
                     MagicEffectsCount = LootRoller.Config.MagicEffectsCount,
+                    SocketCounts = LootRoller.Config.SocketCounts,
                     RestrictedItems = LootRoller.Config.RestrictedItems
                 };
                 string contents = JsonConvert.SerializeObject(newLootConfig, Formatting.Indented);
                 string overhaulFileLocation = Path.Combine(ELConfig.GetOverhaulDirectoryPath(), "loottables.json");
+                string previousContents = File.Exists(overhaulFileLocation) ? File.ReadAllText(overhaulFileLocation) : null;
                 File.WriteAllText(overhaulFileLocation, contents);
+                // Claim this as the mod's own output ONLY when the baseline it merged over was also
+                // ours -- a player-edited baseline must stay flagged as the player's.
+                ConfigVersionManager.RecordWrittenContent("loottables", contents, previousContents);
             }
             catch (Exception e)
             {
@@ -290,7 +303,7 @@ namespace EpicLoot.Magic
 
         private static void AddRemoveItemsFromVendor(List<ItemTypeInfo> newConfig)
         {
-            if (!ELConfig.AutoAddRemoveEquipmentFromVendor.Value)
+            if (ELConfig.AutoAddRemoveEquipmentFromVendor.Value == false)
             {
                 return;
             }
@@ -321,15 +334,18 @@ namespace EpicLoot.Magic
                         if (existingVendorItems.ContainsKey(itemName))
                         {
                             // Found this entry
+                            EpicLoot.Log($"Found existing vendor entry for {itemName} - price {existingVendorItems[itemName].CoinsCost}, keeping it in the list.");
                             foundItemEntry.Add(itemName);
                         }
                         else
                         {
+                            foundItemEntry.Add(itemName);
                             existingVendorItems.Add(itemName, new SecretStashItemConfig()
                             {
                                 Item = itemName,
                                 CoinsCost = DetermineCoinsCostForItem(bossEntry.Key)
                             });
+                            EpicLoot.Log($"Adding new vendor entry for {itemName} with price {existingVendorItems[itemName].CoinsCost}.");
                         }
                     }
                 }
@@ -349,7 +365,11 @@ namespace EpicLoot.Magic
             {
                 string contents = JsonConvert.SerializeObject(AdventureDataConfigReplacement, Formatting.Indented);
                 string overhaulFileLocation = Path.Combine(ELConfig.GetOverhaulDirectoryPath(), "adventuredata.json");
+                string previousContents = File.Exists(overhaulFileLocation) ? File.ReadAllText(overhaulFileLocation) : null;
                 File.WriteAllText(overhaulFileLocation, contents);
+                // Claim this as the mod's own output ONLY when the baseline it merged over was also
+                // ours -- a player-edited baseline must stay flagged as the player's.
+                ConfigVersionManager.RecordWrittenContent("adventuredata", contents, previousContents);
             }
             catch (Exception e)
             {
@@ -392,7 +412,10 @@ namespace EpicLoot.Magic
         {
             foreach (ItemDrop item in allEquipment)
             {
-                string itemType = DetermineItemType(item.m_itemData);
+                // Raw-field classification only: this loop is what GENERATES iteminfo.json, so it must
+                // not consult the configured answer (ItemTypeClassifier.GetItemInfoType) -- doing so
+                // would make the sorter self-confirming and unable to ever re-sort a mis-filed item.
+                string itemType = ItemTypeClassifier.ClassifyFromFields(item.m_itemData);
                 string itemName = item.name;
                 // Check if the item is already in the config
                 // If it is, add it to the foundBy
@@ -464,7 +487,7 @@ namespace EpicLoot.Magic
                 //if (itemfound || ELConfig.AutoAddEquipment.Value == false) { continue; }
                 if ((ELConfig.OnlyAddEquipmentWithRecipes.Value == true && key == NONE) ||
                     (key == NONE && itemType == NONE) ||
-                    itemType == "Unkown" ||
+                    itemType == ItemTypeClassifier.Unknown ||
                     IgnoredItems.Contains(itemName))
                 {
                     EpicLoot.Log($"skipping name:{itemName} type:{itemType} techlevel:{key}");
@@ -497,9 +520,10 @@ namespace EpicLoot.Magic
                         continue;
                     }
 
-                    // Replace entries with only the found values, removes non-found items and adds new ones
+                    // Merge in the newly-found ignored items (this used to union the list with
+                    // itself -- a no-op -- so add-only mode never picked up new ignored items).
                     itemsByCategory[fbc.Key].IgnoredItems = itemsByCategory[fbc.Key].IgnoredItems
-                        .Union(itemsByCategory[fbc.Key].IgnoredItems).ToList();
+                        .Union(fbc.Value.IgnoredItems).ToList();
 
                     foreach (KeyValuePair<string, List<string>> entry in fbc.Value.ItemsByBoss)
                     {
@@ -586,30 +610,93 @@ namespace EpicLoot.Magic
         }
 
         private static List<LootDrop> ValidateLootList(LootTable lt,
-            List<string> metaLootTables, List<string> metaItemSetNames, List<string> validItems)
+            List<string> metaLootTables, List<string> metaItemSetNames, List<string> validItems,
+            List<string> magicMats)
         {
             List<LootDrop> updatedLootDrop = new List<LootDrop>();
             foreach (LootDrop loot in lt.Loot)
             {
-                if (loot.Item.Contains("."))
-                {
-                    string[] referenceAndIndex = loot.Item.Split('.');
-                    EpicLoot.Log($"Validating meta reference {loot.Item} {referenceAndIndex[0]}");
-                    if (metaItemSetNames.Contains(referenceAndIndex[0]) || metaLootTables.Contains(referenceAndIndex[0]))
-                    {
-                        updatedLootDrop.Add(loot);
-                        continue;
-                    }
-                }
-
-                if (!validItems.Contains(loot.Item) && !metaItemSetNames.Contains(loot.Item))
+                if (!IsValidLootEntryName(loot.Item, metaItemSetNames, metaLootTables, validItems, magicMats))
                 {
                     EpicLoot.Log($"REMOVING: Loot table ({lt.Object}) Item {loot.Item} not found.");
                     continue;
                 }
+
+                PruneRarityItems(loot, lt.Object, metaItemSetNames, metaLootTables, validItems, magicMats);
                 updatedLootDrop.Add(loot);
             }
             return updatedLootDrop;
+        }
+
+        // The single answer to "may a loot entry name this?", shared by the ItemSet pass and the loot
+        // table pass so the two cannot drift. Anything this rejects is deleted from the rewritten
+        // loottables.json permanently, so every legitimate shape has to be represented here:
+        // a gated equipment item, an ItemSet or loot table name, a magic crafting material, an
+        // "Object.Level" reference to another table, or any other real prefab -- which is what covers
+        // shard stones and every non-equipment item a table may drop.
+        //
+        // metaLootTables is null for the ItemSet pass, where table references are not a valid target.
+        private static bool IsValidLootEntryName(string name, List<string> metaItemSetNames,
+            List<string> metaLootTables, List<string> validItems, List<string> magicMats)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return false;
+            }
+
+            if (metaLootTables != null && name.Contains("."))
+            {
+                string reference = name.Split('.')[0];
+                EpicLoot.Log($"Validating meta reference {name} {reference}");
+                if (metaItemSetNames.Contains(reference) || metaLootTables.Contains(reference))
+                {
+                    return true;
+                }
+            }
+
+            return validItems.Contains(name)
+                || metaItemSetNames.Contains(name)
+                || magicMats.Contains(name)
+                || ObjectDB.instance.GetItemPrefab(name) != null;
+        }
+
+        // Drops only the unresolvable rarities from an entry's per-rarity map, leaving the entry itself
+        // alone -- its Item already validated, and it stays a working drop at every rarity that remains.
+        // An emptied map is removed outright so the rewritten config does not carry a dead "RarityItems".
+        private static void PruneRarityItems(LootDrop loot, string owner, List<string> metaItemSetNames,
+            List<string> metaLootTables, List<string> validItems, List<string> magicMats)
+        {
+            if (loot.RarityItems == null || loot.RarityItems.Count == 0)
+            {
+                return;
+            }
+
+            List<ItemRarity> invalid = null;
+            foreach (KeyValuePair<ItemRarity, string> entry in loot.RarityItems)
+            {
+                if (IsValidLootEntryName(entry.Value, metaItemSetNames, metaLootTables, validItems, magicMats))
+                {
+                    continue;
+                }
+
+                EpicLoot.Log($"REMOVING: ({owner}) {loot.Item} rarity {entry.Key} item {entry.Value} not found.");
+                (invalid ??= new List<ItemRarity>()).Add(entry.Key);
+            }
+
+            if (invalid == null)
+            {
+                return;
+            }
+
+            foreach (ItemRarity rarity in invalid)
+            {
+                loot.RarityItems.Remove(rarity);
+            }
+
+            if (loot.RarityItems.Count == 0)
+            {
+                loot.RarityItems = null;
+            }
         }
 
         private static int DetermineCoinsCostForItem(string bosskey)
@@ -651,110 +738,7 @@ namespace EpicLoot.Magic
                 return Config.TierRarityProbabilities[tier].ToArray();
             }
 
-            return [97, 2, 1, 0, 0];
-        }
-
-        private static string DetermineItemType(ItemDrop.ItemData item)
-        {
-            ItemDrop.ItemData.ItemType itemType = item.m_shared.m_itemType;
-            switch (itemType)
-            {
-                case ItemDrop.ItemData.ItemType.TwoHandedWeapon:
-                case ItemDrop.ItemData.ItemType.OneHandedWeapon:
-                case ItemDrop.ItemData.ItemType.TwoHandedWeaponLeft:
-                case ItemDrop.ItemData.ItemType.Attach_Atgeir:
-                    switch (item.m_shared.m_skillType)
-                    {
-                        case Skills.SkillType.Spears:
-                            return "Spears";
-                        case Skills.SkillType.Swords:
-                            return "Swords";
-                        case Skills.SkillType.Clubs:
-                            return (itemType == ItemDrop.ItemData.ItemType.OneHandedWeapon) ? "Clubs" : "Sledges";
-                        case Skills.SkillType.Axes:
-                            return (itemType == ItemDrop.ItemData.ItemType.OneHandedWeapon) ? "Axes" : "TwoHandAxes";
-                        case Skills.SkillType.Knives:
-                            return "Knives";
-                        case Skills.SkillType.Unarmed:
-                            return "Fists";
-                        case Skills.SkillType.ElementalMagic:
-                        case Skills.SkillType.BloodMagic:
-                            return "Staffs";
-                        case Skills.SkillType.Polearms:
-                            return "Polearms";
-                        case Skills.SkillType.Pickaxes:
-                            return "Pickaxes";
-                        case Skills.SkillType.Sneak:
-                            return "Torches";
-                    }
-                    break;
-                case ItemDrop.ItemData.ItemType.Shield:
-                    if (item.m_shared.m_timedBlockBonus > 0)
-                    {
-                        return (item.m_shared.m_timedBlockBonus >= 2.5f) ? "Bucklers" : "RoundShields";
-                    }
-                    else
-                    {
-                        return "TowerShields";
-                    }
-                case ItemDrop.ItemData.ItemType.Bow:
-                    return "Bows";
-                case ItemDrop.ItemData.ItemType.Helmet:
-                    return "HeadArmor";
-                case ItemDrop.ItemData.ItemType.Chest:
-                    return "ChestArmor";
-                case ItemDrop.ItemData.ItemType.Legs:
-                    return "LegsArmor";
-                case ItemDrop.ItemData.ItemType.Shoulder:
-                    return "ShouldersArmor";
-                case ItemDrop.ItemData.ItemType.Torch:
-                    return "Torches";
-                case ItemDrop.ItemData.ItemType.Tool:
-                    return "Tools";
-                case ItemDrop.ItemData.ItemType.Utility:
-                case ItemDrop.ItemData.ItemType.Trinket:
-                case ItemDrop.ItemData.ItemType.Misc:
-                    return "Utility";
-            }
-
-            // It is possible that the item is not a known skill type
-            // This happens with weapons that use mod skills eg: scythes
-            switch (item.m_shared.m_animationState)
-            {
-                // Its either an axe or a sword, currently this is only therzies throwing axes which get to this point
-                case ItemDrop.ItemData.AnimationState.OneHanded:
-                    return "Axes";
-                case ItemDrop.ItemData.AnimationState.DualAxes:
-                    return "TwoHandAxes";
-                case ItemDrop.ItemData.AnimationState.Unarmed:
-                    if (item.m_shared.m_skillType == Skills.SkillType.None)
-                    {
-                        // This is likely a throwable bomb, make sure it remains unknown
-                        break;
-                    }
-                    return "Fists";
-                case ItemDrop.ItemData.AnimationState.MagicItem:
-                    return "Staffs";
-                case ItemDrop.ItemData.AnimationState.Scythe:
-                case ItemDrop.ItemData.AnimationState.Atgeir:
-                    return "Polearms";
-                case ItemDrop.ItemData.AnimationState.Bow:
-                case ItemDrop.ItemData.AnimationState.Crossbow:
-                    return "Bows";
-                case ItemDrop.ItemData.AnimationState.Feaster:
-                case ItemDrop.ItemData.AnimationState.FishingRod:
-                    return "Tools";
-                case ItemDrop.ItemData.AnimationState.Torch:
-                case ItemDrop.ItemData.AnimationState.LeftTorch:
-                    return "Torches";
-                case ItemDrop.ItemData.AnimationState.Greatsword:
-                    return "Swords";
-                case ItemDrop.ItemData.AnimationState.TwoHandedClub:
-                    return "Sledges";
-            }
-
-            EpicLoot.Log($"Unknown item type for item {item.m_shared.m_name}: {itemType}");
-            return "Unkown";
+            return [97, 2, 1, 0, 0, 0];
         }
 
         public static string DetermineBossLevelForItem(ItemDrop.ItemData item)

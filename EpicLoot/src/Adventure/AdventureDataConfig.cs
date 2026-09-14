@@ -1,6 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using EpicLoot.Biomes;
+using EpicLoot.Crafting;
 
 namespace EpicLoot.Adventure
 {
@@ -30,7 +32,10 @@ namespace EpicLoot.Adventure
     {
         public int RefreshInterval;
         public List<SecretStashItemConfig> Materials = new List<SecretStashItemConfig>();
-        public List<int> RollsPerRarity = new List<int> {1, 1, 1, 1};
+        // Left empty and backfilled in AdventureDataManager.Initialize: Newtonsoft APPENDS to
+        // pre-initialized collections, so a hardcoded {1,1,1,1} turned the shipped [1,1,1,1,1]
+        // into a 9-element list whose first four entries were the defaults.
+        public List<int> RollsPerRarity = new List<int>();
         public List<SecretStashItemConfig> RandomItems = new List<SecretStashItemConfig>();
         public int RandomItemsCount = 0;
         public List<SecretStashItemConfig> OtherItems = new List<SecretStashItemConfig>();
@@ -45,8 +50,21 @@ namespace EpicLoot.Adventure
         public int ForestTokenGamblesCount;
         public int IronBountyGamblesCount;
         public int GoldBountyGamblesCount;
-        public float[] GambleRarityChance = new float[5];
-        public float[][] GambleRarityChanceByRarity = { new float[5], new float[5], new float[5], new float[5], new float[5] };
+        // Index 0 of GambleRarityChance (and of every row below) is the non-magic weight, then one
+        // column per rarity in ordinal order. Rows are indexed by the guaranteed rarity.
+        public float[] GambleRarityChance = new float[Rarities.Count + 1];
+        public float[][] GambleRarityChanceByRarity = BuildEmptyGambleRarityChanceByRarity();
+
+        private static float[][] BuildEmptyGambleRarityChanceByRarity()
+        {
+            var rows = new float[Rarities.Count][];
+            for (var i = 0; i < rows.Length; i++)
+            {
+                rows[i] = new float[Rarities.Count + 1];
+            }
+
+            return rows;
+        }
         public float ForestTokenGambleCoinsCost = 1.0f;
         public int ForestTokenGambleCostMin = 5;
         public int ForestTokenGambleCostMax = 10;
@@ -60,7 +78,8 @@ namespace EpicLoot.Adventure
     [Serializable]
     public class TreasureMapBiomeInfoConfig
     {
-        public Heightmap.Biome Biome;
+        /// <summary>A biome name (vanilla or biomedata.json) or numeric value, resolved through the registry on use.</summary>
+        public string Biome;
         public int Cost;
         public int ForestTokens = 0;
         public int GoldTokens;
@@ -68,6 +87,8 @@ namespace EpicLoot.Adventure
         public int Coins;
         public float MinRadius;
         public float MaxRadius;
+
+        public Heightmap.Biome GetBiome() => BiomeDataManager.Resolve(Biome);
     }
 
     [Serializable]
@@ -82,6 +103,27 @@ namespace EpicLoot.Adventure
         [Obsolete] // TODO evaluate if should keep
         public float RadiusInterval = 500;
         public float MinimapAreaRadius = 100;
+        /// <summary>
+        /// How many times the adventure spawn search may push its sampling ring further out when
+        /// everything inside the map circle is blocked (almost always by a ward). Each band steps out
+        /// by one <see cref="MinimapAreaRadius"/>, which is the minimum that can escape a ward's
+        /// veto, since a ward rejects points within its own radius + MinimapAreaRadius. Set to 0 to
+        /// restore the old behaviour of never searching outside the circle.
+        /// </summary>
+        public int MaxSpawnSearchExpansions = 5;
+
+        /// <summary>
+        /// Scale every biome's MinRadius/MaxRadius by the real world radius / 10000, so the shipped
+        /// bands keep their meaning on a world resized by Expand World Size. Without this, AshLands'
+        /// 8000-10500 band sits in the inner Meadows of a 40km map and no AshLands point is ever in
+        /// band. Set false if the bands have already been retuned in metres for the target world,
+        /// otherwise the scaling is applied twice.
+        ///
+        /// The `= true` default is load-bearing: an existing on-disk adventuredata.json has no such
+        /// key, and Newtonsoft leaves an absent field at its initializer.
+        /// </summary>
+        public bool ScaleRadiiToWorldSize = true;
+
         public List<SecretStashItemConfig> SaleItems = new List<SecretStashItemConfig>();
         
         [NonSerialized]
@@ -91,15 +133,24 @@ namespace EpicLoot.Adventure
         {
             if (_biomeList == null)
             {
-                _biomeList = BiomeInfo.Select(item => item.Biome).ToArray();
+                UpdateBiomeList();
             }
 
             return _biomeList;
         }
 
+        /// <summary>
+        /// Re-resolves the BiomeInfo biome names. Runs on every adventure data load, whenever
+        /// biomedata.json reloads, and when the API appends a treasure map. A name that does not
+        /// resolve is left out rather than filed under None.
+        /// </summary>
         public void UpdateBiomeList()
         {
-            _biomeList = BiomeInfo.Select(item => item.Biome).ToArray();
+            _biomeList = BiomeInfo
+                .Select(item => item.GetBiome())
+                .Where(biome => biome != Heightmap.Biome.None && biome != Heightmap.Biome.All)
+                .Distinct()
+                .ToArray();
         }
     }
 
@@ -122,18 +173,25 @@ namespace EpicLoot.Adventure
     [Serializable]
     public class BountyTargetConfig
     {
-        public Heightmap.Biome Biome;
+        /// <summary>A biome name (vanilla or biomedata.json) or numeric value, resolved through the registry on use.</summary>
+        public string Biome;
         public string TargetID;
         public int RewardGold;
         public int RewardIron;
         public int RewardCoins;
         public List<BountyTargetAddConfig> Adds = new List<BountyTargetAddConfig>();
+
+        public Heightmap.Biome GetBiome() => BiomeDataManager.Resolve(Biome);
     }
 
+    /// <summary>
+    /// Deprecated. Biome progression order and boss keys live in biomedata.json; entries here are
+    /// still read so older files and patches keep working (see BiomeDataManager.SetLegacyBosses).
+    /// </summary>
     [Serializable]
     public class BountyBossConfig
     {
-        public Heightmap.Biome Biome;
+        public string Biome;
         public string BossPrefab;
         public string BossDefeatedKey;
     }
@@ -157,6 +215,14 @@ namespace EpicLoot.Adventure
     }
 
     [Serializable]
+    public class TemperingConfig
+    {
+        // There are no hardcoded temper costs to seed this with: what the json lists is the whole cost
+        // table. A rarity omitted here is not temperable at all; see TemperMan.ApplyConfig.
+        public Dictionary<ItemRarity, List<ItemAmountConfig>> CostsByRarity = new Dictionary<ItemRarity, List<ItemAmountConfig>>();
+    }
+
+    [Serializable]
     public class AdventureDataConfig
     {
         public float FulingCoinDropScale = 1;
@@ -164,5 +230,6 @@ namespace EpicLoot.Adventure
         public GambleConfig Gamble;
         public TreasureMapConfig TreasureMap;
         public BountiesConfig Bounties;
+        public TemperingConfig Tempering;
     }
 }

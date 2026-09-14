@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\Paths.props" />
+  <PropertyGroup>
+    <!-- The one project here that compiles clean against the vanilla assemblies as shipped:
+         it is a pure API shim and touches no non-public Valheim members. Skip the
+         publicizer rather than take the dependency for nothing. -->
+    <PublicizeGameAssemblies>false</PublicizeGameAssemblies>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net472</TargetFramework>
+    <RootNamespace>EquipmentAndQuickSlotsAPI</RootNamespace>
+    <AssemblyName>EquipmentAndQuickSlotsAPI</AssemblyName>
+    <LangVersion>10</LangVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+    <!-- No assembly attributes at all: the shim is deliberately Version 0.0.0.0 so consumers
+         never need a rebuild when the mod's version moves. -->
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <Optimize>false</Optimize>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+</Project>

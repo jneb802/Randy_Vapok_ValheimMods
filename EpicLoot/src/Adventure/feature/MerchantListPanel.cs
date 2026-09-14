@@ -8,7 +8,13 @@ namespace EpicLoot.Adventure.Feature
 {
     public interface IMerchantListPanel
     {
-        bool NeedsRefresh(bool currenciesChanged);
+        /// <summary>
+        /// True only when the offers themselves are stale -- i.e. the refresh interval rolled over.
+        /// A currency change is NOT a reason to rebuild; that is what
+        /// <see cref="UpdateAffordability"/> is for.
+        /// </summary>
+        bool NeedsRefresh();
+        void UpdateAffordability(Currencies currencies);
         void RefreshButton(Currencies playerCurrencies);
         void UpdateRefreshTime();
         void RefreshItems(Currencies currencies);
@@ -26,6 +32,39 @@ namespace EpicLoot.Adventure.Feature
         protected int _currentInterval = -1;
         protected int _selectedItemIndex = -1;
 
+        /// <summary>
+        /// Guards against a second click while a purchase or accept is still resolving.
+        ///
+        /// It expires rather than latching forever. The work it guards runs as a coroutine whose host
+        /// can go away mid-flight (a world change stops the adventure driver), and a latch with no
+        /// expiry left the button permanently dead when that happened. Longer than any search can
+        /// legitimately take, including a first world biome index build on a very large world.
+        /// </summary>
+        private bool _actionInFlight;
+        private float _actionStarted;
+        private const float ActionTimeout = 60f;
+
+        /// <summary>
+        /// Claims the panel's single in-flight action slot. Every path that begins one must pair this
+        /// with <see cref="EndAction"/>, including the failure paths.
+        /// </summary>
+        protected bool TryBeginAction()
+        {
+            if (_actionInFlight && Time.unscaledTime - _actionStarted <= ActionTimeout)
+            {
+                return false;
+            }
+
+            _actionInFlight = true;
+            _actionStarted = Time.unscaledTime;
+            return true;
+        }
+
+        protected void EndAction()
+        {
+            _actionInFlight = false;
+        }
+
         protected MerchantListPanel(RectTransform list, T elementPrefab, Button button, [CanBeNull] Text refreshTime)
         {
             List = list;
@@ -36,11 +75,34 @@ namespace EpicLoot.Adventure.Feature
             RefreshTime = refreshTime;
         }
 
-        public abstract bool NeedsRefresh(bool currenciesChanged);
+        public abstract bool NeedsRefresh();
         public abstract void RefreshItems(Currencies currencies);
         public abstract void UpdateRefreshTime();
         public abstract void RefreshButton(Currencies playerCurrencies);
         protected abstract void OnMainButtonClicked();
+
+        /// <summary>
+        /// Re-applies affordability visuals to the rows already on screen. Deliberately does NOT
+        /// touch the row set: rebuilding on every coin change wiped the player's selection
+        /// (<see cref="DestroyAllListElementsInList"/> resets the index), snapped the scroll position
+        /// and re-instantiated every candidate ItemDrop. Panels whose rows do not depend on currency
+        /// leave this a no-op.
+        /// </summary>
+        public virtual void UpdateAffordability(Currencies currencies)
+        {
+        }
+
+        protected void ForEachElement(Action<T> action)
+        {
+            for (var i = 0; i < List.childCount; i++)
+            {
+                var child = List.GetChild(i).GetComponent<T>();
+                if (child != null)
+                {
+                    action(child);
+                }
+            }
+        }
 
         public virtual Button GetMainButton()
         {
@@ -103,10 +165,18 @@ namespace EpicLoot.Adventure.Feature
 
         protected void DestroyAllListElementsInList()
         {
-            foreach (Transform child in List)
+            // DestroyImmediate (same reason as MultiSelectItemList.MakeEnoughElements): Object.Destroy
+            // defers removal to end-of-frame, so for the rest of this frame List.childCount covered
+            // old+new rows and the child-index selection below read a stale, pending-destroy element
+            // while highlighting a different new one.
+            for (int i = List.childCount - 1; i >= 0; i--)
             {
-                Object.Destroy(child.gameObject);
+                Object.DestroyImmediate(List.GetChild(i).gameObject);
             }
+
+            // The old index points at whatever now happens to occupy that row after a refresh (an
+            // accepted bounty vanishing shifts everything up) -- never carry it across a rebuild.
+            _selectedItemIndex = -1;
         }
     }
 }

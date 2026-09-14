@@ -1,6 +1,7 @@
 ﻿using Common;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace EpicLoot.CraftingV2
 {
@@ -9,7 +10,12 @@ namespace EpicLoot.CraftingV2
     {
         Upgrade,
         Convert,
-        Junk
+        Junk,
+        // Appended, never reordered or inserted into. ConvertUI casts a mode button's index in its serialized
+        // ModeButtons list straight to this enum, and both the API shim and the config RPCs round-trip it as an
+        // int (nothing here configures a StringEnumConverter), so the existing ordinals are part of two wire
+        // formats. Only the JSON configs spell it by name.
+        ShardUpgrade
     }
 
     [Serializable]
@@ -43,6 +49,12 @@ namespace EpicLoot.CraftingV2
 
         public static void Initialize(MaterialConversionsConfig config)
         {
+            if (config == null)
+            {
+                EpicLoot.LogWarning("MaterialConversions.Initialize called with a null config; keeping the currently loaded conversions.");
+                return;
+            }
+
             Config = config;
             OnSetupMaterialConversions?.Invoke();
 
@@ -53,9 +65,17 @@ namespace EpicLoot.CraftingV2
             }
         }
 
+        // What a dedicated server pushes to each client. The shardstone recipes are merged into Config at
+        // load but ship in their own config with its own RPC, and every client re-merges them from that
+        // copy, so sending them here would duplicate several hundred entries in the payload for nothing.
         public static MaterialConversionsConfig GetCFG()
         {
-            return Config;
+            return new MaterialConversionsConfig
+            {
+                MaterialConversions = Config.MaterialConversions
+                    .Where(x => !ShardStones.ShardStoneConversions.IsShardStoneRecipe(x))
+                    .ToList()
+            };
         }
     }
 }

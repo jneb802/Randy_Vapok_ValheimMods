@@ -4,7 +4,7 @@ using EpicLoot.Adventure;
 using EpicLoot.Crafting;
 using EpicLoot.CraftingV2;
 using EpicLoot.LegendarySystem;
-using EpicLoot.MagicItemEffects;
+using EpicLoot.src.Magic.MagicItemEffects.Helpers;
 using JetBrains.Annotations;
 using Newtonsoft.Json;
 using System;
@@ -37,6 +37,7 @@ public static partial class API
     /// </summary>
     static API()
     {
+        LootRoller.OnSetupLootTables += ReloadExternalLootTables;
         MagicItemEffectDefinitions.OnSetupMagicItemEffectDefinitions += ReloadExternalMagicEffects;
         UniqueLegendaryHelper.OnSetupLegendaryItemConfig += ReloadExternalLegendary;
         AbilityDefinitions.OnSetupAbilityDefinitions += ReloadExternalAbilities;
@@ -88,7 +89,7 @@ public static partial class API
     [PublicAPI]
     public static bool HasLegendaryItem(Player player, string legendaryItemID)
     {
-        foreach (ItemDrop.ItemData item in player.GetEquipment())
+        foreach (ItemDrop.ItemData item in player.GetInventory().GetEquippedItems())
         {
             if (item.IsMagic(out var magicItem) && magicItem.LegendaryID == legendaryItemID) return true;
         }
@@ -111,7 +112,7 @@ public static partial class API
             return false;
         }
 
-        count = player.GetEquippedSetPieces(legendarySetID).Count;
+        count = player.GetMagicEquippedSetPieces(legendarySetID).Count;
         return count >= legendarySetInfo.LegendaryIDs.Count;
     }
     /// <param name="type"><see cref="MagicEffectType"/></param>

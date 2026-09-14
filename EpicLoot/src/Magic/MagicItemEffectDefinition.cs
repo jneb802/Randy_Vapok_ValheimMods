@@ -5,9 +5,26 @@ using JetBrains.Annotations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static ItemDrop;
+using System.Text.RegularExpressions;
 
 namespace EpicLoot
 {
+    // Why a requirement check failed, so callers (e.g. shard socketing) can give specific feedback
+    // instead of a single generic "not allowed" message. Other is the catch-all for any failure path
+    // that wasn't explicitly categorized, including checks added to CheckRequirements later.
+    public enum RequirementFailure
+    {
+        None,
+        Other,
+        NoRoll,
+        ConflictingEffect,
+        MissingRequiredEffect,
+        ItemTypeNotAllowed,
+        RarityNotAllowed,
+        ItemPropertyMismatch
+    }
+
     [Serializable]
     public class MagicItemEffectRequirements
     {
@@ -37,8 +54,11 @@ namespace EpicLoot
         public bool? ItemUsesEitrOnAttack;
         public bool? ItemUsesHealthOnAttack;
         public bool? ItemUsesDrawStaminaOnAttack;
+        public bool? ItemGivesAdrenaline;
+        public bool? ItemHasAdrenaline;
 
         public List<string> CustomFlags;
+        public List<string> ExternalRequirements;
 
         public bool AllowByItemType([NotNull] ItemDrop.ItemData itemData)
         {
@@ -59,16 +79,13 @@ namespace EpicLoot
             return AllowedItemTypes.Contains(itemData.m_shared.m_itemType.ToString());
         }
 
+        // Deliberately the CONFIGURED type only, not ItemTypeClassifier.GetItemInfoType: this gates
+        // loot/augment rolls, and letting the raw-field heuristic answer would newly subject every
+        // item missing from iteminfo.json to type requirements it currently escapes.
         public bool AllowedByItemInfoType(ItemDrop.ItemData itemData)
         {
-            var prefabName = string.Empty;
-            if (itemData.m_dropPrefab?.name != null)
-                prefabName = itemData.m_dropPrefab.name;
-
-            var typeName = !string.IsNullOrEmpty(prefabName) && GatedItemTypeHelper.AllItemsWithDetails.TryGetValue(prefabName,
-                out var itemTypeInfo) ? itemTypeInfo.Type : null;
-
-            return !string.IsNullOrEmpty(typeName) && AllowedItemTypes.Contains(typeName);
+            return ItemTypeClassifier.TryGetConfiguredType(itemData, out var typeName) &&
+                AllowedItemTypes.Contains(typeName);
         }
 
         public bool ExcludeByItemType([NotNull] ItemDrop.ItemData itemData)
@@ -79,8 +96,10 @@ namespace EpicLoot
             if (ExcludedItemTypes.Count == 0)
                 return false;
 
+            // A configured iteminfo-type match means the item IS excluded (mirror of
+            // AllowedByItemInfoType in AllowByItemType above; this used to be inverted).
             if (ExcludedByItemInfoType(itemData))
-                return false;
+                return true;
 
             var itemIsStaff = itemData.m_shared.m_skillType == Skills.SkillType.BloodMagic ||
                 itemData.m_shared.m_skillType == Skills.SkillType.ElementalMagic;
@@ -90,32 +109,48 @@ namespace EpicLoot
             return ExcludedItemTypes.Contains(itemData.m_shared.m_itemType.ToString());
         }
 
+        // Configured type only, for the same reason as AllowedByItemInfoType above.
         public bool ExcludedByItemInfoType(ItemDrop.ItemData itemData)
         {
-            string prefabName = "";
-            if (itemData.m_dropPrefab?.name != null)
-                prefabName = itemData.m_dropPrefab.name;
-
-            var typeName = !string.IsNullOrEmpty(prefabName) &&
-                GatedItemTypeHelper.AllItemsWithDetails.TryGetValue(prefabName, out var itemTypeInfo) ?
-                itemTypeInfo.Type : null;
-
-            return !string.IsNullOrEmpty(typeName) && ExcludedItemTypes.Contains(typeName);
+            return ItemTypeClassifier.TryGetConfiguredType(itemData, out var typeName) &&
+                ExcludedItemTypes.Contains(typeName);
         }
 
-        public bool CheckRequirements([NotNull] ItemDrop.ItemData itemData, [NotNull] MagicItem magicItem, string magicEffectType = null, bool checklootroll = true, bool checkaugmentroll = false, bool checkruneroll = false)
+        public bool CheckRequirements([NotNull] ItemDrop.ItemData itemData, [NotNull] MagicItem magicItem, string magicEffectType = null, bool checklootroll = true, bool checkaugmentroll = false, bool checkruneroll = false, bool checkItemTypeGating = true)
         {
+            return CheckRequirements(itemData, magicItem, out _, out _, magicEffectType, checklootroll, checkaugmentroll, checkruneroll, checkItemTypeGating);
+        }
+
+        // Same predicate as the overload above, but also reports WHY it failed (see RequirementFailure) so
+        // callers can surface a specific reason. For ConflictingEffect, `conflictEffectType` names the
+        // offending effect already on the item. `failure` defaults to Other so any uncategorized early-out
+        // (e.g. a check added later without a category) surfaces as unknown rather than reading as success.
+        // When checkItemTypeGating is false, the host-item gating (item type/skill/name/rarity/property
+        // predicates) is skipped and only effect-composition rules (exclusivity / must-have) are enforced;
+        // shard socketing passes false because the shard config's per-slot grid is the placement authority.
+        public bool CheckRequirements([NotNull] ItemDrop.ItemData itemData, [NotNull] MagicItem magicItem,
+            out RequirementFailure failure, out string conflictEffectType, string magicEffectType = null,
+            bool checklootroll = true, bool checkaugmentroll = false, bool checkruneroll = false, bool checkItemTypeGating = true)
+        {
+            failure = RequirementFailure.Other;
+            conflictEffectType = null;
+
             if (checklootroll && NoRoll) {
+                failure = RequirementFailure.NoRoll;
                 return false;
             }
 
             if (ExclusiveSelf && magicItem.HasEffect(magicEffectType))
             {
+                failure = RequirementFailure.ConflictingEffect;
+                conflictEffectType = magicEffectType;
                 return false;
             }
 
             if (ExclusiveEffectTypes?.Count > 0 && magicItem.HasAnyEffect(ExclusiveEffectTypes))
             {
+                failure = RequirementFailure.ConflictingEffect;
+                conflictEffectType = ExclusiveEffectTypes.FirstOrDefault(t => magicItem.HasEffect(t));
                 return false;
             }
 
@@ -134,105 +169,159 @@ namespace EpicLoot
                     }
                     else
                     {
+                        failure = RequirementFailure.MissingRequiredEffect;
                         return false;
                     }
                 }
             }
 
+            // Host-item gating: item type, skill type, item name, rarity, and item-property predicates.
+            // Shards bypass this (checkItemTypeGating == false): a shard's placement is decided
+            // authoritatively by the per-slot effect grid in config/shardstones.json, so re-applying an
+            // effect's rune/loot-roll host requirements here would wrongly reject valid slot mappings
+            // (e.g. AddPickaxesSkill -- a Pickaxes-skill weapon effect -- resolved onto the Legs armor
+            // slot). The effect-composition rules (exclusivity / must-have, above) still apply to shards.
+            if (checkItemTypeGating && !CheckItemTypeRequirements(itemData, magicItem, out failure))
+            {
+                return false;
+            }
+
+            // External requirements are arbitrary predicates registered by other mods against a specific
+            // effect (API.RegisterMagicEffectRequirement). Unlike host-item gating they are NOT skipped when
+            // checkItemTypeGating is false: a mod's hard requirement must hold on every path, shard socketing
+            // included, so it can never be silently bypassed by the shard config's per-slot grid.
+            if (!API.CheckMagicEffectExternalRequirements(ExternalRequirements, itemData, magicItem,
+                magicEffectType, checklootroll, checkaugmentroll, checkruneroll))
+            {
+                failure = RequirementFailure.Other;
+                return false;
+            }
+
+            failure = RequirementFailure.None;
+            return true;
+        }
+
+        // Host-item gating extracted from CheckRequirements: does this effect fit THIS specific host item
+        // and rarity (as opposed to the effect-composition/exclusivity rules)? Returns false with a
+        // categorized `failure` on the first unmet requirement. Skipped for shard socketing, where the
+        // shard config's per-slot grid is the placement authority (see CheckRequirements).
+        private bool CheckItemTypeRequirements([NotNull] ItemDrop.ItemData itemData, [NotNull] MagicItem magicItem,
+            out RequirementFailure failure)
+        {
+            failure = RequirementFailure.Other;
+
             if (!AllowByItemType(itemData))
             {
+                failure = RequirementFailure.ItemTypeNotAllowed;
                 return false;
             }
 
             if (ExcludeByItemType(itemData))
             {
+                failure = RequirementFailure.ItemTypeNotAllowed;
                 return false;
             }
 
             if (AllowedRarities?.Count > 0 && !AllowedRarities.Contains(magicItem.Rarity))
             {
+                failure = RequirementFailure.RarityNotAllowed;
                 return false;
             }
 
             if (ExcludedRarities?.Count > 0 && ExcludedRarities.Contains(magicItem.Rarity))
             {
+                failure = RequirementFailure.RarityNotAllowed;
                 return false;
             }
 
             if (AllowedSkillTypes?.Count > 0 && !AllowedSkillTypes.Contains(itemData.m_shared.m_skillType))
             {
+                failure = RequirementFailure.ItemTypeNotAllowed;
                 return false;
             }
 
             if (ExcludedSkillTypes?.Count > 0 && ExcludedSkillTypes.Contains(itemData.m_shared.m_skillType))
             {
+                failure = RequirementFailure.ItemTypeNotAllowed;
                 return false;
             }
 
             if (AllowedItemNames?.Count > 0 && !(AllowedItemNames.Contains(itemData.m_shared.m_name) ||
                 AllowedItemNames.Contains(itemData.m_dropPrefab?.name)))
             {
+                failure = RequirementFailure.ItemTypeNotAllowed;
                 return false;
             }
 
             if (ExcludedItemNames?.Count > 0 && (ExcludedItemNames.Contains(itemData.m_shared.m_name) ||
                 ExcludedItemNames.Contains(itemData.m_dropPrefab?.name)))
             {
+                failure = RequirementFailure.ItemTypeNotAllowed;
                 return false;
             }
 
             if (ItemHasPhysicalDamage != null &&
                 (ItemHasPhysicalDamage == itemData.m_shared.m_damages.GetTotalPhysicalDamage() <= 0))
             {
+                failure = RequirementFailure.ItemPropertyMismatch;
                 return false;
             }
 
-            if (ItemHasElementalDamage != null && 
-                (ItemHasElementalDamage == itemData.EpicLootHasElementalDamage()))
+            if (ItemHasElementalDamage != null &&
+                (ItemHasElementalDamage == !itemData.EpicLootHasElementalDamage()))
             {
+                failure = RequirementFailure.ItemPropertyMismatch;
                 return false;
             }
-            
+
             if (ItemHasChopDamage != null &&
                 (ItemHasChopDamage == itemData.m_shared.m_damages.m_chop <= 0))
             {
+                failure = RequirementFailure.ItemPropertyMismatch;
                 return false;
             }
 
             if (ItemUsesDurability != null &&
                 (ItemUsesDurability == !itemData.m_shared.m_useDurability))
             {
+                failure = RequirementFailure.ItemPropertyMismatch;
                 return false;
             }
 
             if (ItemHasNegativeMovementSpeedModifier != null &&
                 (ItemHasNegativeMovementSpeedModifier == itemData.m_shared.m_movementModifier >= 0))
             {
+                failure = RequirementFailure.ItemPropertyMismatch;
                 return false;
             }
 
             if (ItemHasBlockPower != null && (ItemHasBlockPower == itemData.m_shared.m_blockPower <= 0))
             {
+                failure = RequirementFailure.ItemPropertyMismatch;
                 return false;
             }
 
             if (ItemHasParryPower != null && (ItemHasParryPower == itemData.m_shared.m_timedBlockBonus <= 0))
             {
+                failure = RequirementFailure.ItemPropertyMismatch;
                 return false;
             }
 
             if (ItemHasNoParryPower != null && (ItemHasNoParryPower == itemData.m_shared.m_timedBlockBonus > 0))
             {
+                failure = RequirementFailure.ItemPropertyMismatch;
                 return false;
             }
 
-            if (ItemHasArmor != null && (ItemHasArmor == itemData.m_shared.m_armor <= 0))
+            if (ItemHasArmor != null && (ItemHasArmor == (itemData.m_shared.m_armor <= 0 || !IsArmorType(itemData.m_shared.m_itemType))))
             {
+                failure = RequirementFailure.ItemPropertyMismatch;
                 return false;
             }
 
             if (ItemHasBackstabBonus != null && (ItemHasBackstabBonus == itemData.m_shared.m_backstabBonus <= 0))
             {
+                failure = RequirementFailure.ItemPropertyMismatch;
                 return false;
             }
 
@@ -242,6 +331,7 @@ namespace EpicLoot
                     itemData.m_shared.m_secondaryAttack.m_attackStamina > 0;
                 if (ItemUsesStaminaOnAttack.Value != hasStamina)
                 {
+                    failure = RequirementFailure.ItemPropertyMismatch;
                     return false;
                 }
             }
@@ -257,20 +347,22 @@ namespace EpicLoot
 
                 if (ItemUsesEitrOnAttack.Value != hasEitr)
                 {
+                    failure = RequirementFailure.ItemPropertyMismatch;
                     return false;
                 }
             }
-            
+
             if (ItemUsesHealthOnAttack != null)
             {
                 bool usesHealth = itemData.m_shared.m_attack.m_attackHealth > 0 ||
                     itemData.m_shared.m_secondaryAttack.m_attackHealth > 0 ||
                     itemData.m_shared.m_attack.m_attackHealthPercentage > 0 ||
                     itemData.m_shared.m_secondaryAttack.m_attackHealthPercentage > 0 ||
-                    itemData.HasMagicEffect(MagicEffectType.Bloodlust);
+                    itemData.HasMagicEffect(MagicEffectType.Bloodlust, includeSocketed: false);
 
                 if (ItemUsesHealthOnAttack.Value != usesHealth)
                 {
+                    failure = RequirementFailure.ItemPropertyMismatch;
                     return false;
                 }
             }
@@ -282,11 +374,51 @@ namespace EpicLoot
 
                 if (ItemUsesDrawStaminaOnAttack.Value != drawStamina)
                 {
+                    failure = RequirementFailure.ItemPropertyMismatch;
                     return false;
                 }
             }
 
+            if (ItemGivesAdrenaline != null)
+            {
+                // m_attackAdrenaline defaults to 1 on every attack; only above-default values count as
+                // deliberate adrenaline gain.
+                bool givesAdrenaline = itemData.m_shared.m_attack.m_attackAdrenaline > 1 ||
+                    itemData.m_shared.m_attack.m_attackUseAdrenaline > 1 ||
+                    itemData.m_shared.m_secondaryAttack.m_attackAdrenaline > 1 ||
+                    itemData.m_shared.m_secondaryAttack.m_attackUseAdrenaline > 1;
+
+                if (ItemGivesAdrenaline.Value != givesAdrenaline)
+                {
+                    failure = RequirementFailure.ItemPropertyMismatch;
+                    return false;
+                }
+            }
+
+            if (ItemHasAdrenaline != null)
+            {
+                bool hasAdrenaline = itemData.m_shared.m_maxAdrenaline > 0;
+
+                if (ItemHasAdrenaline.Value != hasAdrenaline)
+                {
+                    failure = RequirementFailure.ItemPropertyMismatch;
+                    return false;
+                }
+            }
+
+            failure = RequirementFailure.None;
             return true;
+        }
+
+        /// <summary>
+        /// Returns the item types that apply armor values for the Player.
+        /// </summary>
+        private bool IsArmorType(ItemData.ItemType type)
+        {
+            return type == ItemData.ItemType.Helmet ||
+                type == ItemData.ItemType.Chest ||
+                type == ItemData.ItemType.Legs ||
+                type == ItemData.ItemType.Shoulder;
         }
     }
 
@@ -309,6 +441,7 @@ namespace EpicLoot
             public ValueDef Epic;
             public ValueDef Legendary;
             public ValueDef Mythic;
+            public ValueDef Ancient;
 
             public ValueDef GetValueDefForRarity(ItemRarity rarity)
             {
@@ -324,6 +457,8 @@ namespace EpicLoot
                         return Legendary;
                     case ItemRarity.Mythic:
                         return Mythic;
+                    case ItemRarity.Ancient:
+                        return Ancient;
                     default:
                         EpicLoot.LogWarning($"Unknown rarity: {rarity}, returning Magic values");
                         return Magic;
@@ -349,14 +484,42 @@ namespace EpicLoot
         public string Ability;
         public Dictionary<string, float> Config = new Dictionary<string, float>();
 
-        public string GetDescriptionTextWithConfig() {
-            string description = Description;
-            if (Config != null && Config.Count > 0) {
-                foreach(var kvp in Config) {
-                    description += $" {kvp.Key}: {kvp.Value}";
-                }
+        // Human-readable label for a Config key, used in the detailed (Shift) tooltip. Resolved via a
+        // two-tier localization lookup with a raw-key fallback: a per-effect override token first
+        // (mod_epicloot_me_<type>_config_<key>), then a shared generic token (mod_epicloot_config_<key>),
+        // then the raw key name when neither is defined. Most keys resolve at the generic tier; the
+        // per-effect tier exists for keys whose meaning differs between effects (e.g. Riches values).
+        public string GetConfigLabel(string key) {
+            var lowerKey = key.ToLowerInvariant();
+            if (Extensions.TryLocalize($"mod_epicloot_me_{Type.ToLowerInvariant()}_config_{lowerKey}", out var perEffect)) {
+                return perEffect;
             }
-            return description;
+
+            if (Extensions.TryLocalize($"mod_epicloot_config_{lowerKey}", out var generic)) {
+                return generic;
+            }
+
+            return key;
+        }
+
+        // Splits a PascalCase effect type into words: "LifeGainOnHit" -> "Life Gain On Hit". Breaks before
+        // a capital that follows a lower-case letter or digit, and before the last capital of a run that
+        // starts a new word ("AoEDamage" -> "AoE Damage"), so acronyms survive intact.
+        private static readonly Regex PascalCaseBoundary =
+            new Regex("(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])", RegexOptions.Compiled);
+
+        // The effect's short name, for places that identify an effect rather than state what it does --
+        // the shardstone compendium lists a name per slot and puts the numbers in the description below
+        // it. Prefers the authored token (mod_epicloot_me_<type>_name, the same per-effect convention as
+        // _display/_desc) and falls back to the type name split into words, so an effect whose name has
+        // not been written yet still reads as English rather than as an identifier.
+        public string GetName() {
+            if (!string.IsNullOrEmpty(Type) &&
+                Extensions.TryLocalize($"mod_epicloot_me_{Type.ToLowerInvariant()}_name", out var localized)) {
+                return localized;
+            }
+
+            return string.IsNullOrEmpty(Type) ? string.Empty : PascalCaseBoundary.Replace(Type, " ");
         }
 
         public List<string> GetAllowedItemTypes()
@@ -394,6 +557,8 @@ namespace EpicLoot
                     return ValuesPerRarity.Legendary;
                 case ItemRarity.Mythic:
                     return ValuesPerRarity.Mythic;
+                case ItemRarity.Ancient:
+                    return ValuesPerRarity.Ancient;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(itemRarity), itemRarity, null);
             }
@@ -452,7 +617,8 @@ namespace EpicLoot
                         Rare = new MagicItemEffectDefinition.ValueDef() { Increment = 2, MaxValue = 15, MinValue = 1 },
                         Epic = new MagicItemEffectDefinition.ValueDef() { Increment = 3, MaxValue = 20, MinValue = 1 },
                         Legendary = new MagicItemEffectDefinition.ValueDef() { Increment = 4, MaxValue = 25, MinValue = 1 },
-                        Mythic = new MagicItemEffectDefinition.ValueDef() { Increment = 5, MaxValue = 30, MinValue = 1 }
+                        Mythic = new MagicItemEffectDefinition.ValueDef() { Increment = 5, MaxValue = 30, MinValue = 1 },
+                        Ancient = new MagicItemEffectDefinition.ValueDef() { Increment = 6, MaxValue = 35, MinValue = 1 }
                     },
                     Requirements = new MagicItemEffectRequirements() { NoRoll = true },
                     Type = type,
