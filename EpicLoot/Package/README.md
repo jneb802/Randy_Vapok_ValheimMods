@@ -82,6 +82,26 @@ Copy the contents of "plugins" to a new folder called "EpicLoot" in your BepInEx
 
 Moved to a new page on the [Wiki](https://thunderstore.io/c/valheim/p/RandyKnapp/EpicLoot/wiki/2750-7cheatscommands/)!
 
+### Spawn an etched runestone
+
+With `devcommands` enabled, use:
+
+```text
+runestone <rarity> <effectID> <value> [amount]
+runestone epic ModifyMovementSpeed 12.5
+```
+
+This drops an etched runestone near your player with exactly one effect and the specified
+value. Rarity names are `magic`, `rare`, `epic`, `legendary`, `mythic`, and `ancient`.
+Use Tab to complete rarity names and case-sensitive effect IDs. The optional amount defaults
+to 1 and must be between 1 and 100.
+
+Use a period for decimals. Values must be finite. Effects without a numeric strength, such
+as `Indestructible`, require value `1`. Numeric values are not limited to normal roll ranges;
+normal equipment restrictions still apply when socketing the runestone. Like other Epic Loot
+cheats, this command requires cheat confirmation and marks the character as cheated. On a
+dedicated server, admins need a mod that enables devcommands for them.
+
 ## Current Known Mod Conflicts
 
   * **BetterUI**: You won't be able to see the magic item properties in the tooltip. Go to the BetterUI config and set `showCustomTooltips = false`.
