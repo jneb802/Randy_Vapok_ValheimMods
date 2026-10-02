@@ -1,5 +1,8 @@
 ﻿using System;
+using EpicLoot;
+using EpicLoot.Config;
 using EpicLoot.CraftingV2;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,15 +12,16 @@ namespace EpicLoot_UnityLib
     {
         public const string TotalQuantityFormat = "/ {0}";
         public const string ReadOnlyQuantityFormat = "{0}";
+        public const string StorageCountColor = "#9BDB9B";
 
         public Button MainButton;
         public Toggle SelectedToggle;
         public GameObject SelectedBackground;
-        public Text ItemName;
+        public TMP_Text ItemName;
         public Image MagicBG;
         public Image ItemIcon;
-        public Text ItemTotalQuantity;
-        public InputField ItemSelectedQuantity;
+        public TMP_Text ItemTotalQuantity;
+        public TMP_InputField ItemSelectedQuantity;
         public Button QuantityUpButton;
         public Button QuantityDownButton;
         public UITooltip Tooltip;
@@ -202,6 +206,13 @@ namespace EpicLoot_UnityLib
                 EnchantingUIController.SetMagicItem(this, _item.GetItem(), Tooltip);
                 CheckAndSetNameToEnchantingEffects();
 
+                int stored = GetStorageCount();
+                if (Tooltip != null && stored > 0)
+                {
+                    string storageLine = Localization.instance.Localize("$mod_epicloot_storagecount", stored.ToString());
+                    Tooltip.m_text += $"\n<color={StorageCountColor}>{storageLine}</color>";
+                }
+
                 if (ItemName != null)
                 {
                     ItemName.text += _item.GetDisplayNameSuffix();
@@ -223,12 +234,23 @@ namespace EpicLoot_UnityLib
             
         }
 
+        private int GetStorageCount()
+        {
+            if (!CheckPlayerInventory || !ELConfig.ShowStorageCounts.Value || _item?.GetItem() == null)
+            {
+                return 0;
+            }
+
+            return InventoryManagement.Instance.CountProviderItem(_item.GetItem());
+        }
+
         private bool CheckAndSetNameToEnchantingEffects()
         {
             if (UseEnchantAsName && _item.GetEnchantName() != string.Empty)
             {
                 ItemName.text = _item.GetEnchantName();
-                ItemName.alignment = TextAnchor.MiddleLeft;
+                MagicTextShimmer.Ensure(ItemName);
+                ItemName.alignment = TextAlignmentOptions.Left;
                 // Adjust the text box container to give it the whole width, which is normally used for quantity
                 ItemName.GetComponent<RectTransform>().offsetMax = new Vector2(y: 0f, x: -5f);
                 return true;
@@ -307,6 +329,14 @@ namespace EpicLoot_UnityLib
                     {
                         quantityText = $"<color=red>{quantityText}</color>";
                     }
+                }
+
+                int stored = GetStorageCount();
+                if (stored > 0)
+                {
+                    // The cost cell's label wraps and autosizes, so without nobr a long count can drop
+                    // to a second line instead of shrinking.
+                    quantityText = $"<nobr>{quantityText} <color={StorageCountColor}>+{stored}</color></nobr>";
                 }
                 ItemTotalQuantity.text = quantityText;
             }

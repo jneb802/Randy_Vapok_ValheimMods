@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using EpicLoot;
 using EpicLoot.CraftingV2;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,12 +11,12 @@ namespace EpicLoot_UnityLib
 {
     public class EnchantUI : EnchantingTableUIPanelBase
     {
-        public Text EnchantInfo;
+        public TMP_Text EnchantInfo;
         public Scrollbar EnchantInfoScrollbar;
         public List<Toggle> RarityButtons;
 
         [Header("Cost")]
-        public Text CostLabel;
+        public TMP_Text CostLabel;
         public MultiSelectItemList CostList;
 
         public AudioClip[] EnchantCompleteSFX;
@@ -28,6 +29,7 @@ namespace EpicLoot_UnityLib
         {
             base.Awake();
 
+            MagicTextShimmer.Ensure(EnchantInfo);
             EnsureRarityButtons();
 
             if (RarityButtons.Count > 0)
@@ -67,7 +69,7 @@ namespace EpicLoot_UnityLib
 
                 // The panel root was localized before this tab ever woke, so the clone's label is
                 // localized here rather than left as a token.
-                foreach (Text label in clone.GetComponentsInChildren<Text>(true))
+                foreach (TMP_Text label in clone.GetComponentsInChildren<TMP_Text>(true))
                 {
                     label.text = Localization.instance.Localize($"$mod_epicloot_{rarity}");
                 }
@@ -81,14 +83,6 @@ namespace EpicLoot_UnityLib
                 toggle.group = template.group;
                 toggle.isOn = false;
                 RarityButtons.Add(toggle);
-
-                // The selector column is a fixed-height vertical layout; give it room for one more row.
-                if (template.transform.parent is RectTransform column &&
-                    template.transform is RectTransform templateRect)
-                {
-                    float spacing = column.TryGetComponent(out VerticalLayoutGroup layout) ? layout.spacing : 0f;
-                    column.sizeDelta = new Vector2(column.sizeDelta.x, column.sizeDelta.y + templateRect.sizeDelta.y + spacing);
-                }
             }
         }
 
