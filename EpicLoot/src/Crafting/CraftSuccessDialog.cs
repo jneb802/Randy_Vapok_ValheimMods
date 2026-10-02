@@ -74,6 +74,7 @@ namespace EpicLoot.Crafting
             if (Description != null)
             {
                 Description.text = Localization.instance.Localize(item.GetTooltip());
+                MagicTextShimmer.Ensure(Description);
             }
 
             if (Icon != null)
@@ -85,6 +86,8 @@ namespace EpicLoot.Crafting
             {
                 _audioSource.PlayOneShot(EpicLoot.GetMagicItemDropSFX(item.GetRarity()));
             }
+
+            RarityRevealFlare.Play(Frame, MagicEffectRarity.GetBestTier(item.GetMagicItem()));
         }
 
         public void Close()

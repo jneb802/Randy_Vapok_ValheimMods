@@ -72,23 +72,12 @@ namespace EpicLoot.CraftingV2
                     AugaFixupMultiselectPrefab(convertUI.Products.ElementPrefab.gameObject);
                     AugaFixupMultiselectPrefab(convertUI.CostList.ElementPrefab.gameObject);
 
-                    for (var index = 0; index < convertUI.ModeButtons.Count; index++)
-                    {
-                        var modeButton = convertUI.ModeButtons[index];
-                        AugaFixupModeSelectButton(modeButton);
-                    }
-
                     var modeButtonContainer = (RectTransform)convertUI.ModeButtons[0].transform.parent;
                     modeButtonContainer.anchoredPosition = new Vector2(-20, modeButtonContainer.anchoredPosition.y);
                 }
                 else if (panelBase is EnchantUI enchantUI)
                 {
                     AugaFixupMultiselectPrefab(enchantUI.CostList.ElementPrefab.gameObject);
-
-                    foreach (var rarityButton in enchantUI.RarityButtons)
-                    {
-                        AugaFixupRaritySelectButton(rarityButton);
-                    }
                 }
                 else if (panelBase is AugmentUI augmentUI)
                 {

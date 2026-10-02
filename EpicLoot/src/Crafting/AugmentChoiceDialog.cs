@@ -119,6 +119,7 @@ namespace EpicLoot.Crafting
             if (Description != null)
             {
                 Description.text = Localization.instance.Localize(fromItem.GetTooltip());
+                MagicTextShimmer.Ensure(Description);
             }
             
             if (Icon != null)
@@ -138,17 +139,13 @@ namespace EpicLoot.Crafting
                 var effect = newEffectOptions[index];
                 var button = EffectChoiceButtons[index];
                 button.gameObject.SetActive(true);
-                // A legacy Text on the vanilla-built dialog, a TMP label on Auga's buttons.
-                Graphic text = (Graphic)button.GetComponentInChildren<TMP_Text>() ?? button.GetComponentInChildren<Text>();
+                var text = button.GetComponentInChildren<TMP_Text>();
                 // Option 0 is the effect the item already carries (RollAugmentEffects puts it first), so
                 // it shows the item's own range; the new options were rolled from the rarity table.
                 var legendaryID = index == 0 ? magicItem.LegendaryID : null;
-                EpicLootAuga.SetLabel(button, Localization.instance.Localize((index == 0 ? "<color=white>($mod_epicloot_augment_keep)</color> " : "") +
-                    MagicItem.GetEffectText(effect, rarity, true, legendaryID)));
-                if (text != null)
-                {
-                    text.color = rarityColor;
-                }
+                text.text = Localization.instance.Localize((index == 0 ? "<color=white>($mod_epicloot_augment_keep)</color> " : "") +
+                    MagicEffectRarity.Decorate(effect.EffectType, MagicItem.GetEffectText(effect, rarity, true, legendaryID), true));
+                text.color = rarityColor;
 
                 if (IsAugaPanel)
                 {

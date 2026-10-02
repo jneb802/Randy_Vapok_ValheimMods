@@ -103,9 +103,11 @@ public static partial class TerminalManager
             _ = new Command("checkstackquality", "show list of items that have a max stack size over 1 and max quality over 1", CheckStackQuality);
             _ = new Command("magicmats", "spawn all magic materials with half stack", SpawnMagicCraftingMaterials);
             _ = new Command("magicshards", "spawn all shardstones: [rarity] (random valid rarity per shard if omitted)", SpawnMagicShards, GetMagicShardOptions);
+            _ = new Command("runestone", "spawn etched runestones: <rarity> <effect> <value> [amount: 1-100]", SpawnRunestone, GetRunestoneOptions);
             _ = new Command("alwaysdrop", "toggle always drop", ToggleAlwaysDrop);
             _ = new Command("cheatgating", "toggle cheat gating", ToggleCheatGating);
             _ = new Command("cheatsockets", "forces the provided number of sockets to always roll onto drops", CheatSockets);
+            _ = new Command("cheateffectrarity", "force rare effects to roll: [0-3] [all|first] (0 = off)", CheatEffectRarity, GetCheatEffectRarityOptions, alternates: "cheatrarity");
             _ = new Command("testtreasuremap", "spawns treasure chests and adds to adventure map", TestTreasureMap, alternates: "testtm");
             _ = new Command("resettreasuremap", "removes all active treasure maps", ResetTreasureMap, alternates: "resettm");
             _ = new Command("debugtreasuremap", "toggle treasure map debug mode", DebugTreasureMap, alternates: "debugtm");
@@ -132,5 +134,4 @@ public static partial class TerminalManager
         }
     }
 }
-
 

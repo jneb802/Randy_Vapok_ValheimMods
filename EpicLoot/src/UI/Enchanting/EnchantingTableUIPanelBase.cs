@@ -24,9 +24,7 @@ namespace EpicLoot_UnityLib
 
         protected bool _inProgress;
         protected float _countdown;
-        protected Text _buttonLabel;
-        protected TMP_Text _tmpButtonLabel;
-        protected bool _useTMP = false;
+        protected TMP_Text _buttonLabel;
         protected string _defaultButtonLabelText;
         protected bool _locked;
 
@@ -46,14 +44,16 @@ namespace EpicLoot_UnityLib
             if (MainButton != null)
             {
                 MainButton.onClick.AddListener(OnMainButtonClicked);
-                _buttonLabel = MainButton.GetComponentInChildren<Text>();
-                if (_buttonLabel == null)
+                foreach (TMP_Text text in MainButton.GetComponentsInChildren<TMP_Text>(true))
                 {
-                    _tmpButtonLabel = MainButton.GetComponentInChildren<TMP_Text>();
-                    _useTMP = true;
+                    if (text.GetComponent<GamepadGlyph>() == null)
+                    {
+                        _buttonLabel = text;
+                        break;
+                    }
                 }
-                
-                _defaultButtonLabelText = _useTMP ? _tmpButtonLabel.text : _buttonLabel.text;
+
+                _defaultButtonLabelText = _buttonLabel.text;
                 _mainButtonGamepadHint = FindGamepadHint(MainButton.transform);
             }
 
@@ -219,14 +219,7 @@ namespace EpicLoot_UnityLib
 
         public virtual void StartProgress()
         {
-            if (_useTMP)
-            {
-                _tmpButtonLabel.text = Localization.instance.Localize("$menu_cancel");
-            }
-            else
-            {
-                _buttonLabel.text = Localization.instance.Localize("$menu_cancel");
-            }
+            _buttonLabel.text = Localization.instance.Localize("$menu_cancel");
 
             _inProgress = true;
             _countdown = CountdownTime;
@@ -253,14 +246,7 @@ namespace EpicLoot_UnityLib
 
         public virtual void Cancel()
         {
-            if (_useTMP)
-            {
-                _tmpButtonLabel.text = Localization.instance.Localize(_defaultButtonLabelText);
-            }
-            else
-            {
-                _buttonLabel.text = Localization.instance.Localize(_defaultButtonLabelText);
-            }
+            _buttonLabel.text = Localization.instance.Localize(_defaultButtonLabelText);
 
             _inProgress = false;
             _countdown = 0;
