@@ -45,6 +45,7 @@ internal class ELConfig {
     public static ConfigEntry<bool> UseScrollingCraftDescription;
     public static ConfigEntry<bool> ShowRarityInRecipeList;
     public static ConfigEntry<bool> ShowEnchantSelectionChance;
+    public static ConfigEntry<EffectRarityFlare> EffectRarityFlareMode;
     public static ConfigEntry<bool> TransferMagicItemToCrafts;
     public static ConfigEntry<bool> _loggingEnabled;
     public static ConfigEntry<LogLevel> _logLevel;
@@ -57,6 +58,7 @@ internal class ELConfig {
     public static ConfigEntry<float> _bossTrophyDropPlayerRange;
     public static ConfigEntry<int> _andvaranautRange;
     public static ConfigEntry<bool> ShowEquippedAndHotbarItemsInSacrificeTab;
+    public static ConfigEntry<bool> ShowStorageCounts;
     public static ConfigEntry<bool> _adventureModeEnabled;
     public static readonly ConfigEntry<string>[] AbilityKeyCodes = new ConfigEntry<string>[AbilityController.AbilitySlotCount];
     public static ConfigEntry<TextAnchor> AbilityBarAnchor;
@@ -551,9 +553,19 @@ internal class ELConfig {
         ShowEnchantSelectionChance = BindServer(SectionInterface, "Show Enchant Selection Chance", false,
             "When true, the Enchant and Augment panels show the weighted chance that each available effect " +
             "is selected on a single roll, displayed right after the bullet for each effect.");
+        EffectRarityFlareMode = BindClient(SectionInterface, "Effect Rarity Flare", EffectRarityFlare.Animated,
+            "Marks magic effects that are rare to roll, derived from each effect's SelectionWeight relative " +
+            "to the median weight of every loaded effect -- no effect is singled out by name.\n" +
+            "Off = no marker.\n" +
+            "Static = a coloured star rating after the effect, one to three stars by how rare it is.\n" +
+            "Animated = as Static, and in the item tooltip and the enchanting table those lines also drift and shimmer.");
         ShowEquippedAndHotbarItemsInSacrificeTab = BindClient(SectionInterface,
             "ShowEquippedAndHotbarItemsInSacrificeTab", false,
             "If set to false, hides the items that are equipped or on your hotbar in the Sacrifice items list.");
+        ShowStorageCounts = BindClient(SectionInterface, "Show Storage Counts", true,
+            "Shows, after each material cost at the enchanting table, how many of it are available from " +
+            "storage outside your inventory, such as a craft-from-containers mod (as a green +N). Hover " +
+            "the material for the full line.");
         UIAudioVolumeAdjustment = BindClient(SectionInterface, "AudioVolumeAdjustment", 1.0f,
             "Multiplies the crafting UI sound volume by this percentage [0.0-1.0].\n" +
             "1 = full UI sounds\n" +

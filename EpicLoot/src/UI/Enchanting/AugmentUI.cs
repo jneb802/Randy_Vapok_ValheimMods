@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using EpicLoot;
 using EpicLoot.CraftingV2;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,15 +12,15 @@ namespace EpicLoot_UnityLib
 {
     public class AugmentUI : EnchantingTableUIPanelBase
     {
-        public Text AvailableEffectsText;
-        public Text AvailableEffectsHeader;
+        public TMP_Text AvailableEffectsText;
+        public TMP_Text AvailableEffectsHeader;
         public Scrollbar AvailableEffectsScrollbar;
 
         public RectTransform EnchantList;
         public GameObject EnchantmentListPrefab;
 
         [Header("Cost")]
-        public Text CostLabel;
+        public TMP_Text CostLabel;
         public MultiSelectItemList CostList;
 
         private int _augmentIndex;
@@ -29,6 +30,7 @@ namespace EpicLoot_UnityLib
         public override void Awake()
         {
             base.Awake();
+            MagicTextShimmer.Ensure(AvailableEffectsText);
         }
 
         [UsedImplicitly]
@@ -260,7 +262,7 @@ namespace EpicLoot_UnityLib
             foreach (Tuple<string, bool> effect in augmentableEffects)
             {
                 GameObject enchantmentListElement = Instantiate(EnchantmentListPrefab, EnchantList);
-                Text enchantmentElement = enchantmentListElement.GetComponentInChildren<Text>();
+                TMP_Text enchantmentElement = enchantmentListElement.GetComponentInChildren<TMP_Text>(true);
                 Toggle enchantmentbutton = enchantmentListElement.GetComponent<Toggle>();
                 EnchantingUIController.SetupUIAudioSources(enchantmentListElement);
 
@@ -276,6 +278,7 @@ namespace EpicLoot_UnityLib
                 if (enchantmentElement != null)
                 {
                     enchantmentElement.text = effect.Item1;
+                    MagicTextShimmer.Ensure(enchantmentElement);
                 }
 
                 if (effect.Item2 == false)
