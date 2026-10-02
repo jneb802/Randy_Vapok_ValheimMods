@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using EpicLoot;
 using EpicLoot.CraftingV2;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -16,7 +17,7 @@ namespace EpicLoot_UnityLib
         public Toggle RuneEtchButton;
 
         [Header("Cost")]
-        public Text CostLabel;
+        public TMP_Text CostLabel;
         public MultiSelectItemList CostList;
 
         [Header("Rune Selector")]
@@ -25,7 +26,7 @@ namespace EpicLoot_UnityLib
         public GameObject AvailableRunesWindow;
         public MultiSelectItemList AvailableRunes;
 
-        public Text Warning;
+        public TMP_Text Warning;
 
         public AudioClip RunicActionCompleted;
 
@@ -418,7 +419,7 @@ namespace EpicLoot_UnityLib
                 GameObject enchantmentListElement = Instantiate(EnchantmentListPrefab, EnchantList);
                 // Include inactive: the prefab ships deactivated, so the clone is still inactive here and
                 // the plain overload would hand back null and leave every row reading "Enchant Selector".
-                Text enchantmentElement = enchantmentListElement.GetComponentInChildren<Text>(true);
+                TMP_Text enchantmentElement = enchantmentListElement.GetComponentInChildren<TMP_Text>(true);
                 Toggle enchantmentbutton = enchantmentListElement.GetComponent<Toggle>();
                 enchantmentbutton.onValueChanged.AddListener((isOn) =>
                 {
@@ -430,6 +431,7 @@ namespace EpicLoot_UnityLib
                 if (enchantmentElement != null)
                 {
                     enchantmentElement.text = effect.Item1;
+                    MagicTextShimmer.Ensure(enchantmentElement);
                 }
 
                 // Dimming the row was all that marked an effect with CanBeRunified off, and it could
@@ -774,14 +776,7 @@ namespace EpicLoot_UnityLib
         private void SetMainButtonLabel(string token)
         {
             string text = Localization.instance.Localize(token);
-            if (_useTMP)
-            {
-                if (_tmpButtonLabel != null)
-                {
-                    _tmpButtonLabel.text = text;
-                }
-            }
-            else if (_buttonLabel != null)
+            if (_buttonLabel != null)
             {
                 _buttonLabel.text = text;
             }
