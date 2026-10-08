@@ -64,6 +64,8 @@ namespace EpicLoot.GatedItemType
             BiomesInOrder.Clear();
             BiomesToBossKeys.Clear();
 
+            int deniedCount = 0;
+
             // Add to required lists
             foreach (ItemTypeInfo info in config.ItemInfo)
             {
@@ -72,24 +74,41 @@ namespace EpicLoot.GatedItemType
                     FallbackByType.Add(info.Type, new Fallback
                     {
                         Type = info.Fallback,
-                        Item = info.ItemFallback
+                        // A denied fallback item is no fallback at all -- never hand a prop out as the default.
+                        Item = LootDenyList.IsDenied(info.ItemFallback) ? null : info.ItemFallback
                     });
                 }
 
                 Dictionary<string, List<string>> itemsByBoss = new() { };
                 foreach (KeyValuePair<string, List<string>> itemByBoss in info.ItemsByBoss)
                 {
+                    // Filtered COPY, never the config's own list. These pools feed every gated pick -- loot
+                    // fallbacks, the merchant's gamble stock, the terminal commands -- so a denied prop sitting
+                    // in a polluted iteminfo.json must not be selectable from them. Copying also leaves the
+                    // loaded config untouched for AutoAddEnchantableItems to rewrite cleanly.
+                    List<string> allowedItems = new List<string>(itemByBoss.Value.Count);
+                    foreach (string candidate in itemByBoss.Value)
+                    {
+                        if (LootDenyList.IsDenied(candidate))
+                        {
+                            deniedCount++;
+                            continue;
+                        }
+
+                        allowedItems.Add(candidate);
+                    }
+
                     if (itemsByBoss.ContainsKey(itemByBoss.Key))
                     {
                         EpicLoot.Log($"Merging [{itemByBoss.Key}] entries, duplicates will be removed.");
-                        itemsByBoss[itemByBoss.Key].Union(itemByBoss.Value).ToList();
+                        itemsByBoss[itemByBoss.Key].Union(allowedItems).ToList();
                     }
                     else
                     {
-                        itemsByBoss.Add(itemByBoss.Key, itemByBoss.Value);
+                        itemsByBoss.Add(itemByBoss.Key, allowedItems);
                     }
 
-                    foreach (string item in itemByBoss.Value)
+                    foreach (string item in allowedItems)
                     {
                         if (AllItemsWithDetails.ContainsKey(item))
                         {
@@ -119,6 +138,12 @@ namespace EpicLoot.GatedItemType
             }
 
             RebuildBiomeOrder();
+
+            if (deniedCount > 0)
+            {
+                EpicLoot.LogWarning($"iteminfo.json lists {deniedCount} denied prop item entries (see LootDenyList). " +
+                    "They were left out of the gated item pools and will never be picked.");
+            }
 
             EpicLoot.Log($"Gated items configured, total registered: {AllItemsWithDetails.Keys.Count}");
         }
@@ -280,6 +305,13 @@ namespace EpicLoot.GatedItemType
                 return null;
             }
 
+            // A loot entry that names a denied prop directly resolves to nothing. Both LootRoller spawn paths
+            // treat a null name as "skip this drop".
+            if (LootDenyList.IsDenied(itemOrType))
+            {
+                return null;
+            }
+
             string type = itemOrType;
 
             List<string> bossList = null;
@@ -291,7 +323,7 @@ namespace EpicLoot.GatedItemType
                 List<string> potentialItems = new List<string>();
                 foreach (LootTable lt in ltcategory)
                 {
-                    potentialItems.AddRange(lt.Loot.Select(x => x.Item).ToList());
+                    potentialItems.AddRange(lt.Loot.Select(x => x.Item).Where(x => !LootDenyList.IsDenied(x)));
                 }
 
                 if (potentialItems.Count == 0)
@@ -556,6 +588,35 @@ namespace EpicLoot.GatedItemType
         }
 
         /// <summary>
+        /// Whether the mode holds a whole biome tier back until its bosses are down. Only the two
+        /// BossKill modes do: Unlimited gates nothing, and the recipe/crafted modes gate item by item
+        /// (known recipe, crafted material) while treating every boss tier as reachable -- the same
+        /// split DetermineValidBosses makes.
+        /// </summary>
+        public static bool UsesBossBiomeCap(GatedItemTypeMode mode)
+        {
+            return mode != GatedItemTypeMode.Unlimited &&
+                mode != GatedItemTypeMode.PlayerMustKnowRecipe &&
+                mode != GatedItemTypeMode.PlayerMustHaveCraftedItem;
+        }
+
+        /// <summary>
+        /// True when a loot roll naming this exact item would hand that item out under the mode, rather
+        /// than replacing it with a gated substitute or dropping it (a denied prop). The same per-item
+        /// check GetGatedItemNameFromItemOrType makes; an item iteminfo.json does not list is ungated.
+        /// Rolls nothing, so previews can use it.
+        /// </summary>
+        public static bool IsItemAvailableUngated(string itemName, GatedItemTypeMode mode)
+        {
+            if (string.IsNullOrEmpty(itemName) || LootDenyList.IsDenied(itemName))
+            {
+                return false;
+            }
+
+            return mode == GatedItemTypeMode.Unlimited || !CheckIfItemNeedsGate(mode, itemName, out _);
+        }
+
+        /// <summary>
         /// Returns a valid biome defined in the BiomesInOrder list based off the GatedItemTypeMode.
         /// </summary>
         public static Heightmap.Biome GetCurrentOrLowerBiomeByDefeatedBossSettings(Heightmap.Biome biome, GatedItemTypeMode mode)
@@ -567,7 +628,7 @@ namespace EpicLoot.GatedItemType
                 return biome;
             }
 
-            if (mode == GatedItemTypeMode.Unlimited || mode == GatedItemTypeMode.PlayerMustKnowRecipe)
+            if (!UsesBossBiomeCap(mode))
             {
                 return biome;
             }

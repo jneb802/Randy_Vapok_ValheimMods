@@ -163,10 +163,13 @@ namespace EpicLoot.MagicItemEffects
         }
 
         /// <summary>
-        /// Restore the attack damages to previous state if changed by the prefix.
+        /// Restore the attack damages to previous state if changed by the prefix. A finalizer, not a
+        /// postfix: m_shared is shared by every weapon of that kind, so an exception mid-burst would
+        /// otherwise leave all of them at the reduced damage until the game restarts.
         /// </summary>
         [HarmonyPatch(typeof(Attack), nameof(Attack.FireProjectileBurst))]
-        public static void Postfix(Attack __instance, ref HitData.DamageTypes? __state)
+        [HarmonyFinalizer]
+        public static void Attack_FireProjectileBurst_Finalizer(Attack __instance, HitData.DamageTypes? __state)
         {
             if (__state != null)
             {
@@ -178,7 +181,11 @@ namespace EpicLoot.MagicItemEffects
         {
             if (stamcost > 0) { player.UseStamina(stamcost * scale); }
             if (eitrcost > 0) { player.UseEitr(eitrcost * scale); }
-            if (healthcost > 0) { player.UseHealth(healthcost * scale); }
+            // Clamp to leave 1 HP, as vanilla does at both of its own attack-health spends (Attack.cs
+            // DoMeleeAttack / FireProjectileBurst): Character.UseHealth clamps to 0, not 1, so an unclamped
+            // charge here can take the player to 0 and kill them. This runs as a FireProjectileBurst PREFIX,
+            // so vanilla then charges its own (clamped) share in the same method -- ours is on top of that.
+            if (healthcost > 0) { player.UseHealth(Mathf.Min(player.GetHealth() - 1f, healthcost * scale)); }
         }
     }
 

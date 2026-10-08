@@ -53,6 +53,8 @@ namespace EpicLoot.Adventure
         public Text IronBountyTokensCount;
         public Text GoldBountyTokensCount;
 
+        public MerchantPanelGamepad Gamepad { get; private set; }
+
         private readonly Currencies _currencies = new Currencies(-1);
         public static MerchantPanel Instance => _instance;
         public static Text AcceptBountyText => _acceptBountyText;
@@ -62,6 +64,12 @@ namespace EpicLoot.Adventure
 
         private RectTransform _rt;
         private Vector2 _dragOffset;
+
+        /// <summary>
+        /// Indices into <see cref="Panels"/> that threw since this window was opened. Cleared by
+        /// OnEnable, so closing and reopening the merchant gives every section another go.
+        /// </summary>
+        private readonly HashSet<int> _failedPanels = new HashSet<int>();
 
         public void Awake()
         {
@@ -245,15 +253,18 @@ namespace EpicLoot.Adventure
             }
 
             ApplyConfiguredPosition();
+
+            // Last, so the hints it builds are not swept up by the Auga fixups above.
+            Gamepad = new MerchantPanelGamepad(this, Panels);
         }
 
         public void OnEnable()
         {
+            Gamepad?.Release();
+
+            _failedPanels.Clear();
             UpdateCurrencies();
-            foreach (var panel in Panels)
-            {
-                panel.RefreshItems(_currencies);
-            }
+            ForEachPanel("RefreshItems", panel => panel.RefreshItems(_currencies));
 
             if (InputBlocker != null)
             {
@@ -261,8 +272,41 @@ namespace EpicLoot.Adventure
             }
         }
 
+        /// <summary>
+        /// Runs one step against every list panel, isolating failures to the panel that caused them.
+        ///
+        /// These used to be walked in a bare foreach, so the first panel to throw took the whole
+        /// merchant window with it: nothing after it in the list ever refreshed and the player saw an
+        /// empty panel with no indication of why. A panel that throws is reported once and then left
+        /// out for the rest of this opening, which also keeps a failure in Update out of the log on
+        /// every frame.
+        /// </summary>
+        private void ForEachPanel(string step, Action<IMerchantListPanel> action)
+        {
+            for (var i = 0; i < Panels.Count; i++)
+            {
+                if (_failedPanels.Contains(i))
+                {
+                    continue;
+                }
+
+                try
+                {
+                    action(Panels[i]);
+                }
+                catch (Exception e)
+                {
+                    _failedPanels.Add(i);
+                    EpicLoot.LogErrorForce($"[MerchantPanel] {Panels[i].GetType().Name}.{step} failed. " +
+                        $"That section stays as it is until the merchant window is reopened.\n{e}");
+                }
+            }
+        }
+
         public void OnDisable()
         {
+            Gamepad?.Release();
+
             if (GambleSuccessDialog != null)
             {
                 GambleSuccessDialog.Close();
@@ -388,7 +432,7 @@ namespace EpicLoot.Adventure
             UpdateRefreshTime();
             var currenciesChanged = UpdateCurrencies();
 
-            foreach (var panel in Panels)
+            ForEachPanel("RefreshItems", panel =>
             {
                 // A currency change only changes what the player can afford, never what is on offer:
                 // rebuilding the rows for it wiped the selection, snapped the scroll and (with the
@@ -402,34 +446,31 @@ namespace EpicLoot.Adventure
                 {
                     panel.UpdateAffordability(_currencies);
                 }
-            }
+            });
 
             RefreshBuyButtons();
+
+            // After the buttons, so a press this frame lands on their current interactable state.
+            Gamepad?.Update();
         }
 
         public void RefreshAll()
         {
-            foreach (var panel in Panels)
+            ForEachPanel("RefreshAll", panel =>
             {
                 panel.RefreshItems(_currencies);
                 panel.RefreshButton(_currencies);
-            }
+            });
         }
 
         private void RefreshBuyButtons()
         {
-            foreach (var panel in Panels)
-            {
-                panel.RefreshButton(_currencies);
-            }
+            ForEachPanel("RefreshButton", panel => panel.RefreshButton(_currencies));
         }
 
         private void UpdateRefreshTime()
         {
-            foreach (var panel in Panels)
-            {
-                panel.UpdateRefreshTime();
-            }
+            ForEachPanel("UpdateRefreshTime", panel => panel.UpdateRefreshTime());
         }
 
         private bool UpdateCurrencies()

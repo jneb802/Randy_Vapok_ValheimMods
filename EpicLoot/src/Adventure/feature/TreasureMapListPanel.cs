@@ -13,6 +13,7 @@ namespace EpicLoot.Adventure.Feature
         public TreasureMapListPanel(MerchantPanel merchantPanel, TreasureMapListElement elementPrefab)
             : base(
                 merchantPanel.transform.Find("TreasureMap/Panel/ItemList") as RectTransform,
+                merchantPanel.transform.Find("TreasureMap/Title"),
                 elementPrefab,
                 merchantPanel.transform.Find("TreasureMap/TreasureMapBuyButton").GetComponent<Button>(),
                 merchantPanel.transform.Find("TreasureMap/TimeLeft").GetComponent<Text>())
@@ -103,10 +104,12 @@ namespace EpicLoot.Adventure.Feature
 
         public override void RefreshItems(Currencies currencies)
         {
-            _currentInterval = AdventureDataManager.TreasureMaps.GetCurrentInterval();
-
-            DestroyAllListElementsInList();
+            // Gathered before the destroy, for the reason given in SecretStashListPanel.
             System.Collections.Generic.List<TreasureMapItemInfo> allItems = AdventureDataManager.TreasureMaps.GetTreasureMaps();
+
+            _currentInterval = AdventureDataManager.TreasureMaps.GetCurrentInterval();
+            DestroyAllListElementsInList();
+
             for (int index = 0; index < allItems.Count; index++)
             {
                 TreasureMapItemInfo itemInfo = allItems[index];

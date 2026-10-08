@@ -12,6 +12,7 @@ namespace EpicLoot.Adventure.Feature
         public AvailableBountiesListPanel(MerchantPanel merchantPanel, BountyListElement elementPrefab)
             : base(
                 merchantPanel.transform.Find("Bounties/AvailableBountiesPanel/ItemList") as RectTransform,
+                merchantPanel.transform.Find("Bounties/AvailableLabel"),
                 elementPrefab,
                 merchantPanel.transform.Find("Bounties/AcceptBountyButton").GetComponent<Button>(),
                 merchantPanel.transform.Find("Bounties/TimeLeft").GetComponent<Text>())
@@ -27,8 +28,17 @@ namespace EpicLoot.Adventure.Feature
         public override void RefreshButton(Currencies playerCurrencies)
         {
             var selectedItem = GetSelectedItem();
-            
-            var saveData = Player.m_localPlayer.GetAdventureSaveData();
+
+            // Runs from Update, which keeps ticking through a death, a respawn and a world change --
+            // every other panel already tolerates a missing player here.
+            var player = Player.m_localPlayer;
+            if (player == null)
+            {
+                MainButton.interactable = false;
+                return;
+            }
+
+            var saveData = player.GetAdventureSaveData();
             var bountyInProgressCount = saveData.GetInProgressBounties().Count;
             bool allowedToBuy = !(ELConfig.EnableLimitedBountiesInProgress.Value &&
                 bountyInProgressCount >= ELConfig.MaxInProgressBounties.Value);
@@ -90,11 +100,14 @@ namespace EpicLoot.Adventure.Feature
 
         public override void RefreshItems(Currencies currencies)
         {
-            _currentInterval = AdventureDataManager.Bounties.GetCurrentInterval();
+            // Rows are gathered before the old ones are destroyed. The other order left the list
+            // permanently empty whenever the gather threw, since nothing puts rows back until the next
+            // refresh -- and the next refresh throws in the same place.
+            var allItems = AdventureDataManager.Bounties.GetAvailableBounties();
 
+            _currentInterval = AdventureDataManager.Bounties.GetCurrentInterval();
             DestroyAllListElementsInList();
 
-            var allItems = AdventureDataManager.Bounties.GetAvailableBounties();
             for (int index = 0; index < allItems.Count; index++)
             {
                 var itemInfo = allItems[index];
@@ -122,6 +135,7 @@ namespace EpicLoot.Adventure.Feature
         public ClaimableBountiesListPanel(MerchantPanel merchantPanel, BountyListElement elementPrefab)
             : base(
                 merchantPanel.transform.Find("Bounties/ClaimableBountiesPanel/ItemList") as RectTransform,
+                merchantPanel.transform.Find("Bounties/ClaimLabel"),
                 elementPrefab,
                 merchantPanel.transform.Find("Bounties/ClaimBountyButton").GetComponent<Button>(),
                 null)
@@ -132,6 +146,11 @@ namespace EpicLoot.Adventure.Feature
             AbandonButton.onClick.AddListener(OnAbandonButtonClicked);
 
             AbandonButtonIcon = AbandonButton.transform.Find("Icon").GetComponent<Image>();
+        }
+
+        public override Button GetSecondaryButton()
+        {
+            return AbandonButton;
         }
 
         public override bool NeedsRefresh()
@@ -195,11 +214,12 @@ namespace EpicLoot.Adventure.Feature
 
         public override void RefreshItems(Currencies currencies)
         {
-            _currentInterval = AdventureDataManager.Bounties.GetCurrentInterval();
+            // Gathered before the destroy, for the reason given in AvailableBountiesListPanel.
+            var allItems = AdventureDataManager.Bounties.GetClaimableBounties();
 
+            _currentInterval = AdventureDataManager.Bounties.GetCurrentInterval();
             DestroyAllListElementsInList();
 
-            var allItems = AdventureDataManager.Bounties.GetClaimableBounties();
             for (int index = 0; index < allItems.Count; index++)
             {
                 var itemInfo = allItems[index];
