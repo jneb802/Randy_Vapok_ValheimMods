@@ -46,13 +46,13 @@ API.HasEndpoint(name)     // feature probe for a specific method
 API.GetEndpointNames()    // every public endpoint, for diagnostics
 ```
 
-`ApiVersion` increases with additive changes and is independent of the plugin
-version. Use `HasEndpoint` before calling a newer endpoint. A missing endpoint
-returns no value through the shim and logs a warning.
+`ApiVersion` is bumped on every additive change and is independent of the plugin version. If you rely on
+something newer than the oldest Epic Loot you support, gate it on `HasEndpoint`. Through the shim, a
+missing endpoint logs a warning and no-ops rather than throwing.
 
-Epic Loot uses `NetworkCompatibility(EveryoneMustHaveMod, VersionStrictness.Patch)`.
-Every client and server must run the same patch version. This does not apply to
-the bundled shim version.
+Epic Loot runs `NetworkCompatibility(EveryoneMustHaveMod, VersionStrictness.Patch)` — every client and the
+server must run the same patch version. The shim is not subject to that; bundle whichever version you
+built against.
 
 ## Non-equipment enchantable categories (API v2)
 
