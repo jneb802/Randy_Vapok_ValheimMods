@@ -7,6 +7,9 @@ namespace EpicLoot.GatedItemType
     public class ItemTypeInfo
     {
         public string Type;
+        // Opt non-equippable items into enchanting; false preserves normal eligibility.
+        [Newtonsoft.Json.JsonProperty(DefaultValueHandling = Newtonsoft.Json.DefaultValueHandling.Ignore)]
+        public bool Enchantable;
         public string Fallback;
         public string ItemFallback;
         [Obsolete]

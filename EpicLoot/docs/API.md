@@ -35,10 +35,36 @@ Two consequences worth knowing before you write glue by hand:
 - **Rarity is an `int`.** `0`=Magic, `1`=Rare, `2`=Epic, `3`=Legendary, `4`=Mythic, `5`=Ancient. Call
   `GetRarityCount()` rather than hard-coding 5.
 
+## Non-equippable items
+
+An `iteminfo.json` entry can set `Enchantable: true` to allow its listed prefabs
+through the normal enchanting eligibility check. Omitted or false preserves the
+existing behavior; it does not disable enchanting for equipment. Ammunition is
+still excluded. Restrictions, non-stacking checks and material costs still apply.
+
+For example, add this entry to `ItemInfo` (or append it through a config patch):
+
+```json
+{
+  "Type": "Sigil",
+  "Enchantable": true,
+  "ItemsByBoss": { "none": ["Sigil_magic_warp"] }
+}
+```
+
+Use existing effect `Requirements.AllowedItemTypes` and `ExcludedItemTypes` with
+the configured type, or `AllowedItemNames` and `ExcludedItemNames` with prefabs.
+Eligibility alone does not isolate effects. Effects with unrestricted requirements
+must explicitly exclude the new type if they must not roll on it. Provide normal
+enchanting costs for the vanilla item type (`Misc` for this sigil).
+
+This setting does not change effect counts, sockets, legendary selection or effect
+behavior. It adds no API endpoint and does not change the API version.
+
 ## Versioning
 
 ```csharp
-API.ApiVersion            // const int, currently 2
+API.ApiVersion            // const int, currently 1
 API.GetApiVersion()       // same value, as a call
 API.GetPluginVersion()    // "0.13.0"
 API.GetPluginId()         // "randyknapp.mods.epicloot"
@@ -53,27 +79,6 @@ missing endpoint logs a warning and no-ops rather than throwing.
 Epic Loot runs `NetworkCompatibility(EveryoneMustHaveMod, VersionStrictness.Patch)` — every client and the
 server must run the same patch version. The shim is not subject to that; bundle whichever version you
 built against.
-
-## Non-equipment enchantable categories (API v2)
-
-`RegisterEnchantableItemCategory(id, prefabs, effects, effectCounts)` registers
-non-stacking items such as dungeon sigils. Call it once before opening the table.
-The first three arguments are a string and two string arrays. `effectCounts` is
-an integer array indexed from Magic through Ancient. Each count must be positive
-and no greater than the number of registered effects. Register the effects with
-`AddMagicEffect` first. Duplicate IDs, overlapping prefabs and overlapping effect
-pools are rejected.
-
-Category items can roll only their listed effects. Other items cannot roll those
-effects. Normal item restrictions and enchanting costs still apply, so provide
-an `EnchantCosts` entry for the item's base item type. Sigils using `Misc` use the
-existing Misc costs. Categories have no sockets, chisel slots, equipment sets or
-unique legendary assignments. Equipment upgrade bonuses do not increase their
-effect counts or rolled values. Normal enchantment still consumes materials.
-
-The category API does not change Valheim's item-type enum or apply effect behavior.
-The integrating mod must interpret its saved effects. Effect requirements still
-apply; ensure enough distinct effects are valid at every registered rarity.
 
 ---
 

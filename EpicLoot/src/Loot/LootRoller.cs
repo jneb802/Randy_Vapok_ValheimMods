@@ -1153,15 +1153,7 @@ namespace EpicLoot
 
             var effectCount = CheatEffectCount >= 1 ? CheatEffectCount : RollEffectCountPerRarity(magicItem.Rarity);
 
-            API.ItemCategory category = API.FindItemCategory(baseItem);
-            if (category != null)
-            {
-                powerlevelMod = 1f;
-                magicItem.SocketCount = 0;
-                effectCount = category.EffectCounts[(int)magicItem.Rarity];
-            }
-
-            if (category == null && (rarity == ItemRarity.Legendary || rarity == ItemRarity.Mythic))
+            if (rarity == ItemRarity.Legendary || rarity == ItemRarity.Mythic)
             {
                 LegendaryInfo itemInfo = null;
                 if (cheatMythic)

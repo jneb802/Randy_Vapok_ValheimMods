@@ -34,7 +34,6 @@ public static partial class API
         {
             return false;
         }
-        if (FindItemCategory(item) != null && !string.IsNullOrEmpty(legendaryID)) return false;
 
         try
         {
