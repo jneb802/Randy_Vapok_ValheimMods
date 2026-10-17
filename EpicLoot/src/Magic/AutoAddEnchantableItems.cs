@@ -497,8 +497,7 @@ namespace EpicLoot.Magic
                 // not consult the configured answer (ItemTypeClassifier.GetItemInfoType) -- doing so
                 // would make the sorter self-confirming and unable to ever re-sort a mis-filed item.
                 string itemType = ItemTypeClassifier.ClassifyFromFields(item.m_itemData);
-                // Explicit non-equipment opt-ins must keep their configured type.
-                // Otherwise a Misc sigil would be moved into Utility during sorting.
+                // Keep the configured type for non-equippable items explicitly allowed to be enchanted.
                 if (!item.m_itemData.IsEquipable() && item.m_itemData.m_dropPrefab != null &&
                     GatedItemTypeHelper.AllItemsWithDetails.TryGetValue(item.m_itemData.m_dropPrefab.name, out GatedItemDetails details) &&
                     details.Enchantable)
