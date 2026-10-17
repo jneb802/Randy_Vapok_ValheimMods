@@ -35,32 +35,6 @@ Two consequences worth knowing before you write glue by hand:
 - **Rarity is an `int`.** `0`=Magic, `1`=Rare, `2`=Epic, `3`=Legendary, `4`=Mythic, `5`=Ancient. Call
   `GetRarityCount()` rather than hard-coding 5.
 
-## Non-equippable items
-
-An `iteminfo.json` entry can set `Enchantable: true` to allow its listed prefabs
-through the normal enchanting eligibility check. Omitted or false preserves the
-existing behavior; it does not disable enchanting for equipment. Ammunition is
-still excluded. Restrictions, non-stacking checks and material costs still apply.
-
-For example, add this entry to `ItemInfo` (or append it through a config patch):
-
-```json
-{
-  "Type": "Sigil",
-  "Enchantable": true,
-  "ItemsByBoss": { "none": ["Sigil_magic_warp"] }
-}
-```
-
-Use existing effect `Requirements.AllowedItemTypes` and `ExcludedItemTypes` with
-the configured type, or `AllowedItemNames` and `ExcludedItemNames` with prefabs.
-Eligibility alone does not isolate effects. Effects with unrestricted requirements
-must explicitly exclude the new type if they must not roll on it. Provide normal
-enchanting costs for the vanilla item type (`Misc` for this sigil).
-
-This setting does not change effect counts, sockets, legendary selection or effect
-behavior. It adds no API endpoint and does not change the API version.
-
 ## Versioning
 
 ```csharp
