@@ -59,7 +59,7 @@ namespace EpicLoot.ShardStones {
 
             // CanBeMagicItem is what keeps shardstones, unidentified items and crafting materials out:
             // all of them carry a MagicItem, so IsMagic alone is true for them too.
-            if (!EpicLoot.CanBeMagicItem(target) || !target.IsMagic(out var magicItem)) {
+            if (API.FindItemCategory(target) != null || !EpicLoot.CanBeMagicItem(target) || !target.IsMagic(out var magicItem)) {
                 reason = "$mod_epicloot_slotchisel_notmagic";
                 return false;
             }

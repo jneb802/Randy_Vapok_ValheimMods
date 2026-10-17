@@ -136,6 +136,12 @@ namespace EpicLoot
             failure = RequirementFailure.Other;
             conflictEffectType = null;
 
+            if (magicEffectType != null && !API.CategoryAllowsEffect(itemData, magicEffectType))
+            {
+                failure = RequirementFailure.ItemTypeNotAllowed;
+                return false;
+            }
+
             if (checklootroll && NoRoll) {
                 failure = RequirementFailure.NoRoll;
                 return false;
@@ -530,6 +536,7 @@ namespace EpicLoot
 
         public bool CheckRequirements(ItemDrop.ItemData itemData, MagicItem magicItem, bool lootroll = true, bool augmentroll = false, bool runeroll = false)
         {
+            if (!API.CategoryAllowsEffect(itemData, Type)) return false;
             if (Requirements == null)
             {
                 return true;

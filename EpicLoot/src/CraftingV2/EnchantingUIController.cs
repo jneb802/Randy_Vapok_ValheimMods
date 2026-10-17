@@ -521,6 +521,13 @@ namespace EpicLoot.CraftingV2
             float midValueBonus = float.IsNaN(featureValues.Item2) ? 0 : featureValues.Item2;
 
             List<KeyValuePair<int, float>> effectCountWeights = LootRoller.GetEffectCountsPerRarity(rarity, true);
+            API.ItemCategory category = API.FindItemCategory(item);
+            if (category != null)
+            {
+                effectCountWeights = new List<KeyValuePair<int, float>> { new(category.EffectCounts[(int)rarity], 1) };
+                highValueBonus = 0;
+                midValueBonus = 0;
+            }
             float totalWeight = effectCountWeights.Sum(x => x.Value);
             for (int index = 0; index < effectCountWeights.Count; index++)
             {
@@ -541,6 +548,7 @@ namespace EpicLoot.CraftingV2
             // Socket odds come from the same roll, but enchanting upgrades never affect them, so there
             // are no bonus lines here. The 0-socket entry is implied by the others and left out.
             List<KeyValuePair<int, float>> socketCountWeights = LootRoller.GetSocketCountsPerRarity(rarity);
+            if (category != null) socketCountWeights = new List<KeyValuePair<int, float>>();
             float totalSocketWeight = socketCountWeights.Sum(x => x.Value);
             foreach (KeyValuePair<int, float> socketCountEntry in socketCountWeights)
             {

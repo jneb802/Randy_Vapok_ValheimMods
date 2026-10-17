@@ -996,6 +996,7 @@ public sealed class EpicLoot : BaseUnityPlugin {
     }
 
     public static bool IsAllowedMagicItemType(ItemDrop.ItemData item) {
+        if (API.FindItemCategory(item) != null) return true;
         switch (item.m_shared.m_itemType) {
             case ItemDrop.ItemData.ItemType.Ammo:
             case ItemDrop.ItemData.ItemType.AmmoNonEquipable:
