@@ -10,6 +10,9 @@ namespace EpicLoot.GatedItemType
         // True allows non-equippable items to be enchanted. False uses the existing eligibility rules.
         [Newtonsoft.Json.JsonProperty(DefaultValueHandling = Newtonsoft.Json.DefaultValueHandling.Ignore)]
         public bool Enchantable;
+        [System.ComponentModel.DefaultValue(true)]
+        [Newtonsoft.Json.JsonProperty(DefaultValueHandling = Newtonsoft.Json.DefaultValueHandling.Ignore)]
+        public bool Socketable = true;
         public string Fallback;
         public string ItemFallback;
         [Obsolete]
