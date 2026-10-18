@@ -69,9 +69,15 @@ namespace EpicLoot_UnityLib
         public void ReplaceMainButton(Button button)
         {
             MainButton = button;
-            _buttonLabel = button.GetComponentInChildren<Text>();
-            _tmpButtonLabel = _buttonLabel == null ? button.GetComponentInChildren<TMP_Text>() : null;
-            _useTMP = _buttonLabel == null;
+            _buttonLabel = null;
+            foreach (TMP_Text text in button.GetComponentsInChildren<TMP_Text>(true))
+            {
+                if (text.GetComponent<GamepadGlyph>() == null)
+                {
+                    _buttonLabel = text;
+                    break;
+                }
+            }
             _mainButtonGamepadHint = FindGamepadHint(button.transform);
         }
 
