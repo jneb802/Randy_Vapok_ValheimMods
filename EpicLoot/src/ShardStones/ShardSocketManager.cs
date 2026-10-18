@@ -60,6 +60,11 @@ namespace EpicLoot.ShardStones {
         public static bool CanSocket(ItemDrop.ItemData equipment, ItemDrop.ItemData input, out string reason) {
             reason = null;
 
+            if (!GatedItemType.GatedItemTypeHelper.IsSocketable(equipment)) {
+                reason = "$mod_epicloot_socket_unavailable";
+                return false;
+            }
+
             if (equipment == null || !equipment.IsMagic(out var equipMagicItem)) {
                 reason = "$mod_epicloot_socket_notmagic";
                 return false;
@@ -132,6 +137,11 @@ namespace EpicLoot.ShardStones {
         public static bool CanCoexist(ItemDrop.ItemData equipment, ItemDrop.ItemData input,
             IEnumerable<ItemDrop.ItemData> coResident, out string reason) {
             reason = null;
+
+            if (!GatedItemType.GatedItemTypeHelper.IsSocketable(equipment)) {
+                reason = "$mod_epicloot_socket_unavailable";
+                return false;
+            }
 
             if (equipment == null || !equipment.IsMagic(out var equipMagicItem)) {
                 reason = "$mod_epicloot_socket_notmagic";

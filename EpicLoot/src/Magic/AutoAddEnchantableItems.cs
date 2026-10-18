@@ -476,6 +476,7 @@ namespace EpicLoot.Magic
                         ItemFallback = item.Value.ItemFallback,
                         Type = item.Value.Type,
                         Enchantable = item.Value.Enchantable,
+                        Socketable = item.Value.Socketable,
                         ItemsByBoss = itemsByBossUniques
                     };
 
